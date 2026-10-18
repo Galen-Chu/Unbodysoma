@@ -7,8 +7,8 @@
 ```mermaid
 flowchart TB
     subgraph L5["Observe 觀測層"]
-        REC["Recorder / 匯出"]
-        VIS["視覺化 / 重播（規劃中）"]
+        REC["Recorder · RunWriter · HealthMonitor"]
+        VIS["儀表板 / 重播（規劃中）"]
     end
     subgraph L4["Psyche 心智層"]
         P["drives · affect · appraisal · action<br/>（規劃中：attention · memory · learning · self-model · language）"]
@@ -23,7 +23,7 @@ flowchart TB
         W["scripted scenarios（規劃中：物理世界 · 其他代理人）"]
     end
     subgraph L0["Core 引擎核心"]
-        C["Engine（多速率排程） · SignalBus（雙緩衝） · Module 契約"]
+        C["Engine（多速率排程 · 快照 · 干預） · SignalBus（雙緩衝） · Module 契約"]
     end
     L1 & L2 & L3 & L4 --- L0
     L5 -. 只讀 .- L0
@@ -36,7 +36,7 @@ flowchart TB
 | Soma | `soma/` | 生理狀態的動態 | 只讀身體、內分泌、運動指令；**不讀 `psyche.*`**，唯一例外是內分泌系統讀取評估結果（壓力反應的入口） |
 | Interface | `interface/` | 世界 ↔ 身體 ↔ 心智的邊界：感覺與效應器 | 心智看到的是 `extero.*` / `intero.*`，**不能直接讀 `soma.*`** |
 | Psyche | `psyche/` | 驅力、情感、評估、決策 | 對身體的影響只能經由 `motor.*` 或內分泌入口 |
-| Observe | `observe/` | 記錄、匯出、視覺化 | 只讀，不得寫入匯流排 |
+| Observe | `observe/` | 記錄、健康監控、視覺化（見 [OBSERVABILITY.md](OBSERVABILITY.md)） | 只讀，不得寫入匯流排；唯一允許的副作用是要求停止 |
 
 「心智不能直接讀身體」這條規則是刻意的：真實的大腦也只能透過有雜訊、有延遲的內感受訊號認識身體。內感受的**精確度與偏誤**因此成為可實驗的參數（例如模擬焦慮中對心跳的過度敏感）。
 
@@ -50,12 +50,13 @@ class Module(ABC):
     rate_hz: float  # 執行頻率
     reads: tuple[str, ...]  # 宣告讀取的訊號
     writes: tuple[str, ...]  # 宣告寫入的訊號
+    state_fields: tuple[str, ...]  # 宣告會改變的內部狀態（供快照使用）
 
     def setup(self, port): ...  # 發布初始值
     def step(self, dt, port): ...  # 推進 dt 秒並發布輸出
 ```
 
-- 模組的內部狀態是私有的，**對外只透過訊號**。
+- 模組的內部狀態是私有的，**對外只透過訊號**；但必須在 `state_fields` 中宣告，讓引擎能存檔與還原（[ADR-0004](adr/0004-explicit-module-state.md)）。
 - `port` 是模組對匯流排的受限視窗：寫入未宣告的訊號會丟出 `PermissionError`。
 - 引擎在加入模組時檢查**每個訊號只有一個寫入者**，在啟動時檢查**每個被讀取的訊號都有人寫**。
 
@@ -122,6 +123,8 @@ sequenceDiagram
 - 所有隨機性都來自模組自己持有、以種子初始化的 `random.Random`。
 - 不使用牆鐘時間；不依賴 `set` 的迭代順序（字串雜湊每次執行都不同），需要時先排序。
 - 測試 `test_same_seed_is_deterministic` 保證同種子逐位元相同。
+- `Engine.snapshot()` / `restore()` 可以取出與還原完整狀態，倒帶後的結果與第一次逐位元相同。
+- 掛上觀察者不會改變結果；干預只能透過引擎 API 進行並會被記錄（[ADR-0005](adr/0005-read-only-observation-logged-intervention.md)）。
 
 ## 7. 擴充點（規劃中）
 
@@ -140,12 +143,15 @@ sequenceDiagram
 src/unbodysoma/
 ├── core/bus.py          SignalBus、BusPort
 ├── core/module.py       Module 抽象類別
-├── core/engine.py       Engine：多速率排程、契約檢查、觀察者
+├── core/engine.py       Engine：多速率排程、契約檢查、觀察者、快照、干預
+├── core/interventions.py Clamp、Lesion
 ├── core/dynamics.py     relax()、clamp()
 ├── soma/                Cardio、Endocrine、Metabolism
 ├── interface/           Exteroception、Interoception
 ├── psyche/              Appraisal、Affect、Drives、ActionSelection
 ├── world/scenario.py    Event、ScriptedWorld
-├── observe/recorder.py  Recorder
+├── observe/recorder.py  Recorder（記憶體內取樣）
+├── observe/run.py       RunWriter、load_run（執行紀錄）
+├── observe/health.py    HealthMonitor、規則
 └── presets.py           build_minimal_human()
 ```

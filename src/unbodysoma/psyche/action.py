@@ -16,6 +16,7 @@ class ActionSelection(Module):
     rate_hz = 5.0
     reads = ("psyche.appraisal.threat",)
     writes = ("motor.exertion",)
+    state_fields = ("fleeing", "exertion")
 
     def __init__(
         self,

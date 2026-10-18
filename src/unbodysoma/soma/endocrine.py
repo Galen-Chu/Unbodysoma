@@ -20,6 +20,7 @@ class Endocrine(Module):
     rate_hz = 2.0
     reads = ("psyche.appraisal.threat",)
     writes = ("soma.endocrine.adrenaline", "soma.endocrine.cortisol")
+    state_fields = ("adrenaline", "cortisol")
 
     def __init__(
         self,

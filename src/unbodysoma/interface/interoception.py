@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+from typing import Any
 
 from ..core import BusPort, Module, clamp
 
@@ -30,6 +31,12 @@ class Interoception(Module):
         self.bpm_span = bpm_span
         self.noise = noise
         self._rng = random.Random(seed)
+
+    def get_state(self) -> dict[str, Any]:
+        return {"rng": self._rng.getstate()}
+
+    def set_state(self, state: dict[str, Any]) -> None:
+        self._rng.setstate(state["rng"])
 
     def _sense(self, value: float) -> float:
         return clamp(value + self._rng.gauss(0.0, self.noise))

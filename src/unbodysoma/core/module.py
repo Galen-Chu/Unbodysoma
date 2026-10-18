@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import copy
 from abc import ABC, abstractmethod
+from typing import Any
 
 from .bus import BusPort
 
@@ -13,12 +15,18 @@ class Module(ABC):
     Subclasses declare which signals they ``reads`` and ``writes``. The engine
     uses these declarations to enforce a single writer per signal and to
     detect reads that nothing produces.
+
+    Every attribute that changes during ``step`` must be listed in
+    ``state_fields`` (or handled by overriding ``get_state`` / ``set_state``),
+    so that the engine can snapshot and restore the whole simulation.
+    See docs/adr/0004-explicit-module-state.md.
     """
 
     name: str = "module"
     rate_hz: float = 10.0
     reads: tuple[str, ...] = ()
     writes: tuple[str, ...] = ()
+    state_fields: tuple[str, ...] = ()
 
     def setup(self, port: BusPort) -> None:  # noqa: B027 - optional hook
         """Publish initial values. Called once before the first tick."""
@@ -26,3 +34,10 @@ class Module(ABC):
     @abstractmethod
     def step(self, dt: float, port: BusPort) -> None:
         """Advance internal state by ``dt`` seconds and publish outputs."""
+
+    def get_state(self) -> dict[str, Any]:
+        return {field: copy.deepcopy(getattr(self, field)) for field in self.state_fields}
+
+    def set_state(self, state: dict[str, Any]) -> None:
+        for field, value in state.items():
+            setattr(self, field, copy.deepcopy(value))

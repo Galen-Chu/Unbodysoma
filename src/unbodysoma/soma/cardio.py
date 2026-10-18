@@ -16,6 +16,7 @@ class Cardio(Module):
     rate_hz = 10.0
     reads = ("soma.endocrine.adrenaline", "motor.exertion")
     writes = ("soma.cardio.heart_rate",)
+    state_fields = ("heart_rate",)
 
     def __init__(
         self,

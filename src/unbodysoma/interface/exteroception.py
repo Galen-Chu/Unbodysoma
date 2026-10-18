@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import random
+from typing import Any
 
 from ..core import BusPort, Module, clamp
 
@@ -18,6 +19,12 @@ class Exteroception(Module):
     def __init__(self, noise: float = 0.02, seed: int = 0) -> None:
         self.noise = noise
         self._rng = random.Random(seed)
+
+    def get_state(self) -> dict[str, Any]:
+        return {"rng": self._rng.getstate()}
+
+    def set_state(self, state: dict[str, Any]) -> None:
+        self._rng.setstate(state["rng"])
 
     def step(self, dt: float, port: BusPort) -> None:
         sensed = port.read("world.threat") + self._rng.gauss(0.0, self.noise)

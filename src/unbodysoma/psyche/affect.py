@@ -16,6 +16,7 @@ class Affect(Module):
     rate_hz = 10.0
     reads = ("intero.cardiac_arousal", "psyche.appraisal.threat", "psyche.drive.hunger")
     writes = ("psyche.affect.valence", "psyche.affect.arousal")
+    state_fields = ("valence", "arousal")
 
     def __init__(self, baseline_valence: float = 0.1, tau: float = 2.0) -> None:
         self.baseline_valence = baseline_valence

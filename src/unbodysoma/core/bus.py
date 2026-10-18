@@ -27,6 +27,10 @@ class SignalBus:
     def snapshot(self) -> dict[str, float]:
         return dict(self._committed)
 
+    def restore(self, signals: dict[str, float]) -> None:
+        self._committed = dict(signals)
+        self._pending.clear()
+
     def __contains__(self, key: str) -> bool:
         return key in self._committed
 

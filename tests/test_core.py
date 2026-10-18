@@ -69,8 +69,19 @@ def test_reader_sees_previous_tick_regardless_of_order():
 def test_duplicate_writer_is_rejected():
     engine = Engine()
     engine.add(Counter(10.0))
+    rival = Counter(10.0)
+    rival.name = "test.rival"
     with pytest.raises(ValueError, match="already written"):
-        engine.add(Counter(10.0))
+        engine.add(rival)
+
+
+def test_duplicate_module_name_is_rejected():
+    engine = Engine()
+    engine.add(Counter(10.0, key="test.a"))
+    twin = Counter(10.0, key="test.b")
+    twin.name = "test.a"
+    with pytest.raises(ValueError, match="already registered"):
+        engine.add(twin)
 
 
 def test_unwired_read_is_rejected_in_strict_mode():

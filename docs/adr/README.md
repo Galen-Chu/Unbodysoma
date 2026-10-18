@@ -7,6 +7,8 @@
 | [0001](0001-python-first-prototype.md) | 以 Python 撰寫原型，核心零外部相依 | 已採用 |
 | [0002](0002-double-buffered-signal-bus.md) | 模組只透過雙緩衝訊號匯流排溝通 | 已採用 |
 | [0003](0003-multi-rate-fixed-step-scheduling.md) | 固定步長、多速率排程 | 已採用 |
+| [0004](0004-explicit-module-state.md) | 模組必須明確宣告可變狀態 | 已採用 |
+| [0005](0005-read-only-observation-logged-intervention.md) | 觀察只讀，干預經由引擎並被記錄 | 已採用 |
 
 ## 格式
 

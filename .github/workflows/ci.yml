@@ -21,3 +21,4 @@ jobs:
       - run: ruff format --check .
       - run: pytest -q
       - run: python examples/fear_response.py
+      - run: python examples/lesion_study.py --runs runs/lesion_study

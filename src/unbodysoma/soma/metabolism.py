@@ -19,6 +19,7 @@ class Metabolism(Module):
     rate_hz = 1.0
     reads = ("motor.exertion", "world.food_intake", "soma.endocrine.adrenaline")
     writes = ("soma.metabolism.energy_reserve", "soma.metabolism.glucose")
+    state_fields = ("reserve", "glucose")
 
     def __init__(
         self,

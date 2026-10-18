@@ -16,6 +16,7 @@ class Appraisal(Module):
     rate_hz = 10.0
     reads = ("extero.threat", "psyche.affect.arousal")
     writes = ("psyche.appraisal.threat",)
+    state_fields = ("threat",)
 
     def __init__(self, arousal_bias: float = 0.5, tau: float = 0.5) -> None:
         self.arousal_bias = arousal_bias

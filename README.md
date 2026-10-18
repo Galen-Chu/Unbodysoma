@@ -54,6 +54,7 @@ pip install -e ".[dev]"
 
 python examples/fear_response.py          # 執行恐懼反應情境
 python examples/fear_response.py --csv runs/fear.csv
+python examples/lesion_study.py --runs runs/lesion_study   # 干預實驗 + 執行紀錄 + 健康監控
 pytest                                     # 執行測試
 ```
 
@@ -98,18 +99,32 @@ flowchart LR
 ```
 
 所有模組只透過一條**雙緩衝訊號匯流排（Signal Bus）**溝通，各自以不同頻率運行（神經毫秒級、心血管秒級、內分泌分鐘級、代謝小時級）。
+
+## 觀測與監控
+
+模擬可以被**記錄、監控、倒帶與干預**，而且觀察不會改變結果：
+
+```python
+engine = build_minimal_human([Event(60, 90, "world.threat", 0.9)])
+HealthMonitor(halt_on="critical").attach(engine)  # 生理 / 數值合理性警報
+engine.lesion("interface.interoception")  # 干預：讓心智感覺不到身體
+with RunWriter("runs/demo").attach(engine):  # meta.json · signals.csv · events.jsonl
+    engine.run(300, until=lambda bus: bus.read("soma.cardio.heart_rate") > 180)
+```
+
+詳見 [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md)。
 詳見 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
 
 ## 專案結構
 
 ```text
 src/unbodysoma/
-├── core/        引擎核心：Engine、SignalBus、Module 契約、數值工具
+├── core/        引擎核心：Engine、SignalBus、Module 契約、快照、干預
 ├── soma/        身體層：cardio、endocrine、metabolism …
 ├── interface/   介面層：exteroception、interoception（未來：motor、proprioception）
 ├── psyche/      心智層：appraisal、affect、drives、action（未來：memory、attention、self-model）
 ├── world/       環境層：腳本化情境
-├── observe/     觀測：Recorder、CSV 匯出（未來：視覺化、重播）
+├── observe/     觀測：執行紀錄、健康監控（未來：即時儀表板、重播）
 └── presets.py   預組裝的生物體
 examples/        可執行範例
 tests/           單元測試與行為回歸測試
@@ -125,6 +140,7 @@ docs/            設計文件與架構決策紀錄（ADR）
 | [SOMA.md](docs/SOMA.md) | 身體層：子系統規劃與目前的模型方程式 |
 | [PSYCHE.md](docs/PSYCHE.md) | 心智層：心智能力階梯、理論對應、設計取捨 |
 | [SIGNALS.md](docs/SIGNALS.md) | 訊號命名規範與目前的訊號表 |
+| [OBSERVABILITY.md](docs/OBSERVABILITY.md) | 觀測與監控：執行紀錄、健康監控、快照倒帶、干預實驗、儀表板規劃 |
 | [ROADMAP.md](docs/ROADMAP.md) | 分階段路線圖與待討論的開放問題 |
 | [ETHICS.md](docs/ETHICS.md) | 醫療免責、意識宣稱、模擬負面狀態的倫理準則 |
 | [REFERENCES.md](docs/REFERENCES.md) | 理論與既有模型參考文獻 |
@@ -136,7 +152,7 @@ docs/            設計文件與架構決策紀錄（ADR）
 | 階段 | 目標 |
 |---|---|
 | **Phase 0**（目前） | 引擎骨架、最小閉環生物體、文件 |
-| Phase 1 | 最小可行生物體：晝夜節律與睡眠、體溫、進食行為、情境設定檔、視覺化 |
+| Phase 1 | 最小可行生物體：晝夜節律與睡眠、體溫、進食行為、情境設定檔；觀測機制（執行紀錄、健康監控、干預 ✅，儀表板） |
 | Phase 2 | 生理保真度：文獻模型（L1）、對照文獻曲線驗證、外部生理引擎轉接 |
 | Phase 3 | 會學習的心智：記憶、以內感受為獎賞的學習、預測處理 / 主動推論 |
 | Phase 4 | 具身於 3D 世界：感覺運動迴路、物理模擬 |

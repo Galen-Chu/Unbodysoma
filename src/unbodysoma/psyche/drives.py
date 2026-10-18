@@ -12,6 +12,7 @@ class Drives(Module):
     rate_hz = 2.0
     reads = ("intero.energy_deficit",)
     writes = ("psyche.drive.hunger",)
+    state_fields = ("hunger",)
 
     def __init__(self, threshold: float = 0.2, span: float = 0.6, tau: float = 30.0) -> None:
         self.threshold = threshold
