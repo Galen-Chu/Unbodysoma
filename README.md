@@ -141,6 +141,7 @@ docs/            設計文件與架構決策紀錄（ADR）
 | [PSYCHE.md](docs/PSYCHE.md) | 心智層：心智能力階梯、理論對應、設計取捨 |
 | [SIGNALS.md](docs/SIGNALS.md) | 訊號命名規範與目前的訊號表 |
 | [OBSERVABILITY.md](docs/OBSERVABILITY.md) | 觀測與監控：執行紀錄、健康監控、快照倒帶、干預實驗、儀表板規劃 |
+| [VARIABILITY.md](docs/VARIABILITY.md) | 變異與統計真實性：避免「平均人」與眾數塌縮、候選參數、分布層級驗收（討論草案） |
 | [ROADMAP.md](docs/ROADMAP.md) | 分階段路線圖與待討論的開放問題 |
 | [ETHICS.md](docs/ETHICS.md) | 醫療免責、意識宣稱、模擬負面狀態的倫理準則 |
 | [REFERENCES.md](docs/REFERENCES.md) | 理論與既有模型參考文獻 |

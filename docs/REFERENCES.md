@@ -30,6 +30,21 @@
 - Stolwijk, J. A. J. (1971). *A Mathematical Model of Physiological Temperature Regulation in Man*. NASA Contractor Report CR-1855.
 - Hester, R. L., Brown, A. J., Husband, L., Iliescu, R., Pruett, D., Summers, R., & Coleman, T. G. (2011). HumMod: A modeling environment for the simulation of integrative human physiology. *Frontiers in Physiology*, 2, 12.
 
+## 變異與統計真實性
+
+見 [VARIABILITY.md](VARIABILITY.md)。
+
+- Baddeley, A. D. (1966). The capacity for generating information by randomization. *Quarterly Journal of Experimental Psychology*, 18(2), 119–129.
+- Wagenaar, W. A. (1972). Generation of random sequences by human subjects: A critical survey of literature. *Psychological Bulletin*, 77(1), 65–72.
+- Daniels, G. S. (1952). *The "Average Man"?* Technical Note WCRD 53-7. Wright Air Development Center, U.S. Air Force.
+- Lipsitz, L. A., & Goldberger, A. L. (1992). Loss of "complexity" and aging: Potential applications of fractals and chaos theory to senescence. *JAMA*, 267(13), 1806–1809.
+- Task Force of the European Society of Cardiology and the North American Society of Pacing and Electrophysiology (1996). Heart rate variability: Standards of measurement, physiological interpretation, and clinical use. *Circulation*, 93(5), 1043–1065.
+- Tanaka, H., Monahan, K. D., & Seals, D. R. (2001). Age-predicted maximal heart rate revisited. *Journal of the American College of Cardiology*, 37(1), 153–156.
+- Garfinkel, S. N., Seth, A. K., Barrett, A. B., Suzuki, K., & Critchley, H. D. (2015). Knowing your own heart: Distinguishing interoceptive accuracy from interoceptive awareness. *Biological Psychology*, 104, 65–74.
+- Ratcliff, R. (1979). Group reaction time distributions and an analysis of distribution statistics. *Psychological Bulletin*, 86(3), 446–461.
+- Vulkan, N. (2000). An economist's perspective on probability matching. *Journal of Economic Surveys*, 14(1), 101–118.
+- Kirk, R., Mediratta, I., Nalmpantis, C., Luketina, J., Hambro, E., Grefenstette, E., & Raileanu, R. (2024). Understanding the effects of RLHF on LLM generalisation and diversity. *ICLR 2024*.（偏好微調對輸出多樣性的影響）
+
 ## 開源生理引擎與標準
 
 - **Pulse Physiology Engine** — Kitware, Inc. 開源全身生理引擎。<https://pulse.kitware.com>
