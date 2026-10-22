@@ -35,6 +35,27 @@ class SignalBus:
         return key in self._committed
 
 
+class BusReader:
+    """Read-only view of a bus, handed to observers and breakpoints (ADR-0005).
+
+    It has no ``write`` method, so an observer cannot change a run by accident.
+    """
+
+    __slots__ = ("_bus",)
+
+    def __init__(self, bus: SignalBus) -> None:
+        self._bus = bus
+
+    def read(self, key: str, default: float = 0.0) -> float:
+        return self._bus.read(key, default)
+
+    def snapshot(self) -> dict[str, float]:
+        return self._bus.snapshot()
+
+    def __contains__(self, key: str) -> bool:
+        return key in self._bus
+
+
 class BusPort:
     """A module's restricted view of the bus: it may only write keys it declared."""
 

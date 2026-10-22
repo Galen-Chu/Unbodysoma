@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import math
 import random
 from typing import Any
 
-from ..core import BusPort, Module, clamp
+from ..core import BusPort, Module, ParamSpec, SignalSpec, clamp
 
 
 class Interoception(Module):
@@ -18,7 +19,19 @@ class Interoception(Module):
     name = "interface.interoception"
     rate_hz = 10.0
     reads = ("soma.cardio.heart_rate", "soma.metabolism.energy_reserve")
-    writes = ("intero.cardiac_arousal", "intero.energy_deficit")
+    signal_specs = (
+        SignalSpec("intero.cardiac_arousal", "normalized", 0.0, 1.0, "Felt cardiac activation"),
+        SignalSpec("intero.energy_deficit", "normalized", 0.0, 1.0, "Felt shortage of energy"),
+    )
+    writes = tuple(s.key for s in signal_specs)
+    params = (
+        ParamSpec("resting_bpm", 60.0, "bpm", 30.0, 120.0, "Heart rate felt as zero activation"),
+        ParamSpec("bpm_span", 100.0, "bpm", 10.0, 250.0, "Heart-rate rise felt as full activation"),
+        ParamSpec(
+            "noise", 0.01, "normalized", 0.0, 1.0, "SD of interoceptive noise (inverse of interoceptive accuracy)"
+        ),
+        ParamSpec("seed", 1, "", 0, math.inf, "Random seed of the noise", source="run setting"),
+    )
 
     def __init__(
         self,
@@ -30,6 +43,7 @@ class Interoception(Module):
         self.resting_bpm = resting_bpm
         self.bpm_span = bpm_span
         self.noise = noise
+        self.seed = seed
         self._rng = random.Random(seed)
 
     def get_state(self) -> dict[str, Any]:

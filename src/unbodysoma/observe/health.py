@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Iterable
 from dataclasses import dataclass
 
-from ..core import Engine, SignalBus
+from ..core import BusReader, Engine, SignalSpec
 
 SEVERITIES = ("info", "warning", "critical")
 _EPS = 1e-9
@@ -28,7 +28,7 @@ class Rule(ABC):
     severity: str
 
     @abstractmethod
-    def violations(self, t: float, bus: SignalBus) -> dict[str, str]:
+    def violations(self, t: float, bus: BusReader) -> dict[str, str]:
         """Currently violated subjects (usually signal keys) mapped to a human-readable message."""
 
 
@@ -39,7 +39,7 @@ class FiniteRule(Rule):
         self.name = name
         self.severity = severity
 
-    def violations(self, t: float, bus: SignalBus) -> dict[str, str]:
+    def violations(self, t: float, bus: BusReader) -> dict[str, str]:
         return {k: f"{k} is {v}" for k, v in bus.snapshot().items() if not math.isfinite(v)}
 
 
@@ -53,7 +53,7 @@ class RangeRule(Rule):
         self.severity = severity
         self.name = name or f"range:{key}"
 
-    def violations(self, t: float, bus: SignalBus) -> dict[str, str]:
+    def violations(self, t: float, bus: BusReader) -> dict[str, str]:
         if self.key not in bus:
             return {}
         value = bus.read(self.key)
@@ -84,9 +84,13 @@ class SustainedRule(Rule):
         self.name = name or f"sustained:{key}"
         self._since: float | None = None
 
-    def violations(self, t: float, bus: SignalBus) -> dict[str, str]:
+    def violations(self, t: float, bus: BusReader) -> dict[str, str]:
         value = bus.read(self.key)
-        beyond = value < self.below if self.below is not None else value > self.above
+        if self.below is not None:
+            beyond = value < self.below
+        else:
+            assert self.above is not None  # guaranteed by __init__
+            beyond = value > self.above
         if not beyond:
             self._since = None
             return {}
@@ -112,19 +116,37 @@ def default_rules() -> list[Rule]:
     ]
 
 
+def spec_rules(specs: Iterable[SignalSpec], severity: str = "critical") -> list[Rule]:
+    """One range rule per bounded signal spec. A spec violation means a model bug, hence critical."""
+    return [
+        RangeRule(s.key, s.lo, s.hi, severity, name=f"spec:{s.key}")
+        for s in specs
+        if math.isfinite(s.lo) or math.isfinite(s.hi)
+    ]
+
+
 class HealthMonitor:
     """Engine observer that evaluates rules, logs alert transitions and can halt the run.
 
     Alerts are emitted only when a condition is raised or cleared, not on every
     sample. With ``halt_on="critical"`` a critical alert stops ``Engine.run``.
+    With ``check_specs`` (default), every signal is also checked against the
+    valid range declared in its ``SignalSpec``.
     """
 
-    def __init__(self, rules: Iterable[Rule] | None = None, every: float = 0.1, halt_on: str | None = None) -> None:
+    def __init__(
+        self,
+        rules: Iterable[Rule] | None = None,
+        every: float = 0.1,
+        halt_on: str | None = None,
+        check_specs: bool = True,
+    ) -> None:
         if halt_on is not None and halt_on not in SEVERITIES:
             raise ValueError(f"halt_on must be one of {SEVERITIES} or None")
         self.rules = list(default_rules() if rules is None else rules)
         self.every = every
         self.halt_on = halt_on
+        self.check_specs = check_specs
         self.alerts: list[Alert] = []
         self.active: dict[tuple[str, str], Alert] = {}
         self._engine: Engine | None = None
@@ -132,6 +154,8 @@ class HealthMonitor:
 
     def attach(self, engine: Engine) -> HealthMonitor:
         self._engine = engine
+        if self.check_specs:
+            self.rules.extend(spec_rules(engine.signal_specs().values()))
         engine.observe(self)
         return self
 
@@ -141,7 +165,7 @@ class HealthMonitor:
         raised = {a.severity for a in self.alerts if a.raised}
         return max(raised, key=SEVERITIES.index) if raised else None
 
-    def __call__(self, t: float, bus: SignalBus) -> None:
+    def __call__(self, t: float, bus: BusReader) -> None:
         if t + _EPS < self._next:
             return
         self._next += self.every

@@ -1,7 +1,21 @@
-from .bus import BusPort, SignalBus
+from .bus import BusPort, BusReader, SignalBus
 from .dynamics import clamp, relax
 from .engine import Engine, Snapshot
 from .interventions import Clamp, Lesion
 from .module import Module
+from .specs import ParamSpec, SignalSpec
 
-__all__ = ["BusPort", "Clamp", "Engine", "Lesion", "Module", "SignalBus", "Snapshot", "clamp", "relax"]
+__all__ = [
+    "BusPort",
+    "BusReader",
+    "Clamp",
+    "Engine",
+    "Lesion",
+    "Module",
+    "ParamSpec",
+    "SignalBus",
+    "SignalSpec",
+    "Snapshot",
+    "clamp",
+    "relax",
+]

@@ -2,7 +2,7 @@
 
 Layout (see docs/OBSERVABILITY.md):
 
-    <run>/meta.json      engine, modules, user config, versions, git commit
+    <run>/meta.json      engine, modules (with parameters), signal specs, user config, versions, git
     <run>/signals.csv    every declared signal, sampled every ``every`` seconds
     <run>/events.jsonl   engine events: interventions, health alerts, stops
 """
@@ -14,13 +14,13 @@ import json
 import math
 import platform
 import subprocess
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from .. import __version__
-from ..core import Engine, SignalBus
+from ..core import BusReader, Engine
 
 _EPS = 1e-9
 
@@ -82,9 +82,11 @@ class RunWriter:
                     "rate_hz": m.rate_hz,
                     "reads": list(m.reads),
                     "writes": list(m.writes),
+                    "params": m.get_params(),
                 }
                 for m in engine.modules
             ],
+            "signals": {key: asdict(spec) for key, spec in sorted(engine.signal_specs().items())},
         }
         self._write_meta()
         self._signals_file = open(self.path / "signals.csv", "w", newline="", encoding="utf-8")
@@ -118,7 +120,7 @@ class RunWriter:
         text = json.dumps(_jsonable(self._meta), indent=2, ensure_ascii=False)
         (self.path / "meta.json").write_text(text + "\n", encoding="utf-8")
 
-    def _on_sample(self, t: float, bus: SignalBus) -> None:
+    def _on_sample(self, t: float, bus: BusReader) -> None:
         if self._closed:
             return
         if t + _EPS >= self._next:

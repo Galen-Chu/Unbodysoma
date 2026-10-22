@@ -11,16 +11,22 @@ pip install -e ".[dev]"
 pytest                     # 測試
 ruff check .               # lint
 ruff format .              # 格式化
+mypy                       # 型別檢查（strict）
+python -m unbodysoma.catalog   # 修改參數或訊號規格後，重新產生 docs/SIGNALS.md 與 docs/PARAMETERS.md
 ```
+
+CI 會依序執行 lint、格式、型別檢查、文件是否過時、測試與所有範例；請在提交前先在本機跑過。
 
 ## 新增一個模組
 
 1. 選擇所屬的層（`soma/`、`interface/`、`psyche/`、`world/`），遵守 [ARCHITECTURE.md](docs/ARCHITECTURE.md) 中各層的讀寫規則。
 2. 繼承 `unbodysoma.core.Module`，宣告 `name`、`rate_hz`、`reads`、`writes`，以及所有會在 `step` 中改變的屬性 `state_fields`（無法直接深複製的狀態如亂數產生器，請覆寫 `get_state` / `set_state`，見 [ADR-0004](docs/adr/0004-explicit-module-state.md)）。
-3. 在 docstring 中寫明**保真度等級（L0 / L1 / L2）**；L1 以上須附參考文獻。
-4. 新增或修改訊號時，同步更新 [docs/SIGNALS.md](docs/SIGNALS.md)。
-5. 加入測試：至少一個行為測試，描述「在什麼情境下，這個模組應該讓系統表現出什麼」；若模組有可變狀態，把它加入 preset 或撰寫快照還原測試。
-6. 在 [docs/SOMA.md](docs/SOMA.md) 或 [docs/PSYCHE.md](docs/PSYCHE.md) 中更新對應的方程式與狀態。
+3. 為每個 `__init__` 參數宣告一個 `ParamSpec`（同名、同預設值，並以同名屬性保存），為每個寫入的訊號宣告一個 `SignalSpec`。不要把數值常數寫死在 `step()` 裡；可調的值都應該是參數（見 [ADR-0006](docs/adr/0006-declarative-parameter-and-signal-specs.md)）。
+4. 若模組使用亂數，每個獨立的通道使用各自的亂數串流，避免新增通道改變既有結果。
+5. 在 docstring 中寫明**保真度等級（L0 / L1 / L2）**；L1 以上須在 `ParamSpec.source` 與 [REFERENCES.md](docs/REFERENCES.md) 附上參考文獻。
+6. 執行 `python -m unbodysoma.catalog` 重新產生 [docs/SIGNALS.md](docs/SIGNALS.md) 與 [docs/PARAMETERS.md](docs/PARAMETERS.md)。
+7. 加入測試：至少一個行為測試，描述「在什麼情境下，這個模組應該讓系統表現出什麼」；若模組有可變狀態，把它加入 preset 或撰寫快照還原測試。
+8. 在 [docs/SOMA.md](docs/SOMA.md) 或 [docs/PSYCHE.md](docs/PSYCHE.md) 中更新對應的方程式與狀態。
 
 ## 架構決策
 

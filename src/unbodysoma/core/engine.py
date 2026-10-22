@@ -11,15 +11,17 @@ from __future__ import annotations
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, TypeVar
 
-from .bus import BusPort, SignalBus
+from .bus import BusPort, BusReader, SignalBus
 from .interventions import LESION_MODES, Clamp, Intervention, Lesion
 from .module import Module
+from .specs import SignalSpec
 
-Observer = Callable[[float, SignalBus], None]
+Observer = Callable[[float, BusReader], None]
 EventListener = Callable[[dict[str, Any]], None]
-StopCondition = Callable[[SignalBus], bool]
+StopCondition = Callable[[BusReader], bool]
+_I = TypeVar("_I", Clamp, Lesion)
 
 
 @dataclass
@@ -44,10 +46,12 @@ class Engine:
         self.base_dt = base_dt
         self.strict = strict
         self.bus = SignalBus()
+        self._reader = BusReader(self.bus)
         self.tick = 0
         self.events: list[dict[str, Any]] = []
         self._slots: list[_Slot] = []
         self._owners: dict[str, str] = {}
+        self._specs: dict[str, SignalSpec] = {}
         self._observers: list[Observer] = []
         self._event_listeners: list[EventListener] = []
         self._stop_reason: str | None = None
@@ -68,6 +72,16 @@ class Engine:
         """All declared output signals, sorted."""
         return sorted(self._owners)
 
+    def signal_specs(self) -> dict[str, SignalSpec]:
+        return dict(self._specs)
+
+    def writer_of(self, key: str) -> str | None:
+        return self._owners.get(key)
+
+    def unspecified_signals(self) -> list[str]:
+        """Written signals that no module describes with a ``SignalSpec``."""
+        return sorted(key for key in self._owners if key not in self._specs)
+
     # -- assembly ---------------------------------------------------------
 
     def add(self, module: Module) -> Module:
@@ -78,14 +92,22 @@ class Engine:
         for key in module.writes:
             if key in self._owners:
                 raise ValueError(f"signal {key!r} is already written by {self._owners[key]!r}")
+        for spec in module.signal_specs:
+            if spec.key not in module.writes:
+                raise ValueError(f"module {module.name!r} describes {spec.key!r} but does not write it")
+        for param in module.params:
+            param.check(getattr(module, param.name), module.name)
+        for key in module.writes:
             self._owners[key] = module.name
+        for spec in module.signal_specs:
+            self._specs[spec.key] = spec
         interval = max(1, round(1.0 / (module.rate_hz * self.base_dt)))
         port = BusPort(self.bus, module.name, tuple(module.writes))
         self._slots.append(_Slot(module, port, interval))
         return module
 
     def observe(self, observer: Observer) -> None:
-        """Call ``observer(t, bus)`` after setup and after every tick. Observers must not write."""
+        """Call ``observer(t, reader)`` after setup and after every tick, with a read-only bus view."""
         self._observers.append(observer)
 
     def on_event(self, listener: EventListener) -> None:
@@ -138,7 +160,7 @@ class Engine:
         """
         for _ in range(round(duration / self.base_dt)):
             self.step()
-            if self._stop_reason is None and until is not None and until(self.bus):
+            if self._stop_reason is None and until is not None and until(self._reader):
                 self._stop_reason = "breakpoint"
             if self._stop_reason is not None:
                 reason, self._stop_reason = self._stop_reason, None
@@ -159,7 +181,7 @@ class Engine:
 
     def _notify(self) -> None:
         for observer in self._observers:
-            observer(self.time, self.bus)
+            observer(self.time, self._reader)
 
     # -- interventions ----------------------------------------------------
 
@@ -186,7 +208,7 @@ class Engine:
     def interventions(self) -> list[Intervention]:
         return list(self._interventions)
 
-    def _schedule(self, intervention: Intervention) -> Intervention:
+    def _schedule(self, intervention: _I) -> _I:
         if intervention.end <= intervention.start:
             raise ValueError("intervention must end after it starts")
         self._next_intervention_id += 1

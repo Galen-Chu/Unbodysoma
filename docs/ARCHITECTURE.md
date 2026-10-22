@@ -20,10 +20,10 @@ flowchart TB
         S["cardio · endocrine · metabolism<br/>（規劃中：respiratory · thermo · sleep/circadian · immune · musculoskeletal）"]
     end
     subgraph L1["World 環境層"]
-        W["scripted scenarios（規劃中：物理世界 · 其他代理人）"]
+        W["scripted scenarios · food<br/>（規劃中：網格世界 · 物理世界 · 其他代理人）"]
     end
     subgraph L0["Core 引擎核心"]
-        C["Engine（多速率排程 · 快照 · 干預） · SignalBus（雙緩衝） · Module 契約"]
+        C["Engine（多速率排程 · 快照 · 干預） · SignalBus（雙緩衝） · Module 契約 · Param / Signal 規格"]
     end
     L1 & L2 & L3 & L4 --- L0
     L5 -. 只讀 .- L0
@@ -32,11 +32,11 @@ flowchart TB
 | 層 | 套件 | 職責 | 關鍵規則 |
 |---|---|---|---|
 | Core | `core/` | 時間推進、訊號傳遞、契約檢查 | 不包含任何生理或心理知識 |
-| World | `world/` | 產生環境刺激、接收身體對環境的作用 | 只寫 `world.*` |
+| World | `world/` | 產生環境刺激、接收身體對環境的作用（例如把進食行為轉成能量攝取） | 只寫 `world.*`；可讀 `motor.*`（身體對世界的作用） |
 | Soma | `soma/` | 生理狀態的動態 | 只讀身體、內分泌、運動指令；**不讀 `psyche.*`**，唯一例外是內分泌系統讀取評估結果（壓力反應的入口） |
 | Interface | `interface/` | 世界 ↔ 身體 ↔ 心智的邊界：感覺與效應器 | 心智看到的是 `extero.*` / `intero.*`，**不能直接讀 `soma.*`** |
 | Psyche | `psyche/` | 驅力、情感、評估、決策 | 對身體的影響只能經由 `motor.*` 或內分泌入口 |
-| Observe | `observe/` | 記錄、健康監控、視覺化（見 [OBSERVABILITY.md](OBSERVABILITY.md)） | 只讀，不得寫入匯流排；唯一允許的副作用是要求停止 |
+| Observe | `observe/` | 記錄、健康監控、視覺化（見 [OBSERVABILITY.md](OBSERVABILITY.md)） | 只拿到唯讀的 `BusReader`，無法寫入匯流排；唯一允許的副作用是要求停止 |
 
 「心智不能直接讀身體」這條規則是刻意的：真實的大腦也只能透過有雜訊、有延遲的內感受訊號認識身體。內感受的**精確度與偏誤**因此成為可實驗的參數（例如模擬焦慮中對心跳的過度敏感）。
 
@@ -51,6 +51,8 @@ class Module(ABC):
     reads: tuple[str, ...]  # 宣告讀取的訊號
     writes: tuple[str, ...]  # 宣告寫入的訊號
     state_fields: tuple[str, ...]  # 宣告會改變的內部狀態（供快照使用）
+    params: tuple[ParamSpec, ...]  # 宣告可調參數：預設值、單位、有效範圍、來源
+    signal_specs: tuple[SignalSpec, ...]  # 描述寫入的訊號：單位、有效範圍、說明
 
     def setup(self, port): ...  # 發布初始值
     def step(self, dt, port): ...  # 推進 dt 秒並發布輸出
@@ -58,7 +60,8 @@ class Module(ABC):
 
 - 模組的內部狀態是私有的，**對外只透過訊號**；但必須在 `state_fields` 中宣告，讓引擎能存檔與還原（[ADR-0004](adr/0004-explicit-module-state.md)）。
 - `port` 是模組對匯流排的受限視窗：寫入未宣告的訊號會丟出 `PermissionError`。
-- 引擎在加入模組時檢查**每個訊號只有一個寫入者**，在啟動時檢查**每個被讀取的訊號都有人寫**。
+- 引擎在加入模組時檢查**每個訊號只有一個寫入者**、**參數都在有效範圍內**，在啟動時檢查**每個被讀取的訊號都有人寫**。
+- 參數與訊號規格是單一事實來源：執行紀錄、健康監控規則、[SIGNALS.md](SIGNALS.md) 與 [PARAMETERS.md](PARAMETERS.md) 都由它們產生（[ADR-0006](adr/0006-declarative-parameter-and-signal-specs.md)）。
 
 這讓「替換一個模組」變成一件安全的事：只要新模組讀寫同一組訊號，其他模組不需要知道。
 
@@ -120,17 +123,18 @@ sequenceDiagram
 
 ## 6. 決定性與可重現性
 
-- 所有隨機性都來自模組自己持有、以種子初始化的 `random.Random`。
+- 所有隨機性都來自模組自己持有、以種子初始化的 `random.Random`。同一模組的不同感覺通道使用**各自獨立的亂數串流**，新增一個通道不會改變既有通道的雜訊與結果。
 - 不使用牆鐘時間；不依賴 `set` 的迭代順序（字串雜湊每次執行都不同），需要時先排序。
 - 測試 `test_same_seed_is_deterministic` 保證同種子逐位元相同。
 - `Engine.snapshot()` / `restore()` 可以取出與還原完整狀態，倒帶後的結果與第一次逐位元相同。
 - 掛上觀察者不會改變結果；干預只能透過引擎 API 進行並會被記錄（[ADR-0005](adr/0005-read-only-observation-logged-intervention.md)）。
+- 執行紀錄保存所有模組的參數值與情境事件，足以重建同一次模擬。
 
 ## 7. 擴充點（規劃中）
 
 | 擴充點 | 說明 |
 |---|---|
-| 情境設定檔 | 以 TOML / YAML 描述生物體組成、參數與事件時間軸，不必寫 Python |
+| 情境設定檔 | 以 TOML 描述生物體組成、參數與事件時間軸，不必寫 Python；`build_minimal_human(overrides=…)` 已提供同樣的參數覆寫機制 |
 | 外部生理引擎轉接器 | 把 Pulse、BioGears 或 FMI（Functional Mock-up Interface）模型包成 `Module` |
 | 神經調節訊號 | `neuro.*`：多巴胺、血清素、正腎上腺素、乙醯膽鹼作為全域調節參數，影響學習率、注意力與探索 |
 | 語言 / 敘事層 | 可選的語言模型轉接器，**只能讀取**心智狀態並產生自述，不能直接改寫身體或情感 |
@@ -141,17 +145,20 @@ sequenceDiagram
 
 ```text
 src/unbodysoma/
-├── core/bus.py          SignalBus、BusPort
+├── core/bus.py          SignalBus、BusPort（模組用）、BusReader（觀察者用，唯讀）
 ├── core/module.py       Module 抽象類別
+├── core/specs.py        ParamSpec、SignalSpec
 ├── core/engine.py       Engine：多速率排程、契約檢查、觀察者、快照、干預
 ├── core/interventions.py Clamp、Lesion
 ├── core/dynamics.py     relax()、clamp()
 ├── soma/                Cardio、Endocrine、Metabolism
 ├── interface/           Exteroception、Interoception
-├── psyche/              Appraisal、Affect、Drives、ActionSelection
+├── psyche/              Appraisal、Affect、Drives、ActionSelection（逃跑 / 進食）
 ├── world/scenario.py    Event、ScriptedWorld
+├── world/food.py        FoodSource（進食 → 能量攝取）
 ├── observe/recorder.py  Recorder（記憶體內取樣）
 ├── observe/run.py       RunWriter、load_run（執行紀錄）
 ├── observe/health.py    HealthMonitor、規則
-└── presets.py           build_minimal_human()
+├── catalog.py           由規格產生 SIGNALS.md 與 PARAMETERS.md
+└── presets.py           build_minimal_human(events, seed, overrides)
 ```

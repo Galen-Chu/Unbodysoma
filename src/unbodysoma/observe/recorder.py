@@ -6,7 +6,7 @@ import csv
 from collections.abc import Iterable
 from pathlib import Path
 
-from ..core import SignalBus
+from ..core import BusReader
 
 _EPS = 1e-9
 
@@ -20,7 +20,7 @@ class Recorder:
         self.rows: list[tuple[float, ...]] = []
         self._next = 0.0
 
-    def __call__(self, t: float, bus: SignalBus) -> None:
+    def __call__(self, t: float, bus: BusReader) -> None:
         if t + _EPS >= self._next:
             self.rows.append((t, *(bus.read(k) for k in self.keys)))
             self._next += self.every

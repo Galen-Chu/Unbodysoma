@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..core import BusPort, Module, clamp, relax
+from ..core import BusPort, Module, ParamSpec, SignalSpec, clamp, relax
 
 
 class Appraisal(Module):
@@ -15,7 +15,12 @@ class Appraisal(Module):
     name = "psyche.appraisal"
     rate_hz = 10.0
     reads = ("extero.threat", "psyche.affect.arousal")
-    writes = ("psyche.appraisal.threat",)
+    signal_specs = (SignalSpec("psyche.appraisal.threat", "normalized", 0.0, 1.0, "Appraised threat"),)
+    writes = tuple(s.key for s in signal_specs)
+    params = (
+        ParamSpec("arousal_bias", 0.5, "", 0.0, 5.0, "How much arousal amplifies perceived threat (trait anxiety)"),
+        ParamSpec("tau", 0.5, "s", 0.01, 60.0, "Time constant of appraisal"),
+    )
     state_fields = ("threat",)
 
     def __init__(self, arousal_bias: float = 0.5, tau: float = 0.5) -> None:

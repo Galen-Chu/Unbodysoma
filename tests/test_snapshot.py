@@ -20,9 +20,13 @@ def trajectory(engine: Engine, seconds: float) -> list[dict[str, float]]:
     return states
 
 
-def comparable(module_vars: dict) -> dict:
-    """``random.Random`` compares by identity, so compare its internal state instead."""
-    return {k: v.getstate() if isinstance(v, random.Random) else v for k, v in module_vars.items()}
+def comparable(value):
+    """``random.Random`` compares by identity, so compare its internal state instead (recursively)."""
+    if isinstance(value, random.Random):
+        return value.getstate()
+    if isinstance(value, dict):
+        return {k: comparable(v) for k, v in value.items()}
+    return value
 
 
 def test_restore_reproduces_the_future_exactly():

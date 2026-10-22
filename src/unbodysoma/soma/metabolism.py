@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..core import BusPort, Module, clamp, relax
+from ..core import BusPort, Module, ParamSpec, SignalSpec, clamp, relax
 
 _SECONDS_PER_HOUR = 3600.0
 
@@ -18,7 +18,27 @@ class Metabolism(Module):
     name = "soma.metabolism"
     rate_hz = 1.0
     reads = ("motor.exertion", "world.food_intake", "soma.endocrine.adrenaline")
-    writes = ("soma.metabolism.energy_reserve", "soma.metabolism.glucose")
+    signal_specs = (
+        SignalSpec("soma.metabolism.energy_reserve", "fraction", 0.0, 1.0, "Lumped energy store (1 = full)"),
+        SignalSpec("soma.metabolism.glucose", "mg/dL", 0.0, 600.0, "Blood glucose"),
+    )
+    writes = tuple(s.key for s in signal_specs)
+    params = (
+        ParamSpec("initial_reserve", 0.8, "fraction", 0.0, 1.0, "Energy reserve at t = 0"),
+        ParamSpec("hours_to_empty_at_rest", 16.0, "h", 1.0, 500.0, "Time for a full reserve to drain at rest"),
+        ParamSpec("exertion_cost", 4.0, "", 0.0, 20.0, "Extra drain per unit exertion, relative to basal"),
+        ParamSpec("glucose_setpoint", 90.0, "mg/dL", 60.0, 130.0, "Defended fasting glucose"),
+        ParamSpec("k_adrenaline", 40.0, "mg/dL", 0.0, 150.0, "Glucose mobilized per unit adrenaline"),
+        ParamSpec("glucose_tau", 120.0, "s", 1.0, 3600.0, "Time constant of glucose regulation"),
+        ParamSpec(
+            "glucose_defense_reserve",
+            0.1,
+            "fraction",
+            0.01,
+            1.0,
+            "Reserve below which glucose can no longer be defended",
+        ),
+    )
     state_fields = ("reserve", "glucose")
 
     def __init__(
@@ -29,12 +49,15 @@ class Metabolism(Module):
         glucose_setpoint: float = 90.0,
         k_adrenaline: float = 40.0,
         glucose_tau: float = 120.0,
+        glucose_defense_reserve: float = 0.1,
     ) -> None:
-        self.basal_drain = 1.0 / (hours_to_empty_at_rest * _SECONDS_PER_HOUR)
+        self.initial_reserve = initial_reserve
+        self.hours_to_empty_at_rest = hours_to_empty_at_rest
         self.exertion_cost = exertion_cost
         self.glucose_setpoint = glucose_setpoint
         self.k_adrenaline = k_adrenaline
         self.glucose_tau = glucose_tau
+        self.glucose_defense_reserve = glucose_defense_reserve
         self.reserve = initial_reserve
         self.glucose = glucose_setpoint
 
@@ -43,12 +66,11 @@ class Metabolism(Module):
         port.write("soma.metabolism.glucose", self.glucose)
 
     def step(self, dt: float, port: BusPort) -> None:
-        exertion = port.read("motor.exertion")
-        drain = self.basal_drain * (1.0 + self.exertion_cost * exertion)
+        basal_drain = 1.0 / (self.hours_to_empty_at_rest * _SECONDS_PER_HOUR)
+        drain = basal_drain * (1.0 + self.exertion_cost * port.read("motor.exertion"))
         self.reserve = clamp(self.reserve + (port.read("world.food_intake") - drain) * dt)
 
-        # Below 10 % reserve the body can no longer defend the glucose setpoint.
-        availability = min(1.0, self.reserve / 0.1)
+        availability = min(1.0, self.reserve / self.glucose_defense_reserve)
         target = (self.glucose_setpoint + self.k_adrenaline * port.read("soma.endocrine.adrenaline")) * availability
         self.glucose = relax(self.glucose, target, dt, self.glucose_tau)
 

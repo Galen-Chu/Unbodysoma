@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "unbodysoma"
-version = "0.0.1"
+dynamic = ["version"]
 description = "An embodied human simulation engine whose mind emerges from regulating its body."
 readme = "README.md"
 license = { text = "MIT" }
@@ -20,17 +20,28 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "ruff==0.17.*"]
+dev = ["pytest>=8", "ruff==0.17.*", "mypy==2.4.*"]
 
 [project.urls]
 Repository = "https://github.com/Galen-Chu/Unbodysoma"
 
+[tool.setuptools.dynamic]
+version = { attr = "unbodysoma.__version__" }
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+unbodysoma = ["py.typed"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src"]
 
 [tool.ruff]
 line-length = 120

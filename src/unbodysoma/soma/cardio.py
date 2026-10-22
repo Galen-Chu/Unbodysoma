@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..core import BusPort, Module, clamp, relax
+from ..core import BusPort, Module, ParamSpec, SignalSpec, clamp, relax
 
 
 class Cardio(Module):
@@ -15,7 +15,15 @@ class Cardio(Module):
     name = "soma.cardio"
     rate_hz = 10.0
     reads = ("soma.endocrine.adrenaline", "motor.exertion")
-    writes = ("soma.cardio.heart_rate",)
+    signal_specs = (SignalSpec("soma.cardio.heart_rate", "bpm", 0.0, 300.0, "Heart rate"),)
+    writes = tuple(s.key for s in signal_specs)
+    params = (
+        ParamSpec("resting_bpm", 65.0, "bpm", 30.0, 120.0, "Resting heart rate"),
+        ParamSpec("max_bpm", 190.0, "bpm", 100.0, 230.0, "Ceiling of the heart-rate response"),
+        ParamSpec("k_adrenaline", 40.0, "bpm", 0.0, 150.0, "Heart-rate gain per unit adrenaline"),
+        ParamSpec("k_exertion", 70.0, "bpm", 0.0, 150.0, "Heart-rate gain per unit exertion"),
+        ParamSpec("tau", 5.0, "s", 0.1, 120.0, "Time constant of heart-rate changes"),
+    )
     state_fields = ("heart_rate",)
 
     def __init__(

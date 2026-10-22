@@ -9,6 +9,7 @@
 | [0003](0003-multi-rate-fixed-step-scheduling.md) | 固定步長、多速率排程 | 已採用 |
 | [0004](0004-explicit-module-state.md) | 模組必須明確宣告可變狀態 | 已採用 |
 | [0005](0005-read-only-observation-logged-intervention.md) | 觀察只讀，干預經由引擎並被記錄 | 已採用 |
+| [0006](0006-declarative-parameter-and-signal-specs.md) | 參數與訊號的宣告式規格 | 已採用 |
 
 ## 格式
 

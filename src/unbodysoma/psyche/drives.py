@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..core import BusPort, Module, clamp, relax
+from ..core import BusPort, Module, ParamSpec, SignalSpec, clamp, relax
 
 
 class Drives(Module):
@@ -11,7 +11,13 @@ class Drives(Module):
     name = "psyche.drives"
     rate_hz = 2.0
     reads = ("intero.energy_deficit",)
-    writes = ("psyche.drive.hunger",)
+    signal_specs = (SignalSpec("psyche.drive.hunger", "normalized", 0.0, 1.0, "Felt urgency of eating"),)
+    writes = tuple(s.key for s in signal_specs)
+    params = (
+        ParamSpec("threshold", 0.2, "normalized", 0.0, 1.0, "Energy deficit below which no hunger is felt"),
+        ParamSpec("span", 0.6, "normalized", 0.01, 1.0, "Deficit above threshold that is felt as maximal hunger"),
+        ParamSpec("tau", 30.0, "s", 0.1, 3600.0, "Time constant of hunger"),
+    )
     state_fields = ("hunger",)
 
     def __init__(self, threshold: float = 0.2, span: float = 0.6, tau: float = 30.0) -> None:

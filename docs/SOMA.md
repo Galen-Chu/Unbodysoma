@@ -20,6 +20,7 @@
 ## 2. 目前的 L0 模型
 
 以下方程式是**示意用的玩具模型**。`relax(x, x*, dt, τ)` 表示 x 以時間常數 τ 指數逼近目標 x*（解析解，任意步長下皆穩定）。
+方程式中的數字都是預設參數值；每個參數的名稱、單位、有效範圍與來源見自動產生的 [PARAMETERS.md](PARAMETERS.md)。
 
 ### 2.1 心血管 `soma/cardio.py`
 
@@ -32,7 +33,7 @@ HR  ← relax(HR, HR*, dt, τ = 5 s)
 
 ```
 adrenaline ← relax(adrenaline, threat, dt, τ = 3 s（上升）/ 40 s（下降）)
-cortisol*  = 0.2 + 0.8·0.75·threat
+cortisol*  = baseline + (1 − baseline)·gain·threat        （baseline = 0.2，gain = 0.75）
 cortisol   ← relax(cortisol, cortisol*, dt, τ = 300 s（上升）/ 1800 s（下降）)
 ```
 
@@ -47,6 +48,14 @@ reserve  ← clamp(reserve + (food_intake − drain)·dt)
 glucose* = (90 + 40·adrenaline) · min(1, reserve / 0.1)
 glucose  ← relax(glucose, glucose*, dt, τ = 120 s)
 ```
+
+能量攝取 `world.food_intake` 由環境層的 `world/food.py` 計算：只有在**食物在手邊**且**正在進食**時才有攝取。
+
+```
+food_intake = 3×10⁻⁴ /s · world.food_available · motor.eating      （約每 15 分鐘補回 0.3 的儲備）
+```
+
+飢餓迴路因此是閉合的：儲備下降 → 內感受的能量不足 → 飢餓 → 看到食物就進食 → 攝取 → 儲備回升 → 飢餓消退。
 
 ## 3. 從 L0 走向 L1 的工作方式
 

@@ -3,11 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+from typing import Any
 
-from ..core import BusPort, Module
+from ..core import BusPort, Module, SignalSpec
 
-DEFAULT_WORLD_SIGNALS = ("world.threat", "world.food_intake")
+DEFAULT_WORLD_SIGNALS = ("world.threat", "world.food_available")
+
+WORLD_SIGNAL_SPECS = (
+    SignalSpec("world.threat", "normalized", 0.0, 1.0, "Objective threat present in the environment"),
+    SignalSpec("world.food_available", "normalized", 0.0, 1.0, "Food within reach (1 = plenty)"),
+)
 
 
 @dataclass(frozen=True)
@@ -27,6 +33,10 @@ class ScriptedWorld(Module):
     def __init__(self, events: Iterable[Event] = (), signals: Iterable[str] = DEFAULT_WORLD_SIGNALS) -> None:
         self.events = tuple(events)
         self.writes = tuple(sorted(set(signals) | {e.key for e in self.events}))
+        self.signal_specs = tuple(s for s in WORLD_SIGNAL_SPECS if s.key in self.writes)
+
+    def get_params(self) -> dict[str, Any]:
+        return {"events": [asdict(e) for e in self.events]}
 
     def setup(self, port: BusPort) -> None:
         for key in self.writes:

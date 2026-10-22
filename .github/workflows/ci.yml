@@ -19,6 +19,9 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: ruff format --check .
+      - run: mypy
+      - run: python -m unbodysoma.catalog --check
       - run: pytest -q
       - run: python examples/fear_response.py
       - run: python examples/lesion_study.py --runs runs/lesion_study
+      - run: python examples/feeding.py --runs runs/feeding

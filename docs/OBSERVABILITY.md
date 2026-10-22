@@ -4,7 +4,7 @@
 
 ## 1. 兩條鐵律
 
-1. **觀察不能改變模擬。** 掛上任何記錄器、監控器或儀表板，結果都必須逐位元相同（由 `test_observers_do_not_change_results` 把關）。觀察者只能讀匯流排。
+1. **觀察不能改變模擬。** 掛上任何記錄器、監控器或儀表板，結果都必須逐位元相同（由 `test_observers_do_not_change_results` 把關）。觀察者與中斷條件拿到的是唯讀的 `BusReader`，沒有 `write` 方法，由程式強制而不只是約定。
 2. **干預只能透過引擎 API 進行，而且必須被記錄。** `clamp`、`lesion`、`cancel` 都會寫進事件紀錄，因此「拿掉某個模組會怎樣」本身也是一個可重現的實驗（[ADR-0005](adr/0005-read-only-observation-logged-intervention.md)）。
 
 唯一的例外是**停止**：健康監控器或中斷條件可以要求 `Engine.run` 提前返回。停止只會讓模擬提早結束，不會改變已經算出來的結果，而且停止本身也會被記錄成 `engine.stopped` 事件。
@@ -52,7 +52,7 @@ run.events_of("health.alert")
 
 | 檔案 | 內容 |
 |---|---|
-| `meta.json` | 建立時間、版本、Python 版本、git commit 與是否有未提交修改、`base_dt`、取樣間隔、使用者設定、所有模組的類別與讀寫宣告；結束時補上 `end_time` 與 `ticks` |
+| `meta.json` | 建立時間、版本、Python 版本、git commit 與是否有未提交修改、`base_dt`、取樣間隔、使用者設定、所有模組的類別、讀寫宣告與**參數值**（情境模組則是事件時間軸）、所有**訊號規格**；結束時補上 `end_time` 與 `ticks` |
 | `signals.csv` | 第一欄為時間，其後為**所有已宣告的訊號**；尚未發布的值留空（而不是 0） |
 | `events.jsonl` | 每行一個事件：`intervention.*`、`health.*`、`engine.stopped`；包含掛上 RunWriter 之前就已發生的事件。無限大的時間寫成 `null` |
 
@@ -91,6 +91,7 @@ monitor.active  # 目前仍在警報中的項目
 | `glucose_abnormal` | 血糖超出 [50, 200] mg/dL | warning |
 | `starvation` | 能量儲備 < 0.05 | warning |
 | `prolonged_negative_valence` | valence < −0.5 持續 120 秒 | warning（落實 [ETHICS.md](ETHICS.md) §3 的「可見性」） |
+| `spec:<訊號>` | 訊號超出其 `SignalSpec` 宣告的有效範圍 | critical（代表模型錯誤，而不是生理異常；可用 `check_specs=False` 關閉） |
 
 ## 5. ③ 快照、倒帶與中斷
 
