@@ -1,0 +1,24 @@
+# A hungry organism finds food, is interrupted by a threat, and eats until sated.
+# Same experiment as examples/feeding.py.
+
+[scenario]
+name = "feeding"
+duration_s = 1800
+
+[organism]
+preset = "minimal"
+
+[organism.overrides."soma.metabolism"]
+initial_reserve = 0.4
+
+[[events]]
+start = 120
+end = 1e9
+key = "world.food_available"
+value = 1.0
+
+[[events]]
+start = 400
+end = 430
+key = "world.threat"
+value = 0.9

@@ -18,9 +18,11 @@ class Recorder:
         self.keys = tuple(keys)
         self.every = every
         self.rows: list[tuple[float, ...]] = []
-        self._next = 0.0
+        self._next: float | None = None  # aligned to the first observed time
 
     def __call__(self, t: float, bus: BusReader) -> None:
+        if self._next is None:
+            self._next = t
         if t + _EPS >= self._next:
             self.rows.append((t, *(bus.read(k) for k in self.keys)))
             self._next += self.every

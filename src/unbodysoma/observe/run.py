@@ -59,7 +59,7 @@ class RunWriter:
         self.config = config or {}
         self._engine: Engine | None = None
         self._closed = False
-        self._next = 0.0
+        self._next: float | None = None  # aligned to the first observed time
 
     def attach(self, engine: Engine) -> RunWriter:
         if self._engine is not None:
@@ -123,6 +123,8 @@ class RunWriter:
     def _on_sample(self, t: float, bus: BusReader) -> None:
         if self._closed:
             return
+        if self._next is None:
+            self._next = t
         if t + _EPS >= self._next:
             self._signals.writerow((t, *(bus.read(k) if k in bus else "" for k in self._keys)))
             self._next += self.every

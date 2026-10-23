@@ -8,10 +8,10 @@
 
 | 層級 | 能力 | 與身體的關係 | 狀態 |
 |---|---|---|---|
-| M0 反射 | 刺激 → 固定反應 | 直接連結感覺與效應器 | ✅（逃跑、進食策略） |
-| M1 恆定驅力 | 飢餓、口渴、疲倦、體溫不適 | 身體變數偏離設定點的「被感受到的急迫度」 | ✅（飢餓，且已閉環：驅動進食） |
+| M0 反射 | 刺激 → 固定反應 | 直接連結感覺與效應器 | ✅（逃跑、趨近食物） |
+| M1 恆定驅力 | 飢餓、口渴、疲倦、體溫不適 | 身體變數偏離設定點的「被感受到的急迫度」 | ✅（飢餓、睡意，皆已閉環） |
 | M2 核心情感 | valence（好 / 壞）× arousal（激動 / 平靜） | 內感受的整體摘要 | ✅ |
-| M3 評估與注意 | 威脅 / 機會評估、注意力分配 | 身體狀態偏置知覺（高喚醒放大威脅） | 🟡（評估已有，注意力未做） |
+| M3 評估與注意 | 威脅 / 機會評估、注意力分配 | 身體狀態偏置知覺（高喚醒放大威脅） | 🟡（評估與機率式行動競爭已有，注意力未做） |
 | M4 學習與記憶 | 制約、強化學習、情節記憶、語意記憶 | 以身體狀態改善為獎賞；情緒強度調節記憶強度 | ⬜ |
 | M5 預測與規劃 | 預期未來身體狀態、多步規劃 | allostasis：在需求出現前先行動 | ⬜ |
 | M6 自我模型 | 身體擁有感、自我 / 非自我區分、後設認知 | 對「自己這個身體」的整合模型 | ⬜ |
@@ -68,26 +68,50 @@ valence* = clamp(0.1 − 0.9·threat − 0.5·hunger, −1, 1)
 ```
 
 四個權重都是可調參數（`w_cardiac_arousal`、`w_threat_arousal`、`w_threat_valence`、`w_hunger_valence`，見 [PARAMETERS.md](PARAMETERS.md)）。
+兩個目標值各自加上一個緩慢的自發波動 `OU(60 s, σ = 0.03 / 0.02)`，所以即使什麼事都沒發生，心情也不會是一條直線。
 
 ### 4.3 驅力 Drives `psyche/drives.py`
 
 ```
-hunger* = clamp((intero.energy_deficit − 0.2) / 0.6)
-hunger  ← relax(hunger, hunger*, dt, τ = 30 s)
+hunger*     = clamp((intero.energy_deficit − 0.2) / 0.6) · (1 − 0.5·sleeping)
+hunger      ← relax(hunger, hunger*, dt, τ = 30 s)
+
+H = 0.573 + 0.1·C,  L = 0.193 + 0.1·C                 （入睡 / 起床門檻，C = intero.circadian）
+sleepiness* = clamp((S − L) / (H − L), −1, 1)          （S = intero.sleep_pressure）
+sleepiness  ← relax(sleepiness, sleepiness*, dt, τ = 300 s)
 ```
+
+- 睡意在 S 碰到入睡門檻時為 1、降到起床門檻時為 0，再低就轉為負值（休息足夠），這正是結束睡眠的訊號。
+- 睡意必須經過時間積分：把每一刻的感知雜訊直接送進行動選擇的指數型轉換率，會讓睡眠在半夜隨機結束（見 [ADR-0007](adr/0007-probabilistic-action-selection.md)）。
+- 睡眠時感受到的飢餓減半，醒來後約 30 秒內恢復，形成「起床就想吃早餐」的行為。
 
 ### 4.4 行動選擇 ActionSelection `psyche/action.py`
 
-具遲滯、有優先順序的固定策略，三種模式：`idle`、`flee`、`eat`。
+五個行動以效用競爭（[ADR-0007](adr/0007-probabilistic-action-selection.md)）；只有前提成立的行動才可選：
 
-| 行為 | 開始 | 停止 | 輸出 |
+| 行動 | 前提 | 效用 | 輸出 |
 |---|---|---|---|
-| 逃跑（最優先） | 評估威脅 > 0.5 | 威脅 < 0.3 | `motor.exertion → 0.8` |
-| 進食 | 飢餓 > 0.4 且感覺到食物（`extero.food` > 0.5） | 飢餓 < 0.1（飽足）或食物消失 | `motor.eating = 1` |
+| `idle` | — | 0（基準） | — |
+| `flee` | — | `2.5 · (threat − 0.4)` | `motor.exertion → 0.8` |
+| `eat` | 感覺到食物在手邊 | `2.0 · (hunger − 0.35)` | `motor.eating = 1` |
+| `explore` | 手邊沒有食物 | `1.5 · (hunger − 0.4)`（覓食） | `motor.exertion → 0.3` |
+| `sleep` | — | 清醒時 `8 · (sleepiness − 0.95)`；睡著時 `min(1, 5 · sleepiness)` | `motor.sleeping = 1` |
 
-逃跑會打斷進食；威脅過去後，若仍然飢餓（> 0.4）就會繼續吃（`examples/feeding.py`）。
-下一步是把它換成**多個候選行動競爭**（逃跑、進食、休息、探索），以驅力與情感作為價值訊號。
-硬門檻等於永遠選機率最高的選項，正是 [VARIABILITY.md](VARIABILITY.md) 所說的「眾數塌縮」；新版本應改為機率式選擇（如 softmax + 溫度），溫度本身也是個體特質。
+- 目前的行動有 `stickiness = 0.1` 的加成，進食再加 `eat_commitment = 0.4`，形成「吃到飽才停」的遲滯。
+- **切換是連續時間的過程**：從 a 轉到 b 的速率為 `r₀ · exp((u_b − u_a) / 2T)`，`T = 0.015`、`r₀ = 1/60 s⁻¹`。行為因此不受決策頻率影響，長期的時間分配等於 `softmax(u, T)`（即發布的 `psyche.action.p_*`），`T = 0` 則重現眾數塌縮。
+- 睡眠的效用上限（1.0）低於完全威脅下的逃跑效用（1.5），所以危險永遠叫得醒。
+- 被提早叫醒時（睡意仍 > 0.05），30 分鐘內可以再度入睡；自然醒（睡意 ≤ 0）則不會。
+- 例：逃跑會打斷進食，威脅過去後若仍飢餓就回去吃（`examples/feeding.py`）；同一情境下不同種子的個體結束一餐時的飽足程度不同（`tests/test_policy.py`）。
+
+### 4.5 導航 Navigation `psyche/navigation.py`（網格世界）
+
+把選中的行動變成移動指令 `motor.move_x / move_y`：
+
+- `flee`：朝感覺到的威脅反方向全速跑；
+- `explore`：朝感覺到的最近食物走（半速）；感覺範圍內沒有食物時，以相關隨機漫步搜尋（方向以 `wander_sigma` 擴散）；
+- 其他行動：停在原地。
+
+在網格世界裡，這讓「飢餓 → 搜尋 → 找到食物點 → 進食」與「掠食者出現 → 逃離 → 稍後回來」成為完整的感覺運動迴路（`scenarios/grid_72h.toml`）。
 
 ## 5. 待討論的問題
 

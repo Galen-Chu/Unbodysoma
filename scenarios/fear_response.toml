@@ -1,0 +1,20 @@
+# A threat appears for 30 s: the organism appraises it, flees and recovers.
+# Same experiment as examples/fear_response.py.
+
+[scenario]
+name = "fear_response"
+description = "Acute threat at 60-90 s and recovery"
+duration_s = 300
+seed = 0
+
+[organism]
+preset = "minimal"
+
+[[events]]
+start = 60
+end = 90
+key = "world.threat"
+value = 0.9
+
+[observe]
+record_every = 1.0

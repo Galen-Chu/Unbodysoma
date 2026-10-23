@@ -4,13 +4,40 @@ from __future__ import annotations
 
 import math
 import random
+from collections.abc import Iterable
+from dataclasses import dataclass
 from typing import Any
 
 from ..core import BusPort, Module, ParamSpec, SignalSpec, clamp
 
 
+@dataclass(frozen=True)
+class Channel:
+    """One sense: which world signal it reads, which percept it produces, and its range."""
+
+    source: str
+    lo: float
+    hi: float
+    description: str
+
+    def percept(self, name: str) -> str:
+        return f"extero.{name}"
+
+
+CHANNELS = {
+    "threat": Channel("world.threat", 0.0, 1.0, "Sensed threat cue"),
+    "food": Channel("world.food_available", 0.0, 1.0, "Sensed food within reach"),
+    "food_dir_x": Channel("world.food_dir_x", -1.0, 1.0, "Sensed direction to the nearest food (x)"),
+    "food_dir_y": Channel("world.food_dir_y", -1.0, 1.0, "Sensed direction to the nearest food (y)"),
+    "threat_dir_x": Channel("world.threat_dir_x", -1.0, 1.0, "Sensed direction to the strongest threat (x)"),
+    "threat_dir_y": Channel("world.threat_dir_y", -1.0, 1.0, "Sensed direction to the strongest threat (y)"),
+}
+BASIC_CHANNELS = ("threat", "food")
+SPATIAL_CHANNELS = (*BASIC_CHANNELS, "food_dir_x", "food_dir_y", "threat_dir_x", "threat_dir_y")
+
+
 class Exteroception(Module):
-    """Turns world stimuli into noisy sensory signals: threat cues and food.
+    """Turns world signals into noisy percepts, one ``extero.<channel>`` per configured channel.
 
     Each channel has its own random stream, so adding a channel never changes
     the noise (and therefore the results) of the existing ones.
@@ -18,22 +45,27 @@ class Exteroception(Module):
 
     name = "interface.exteroception"
     rate_hz = 20.0
-    reads = ("world.threat", "world.food_available")
-    signal_specs = (
-        SignalSpec("extero.threat", "normalized", 0.0, 1.0, "Sensed threat cue"),
-        SignalSpec("extero.food", "normalized", 0.0, 1.0, "Sensed food within reach"),
-    )
-    writes = tuple(s.key for s in signal_specs)
+    config_args = ("channels",)
     params = (
         ParamSpec("noise", 0.02, "normalized", 0.0, 1.0, "SD of sensory noise"),
         ParamSpec("seed", 0, "", 0, math.inf, "Random seed of the noise", source="run setting"),
     )
 
-    def __init__(self, noise: float = 0.02, seed: int = 0) -> None:
+    def __init__(self, noise: float = 0.02, seed: int = 0, channels: Iterable[str] = BASIC_CHANNELS) -> None:
         self.noise = noise
         self.seed = seed
+        self.channels = tuple(channels)
+        unknown = set(self.channels) - set(CHANNELS)
+        if unknown:
+            raise ValueError(f"unknown sensory channels: {sorted(unknown)}")
+        self.reads = tuple(CHANNELS[c].source for c in self.channels)
+        self.signal_specs = tuple(
+            SignalSpec(f"extero.{c}", "normalized", CHANNELS[c].lo, CHANNELS[c].hi, CHANNELS[c].description)
+            for c in self.channels
+        )
+        self.writes = tuple(s.key for s in self.signal_specs)
         # The threat stream keeps the plain seed so pre-existing results are unchanged.
-        self._rngs = {"threat": random.Random(seed), "food": random.Random(f"{seed}:food")}
+        self._rngs = {c: random.Random(seed if c == "threat" else f"{seed}:{c}") for c in self.channels}
 
     def get_state(self) -> dict[str, Any]:
         return {"rngs": {channel: rng.getstate() for channel, rng in self._rngs.items()}}
@@ -42,9 +74,8 @@ class Exteroception(Module):
         for channel, rng_state in state["rngs"].items():
             self._rngs[channel].setstate(rng_state)
 
-    def _sense(self, channel: str, value: float) -> float:
-        return clamp(value + self._rngs[channel].gauss(0.0, self.noise))
-
     def step(self, dt: float, port: BusPort) -> None:
-        port.write("extero.threat", self._sense("threat", port.read("world.threat")))
-        port.write("extero.food", self._sense("food", port.read("world.food_available")))
+        for c in self.channels:
+            spec = CHANNELS[c]
+            sensed = port.read(spec.source) + self._rngs[c].gauss(0.0, self.noise)
+            port.write(f"extero.{c}", clamp(sensed, spec.lo, spec.hi))

@@ -10,6 +10,8 @@
 | [0004](0004-explicit-module-state.md) | 模組必須明確宣告可變狀態 | 已採用 |
 | [0005](0005-read-only-observation-logged-intervention.md) | 觀察只讀，干預經由引擎並被記錄 | 已採用 |
 | [0006](0006-declarative-parameter-and-signal-specs.md) | 參數與訊號的宣告式規格 | 已採用 |
+| [0007](0007-probabilistic-action-selection.md) | 機率式行動選擇：效用、softmax 與以速率表示的切換 | 已採用 |
+| [0008](0008-toml-scenario-files.md) | 以 TOML 情境檔描述實驗 | 已採用 |
 
 ## 格式
 

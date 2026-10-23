@@ -23,7 +23,7 @@
 
 ## 目前狀態：Phase 1 — 最小可行生物體（進行中）
 
-目前是一個刻意簡化（L0 玩具等級）但有**兩條完整閉環**的最小生物體，用來驗證引擎架構：
+目前是一個刻意簡化（L0 玩具等級）但有**三條完整閉環**的生物體，能在腳本化世界或 2D 網格世界中生活：
 
 ```text
 威脅迴路：
@@ -35,27 +35,51 @@
 飢餓迴路：
 能量儲備↓ → 內感受(能量不足) → 飢餓↑ → 看到食物 → 行動選擇(進食) → 攝取 → 儲備↑ → 飢餓↓
                                           （逃跑優先：威脅出現時會放下食物）
+
+睡眠迴路：
+清醒 → 睡眠壓力 S↑ ─┐   晝夜節律 C 調整入睡 / 起床門檻
+                    ├→ 睡意 → 行動選擇(睡覺) → 心率↓、代謝↓、飢餓感↓ → S↓ → 自然醒
+                    └─ 夠強的威脅或飢餓仍能叫醒；提早被叫醒的人會再睡回去
 ```
+
+所有行動（閒置、逃跑、進食、探索、睡眠）以效用競爭，並以機率方式選擇：同一情境下不同個體的行為有分布，同一個種子則逐位元可重現（[ADR-0007](docs/adr/0007-probabilistic-action-selection.md)）。心率有心率變異（HRV），心情有自發的波動。
 
 恐懼反應範例（威脅在 60–90 秒出現）的部分輸出：
 
 ```text
        t  stimulus    threat   adrenal   HR(bpm)  exertion   arousal   valence
-   50.00      0.00      0.01      0.01     65.49      0.00      0.04      0.09
-   80.00      0.90      1.00      1.00    157.58      0.80      0.97     -0.80
-  120.00      0.00      0.01      0.48     87.30      0.00      0.18      0.09
-  300.00      0.00      0.01      0.01     65.61      0.00      0.04      0.09
+   50.00      0.00      0.01      0.01     64.70      0.00      0.03      0.08
+   80.00      0.90      1.00      1.00    157.75      0.80      0.99     -0.81
+  120.00      0.00      0.01      0.48     87.88      0.00      0.21      0.07
+  300.00      0.00      0.01      0.01     67.01      0.00      0.08      0.07
 ```
 
 進食範例（食物在 120 秒出現，400–430 秒進食中遇到威脅）的部分輸出：
 
 ```text
        t      food    threat    hunger    eating  exertion   reserve   valence
-  180.00      1.00      0.00      0.65      1.00      0.00      0.41     -0.23
-  410.00      1.00      0.90      0.55      0.00      0.80      0.48     -0.99
-  450.00      1.00      0.00      0.54      1.00      0.00      0.48     -0.18
- 1500.00      1.00      0.00      0.09      0.00      0.00      0.75      0.05
+  180.00      1.00      0.00      0.65      1.00      0.00      0.42     -0.25
+  410.00      1.00      0.90      0.54      0.00      0.80      0.48     -0.99
+  450.00      1.00      0.00      0.53      1.00      0.00      0.49     -0.21
+ 1500.00      1.00      0.00      0.07      0.00      0.00      0.76      0.06
 ```
+
+**網格世界的三天**（`scenarios/grid_72h.toml`：食物點長得很慢、掠食者每天輪流造訪各食物點）：
+
+```text
+day 2 (08:00 to 08:00)
+  sleeps    1  22:26-06:21 (7.9 h)
+  meals     4  13:00 (6 min), 16:52 (4 min), 20:05 (3 min), 06:22 (10 min)
+  flights   2  11:00, 11:49
+day 3 (08:00 to 08:00)
+  sleeps    1  22:24-05:42 (7.3 h)
+  meals     5  08:36 (2 min), 12:08 (4 min), 14:01 (10 min), 05:43 (10 min), 07:32 (10 min)
+  flights   9  10:26, 11:26, 11:26, 11:59, 11:59, 11:59, 11:59, 12:00, 17:00
+
+time in serious danger (threat > 0.6): 0.00 %   health alerts: 0
+```
+
+第 3 天 11:26–12:00 的多次逃跑是**趨避衝突**：餓了想回到食物點，掠食者還在，於是一再接近又一再被嚇跑。
 
 > ⚠️ 現階段所有生理參數都是**示意用的玩具模型**，未經驗證，**不可用於任何醫療用途**。
 
@@ -71,7 +95,9 @@ python examples/fear_response.py          # 執行恐懼反應情境
 python examples/fear_response.py --csv runs/fear.csv
 python examples/lesion_study.py --runs runs/lesion_study   # 干預實驗 + 執行紀錄 + 健康監控
 python examples/feeding.py                 # 飢餓迴路：進食、被威脅打斷、飽足
-pytest                                     # 執行測試
+python examples/grid_life.py               # 網格世界的三天（約 2 分鐘）：睡眠、覓食、躲避掠食者
+python -m unbodysoma run scenarios/fear_response.toml --out runs/fear   # 以 TOML 情境檔執行實驗
+pytest                                     # 執行測試（含多日模擬；快速版：pytest -m "not slow"）
 mypy                                       # 型別檢查（strict）
 python -m unbodysoma.catalog               # 由參數 / 訊號規格重新產生 docs/SIGNALS.md 與 docs/PARAMETERS.md
 ```
@@ -83,7 +109,7 @@ python -m unbodysoma.catalog               # 由參數 / 訊號規格重新產�
 ```mermaid
 flowchart LR
     subgraph WORLD["World 環境層"]
-        W["Scenario<br/>威脅 · 食物"]
+        W["Scenario / Grid world<br/>威脅 · 食物 · 位置"]
         FOOD["Food<br/>進食 → 攝取"]
     end
     subgraph IFACE["Interface 介面層"]
@@ -95,11 +121,13 @@ flowchart LR
         AF["Affect 情感"]
         DR["Drives 驅力"]
         AC["Action 行動選擇"]
+        NAV["Navigation 導航"]
     end
     subgraph SOMA["Soma 身體層"]
         EN["Endocrine 內分泌"]
         CV["Cardio 心血管"]
         ME["Metabolism 代謝"]
+        SL["Circadian · Sleep 晝夜 · 睡眠"]
     end
     W --> EXT --> AP
     AP --> AF
@@ -117,6 +145,10 @@ flowchart LR
     INT --> DR
     DR --> AF
     DR --> AC
+    AC -->|sleeping| SL
+    SL --> INT
+    AC --> NAV
+    NAV -->|move| W
     AF -.->|arousal bias| AP
 ```
 
@@ -145,10 +177,12 @@ src/unbodysoma/
 ├── soma/        身體層：cardio、endocrine、metabolism …
 ├── interface/   介面層：exteroception、interoception（未來：motor、proprioception）
 ├── psyche/      心智層：appraisal、affect、drives、action（未來：memory、attention、self-model）
-├── world/       環境層：腳本化情境、食物
+├── world/       環境層：腳本化情境、食物、網格世界
 ├── observe/     觀測：執行紀錄、健康監控（未來：即時儀表板、重播）
+├── config.py    TOML 情境檔（python -m unbodysoma run / validate）
 ├── catalog.py   由規格產生訊號表與參數表
-└── presets.py   預組裝的生物體（可覆寫參數）
+└── presets.py   預組裝的生物體：minimal（腳本化世界）、grid（網格世界）
+scenarios/       TOML 情境檔（包含 Phase 1 的 72 小時完成情境）
 examples/        可執行範例
 tests/           單元測試與行為回歸測試
 docs/            設計文件與架構決策紀錄（ADR）
@@ -164,8 +198,9 @@ docs/            設計文件與架構決策紀錄（ADR）
 | [PSYCHE.md](docs/PSYCHE.md) | 心智層：心智能力階梯、理論對應、設計取捨 |
 | [SIGNALS.md](docs/SIGNALS.md) | 訊號命名規範與訊號表（自動產生） |
 | [PARAMETERS.md](docs/PARAMETERS.md) | 所有模組參數：預設值、單位、有效範圍、來源（自動產生） |
+| [SCENARIOS.md](docs/SCENARIOS.md) | TOML 情境檔格式與命令列 |
 | [OBSERVABILITY.md](docs/OBSERVABILITY.md) | 觀測與監控：執行紀錄、健康監控、快照倒帶、干預實驗、儀表板規劃 |
-| [VARIABILITY.md](docs/VARIABILITY.md) | 變異與統計真實性：避免「平均人」與眾數塌縮、候選參數、分布層級驗收（討論草案） |
+| [VARIABILITY.md](docs/VARIABILITY.md) | 變異與統計真實性：避免「平均人」與眾數塌縮、已實作的變異、實作中的教訓 |
 | [ROADMAP.md](docs/ROADMAP.md) | 分階段路線圖與待討論的開放問題 |
 | [ETHICS.md](docs/ETHICS.md) | 醫療免責、意識宣稱、模擬負面狀態的倫理準則 |
 | [REFERENCES.md](docs/REFERENCES.md) | 理論與既有模型參考文獻 |
@@ -177,7 +212,7 @@ docs/            設計文件與架構決策紀錄（ADR）
 | 階段 | 目標 |
 |---|---|
 | Phase 0 ✅ | 引擎骨架、最小閉環生物體、文件 |
-| **Phase 1**（進行中） | 最小可行生物體：進食迴路 ✅、參數 / 訊號規格 ✅、觀測機制（執行紀錄、健康監控、干預 ✅，儀表板）；晝夜節律與睡眠、多行動競爭、體溫、情境設定檔、網格世界 |
+| **Phase 1**（進行中） | 最小可行生物體：進食、睡眠與晝夜節律、機率式多行動競爭、HRV、網格世界、TOML 情境檔、72 小時完成情境（睡眠 / 覓食 / 避險）✅；口渴與飲水、體溫、庇護所、即時儀表板 ⬜ |
 | Phase 2 | 生理保真度：文獻模型（L1）、對照文獻曲線驗證、外部生理引擎轉接 |
 | Phase 3 | 會學習的心智：記憶、以內感受為獎賞的學習、預測處理 / 主動推論 |
 | Phase 4 | 具身於 3D 世界：感覺運動迴路、物理模擬 |

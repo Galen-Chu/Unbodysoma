@@ -150,7 +150,7 @@ class HealthMonitor:
         self.alerts: list[Alert] = []
         self.active: dict[tuple[str, str], Alert] = {}
         self._engine: Engine | None = None
-        self._next = 0.0
+        self._next: float | None = None  # aligned to the first observed time
 
     def attach(self, engine: Engine) -> HealthMonitor:
         self._engine = engine
@@ -166,6 +166,8 @@ class HealthMonitor:
         return max(raised, key=SEVERITIES.index) if raised else None
 
     def __call__(self, t: float, bus: BusReader) -> None:
+        if self._next is None:
+            self._next = t
         if t + _EPS < self._next:
             return
         self._next += self.every

@@ -1,5 +1,5 @@
 from .bus import BusPort, BusReader, SignalBus
-from .dynamics import clamp, relax
+from .dynamics import clamp, ou_step, relax
 from .engine import Engine, Snapshot
 from .interventions import Clamp, Lesion
 from .module import Module
@@ -17,5 +17,6 @@ __all__ = [
     "SignalSpec",
     "Snapshot",
     "clamp",
+    "ou_step",
     "relax",
 ]

@@ -59,6 +59,7 @@ class Engine:
         self._active_ids: frozenset[int] = frozenset()
         self._next_intervention_id = 1
         self._started = False
+        self._groups: list[tuple[int, float, list[_Slot]]] = []
 
     @property
     def time(self) -> float:
@@ -128,6 +129,11 @@ class Engine:
         missing = self.unwired_reads()
         if self.strict and missing:
             raise ValueError(f"signals read but never written: {missing}")
+        # Group modules by stepping interval: one modulo check per group per tick.
+        groups: dict[int, list[_Slot]] = {}
+        for slot in self._slots:
+            groups.setdefault(slot.interval, []).append(slot)
+        self._groups = [(interval, interval * self.base_dt, slots) for interval, slots in groups.items()]
         for slot in self._slots:
             slot.module.setup(slot.port)
         self._apply_interventions(self._active_at(0.0))
@@ -139,17 +145,25 @@ class Engine:
     def step(self) -> None:
         if not self._started:
             self._start()
-        t_end = (self.tick + 1) * self.base_dt
-        active = self._active_at(t_end)
+        tick = self.tick + 1
+        t_end = tick * self.base_dt
+        intervening = bool(self._interventions or self._active_ids)
+        active = self._active_at(t_end) if intervening else []
         lesioned = {iv.module for iv in active if isinstance(iv, Lesion)}
-        for slot in self._slots:
-            if slot.module.name not in lesioned and (self.tick + 1) % slot.interval == 0:
+        for interval, dt, slots in self._groups:
+            if tick % interval:
+                continue
+            for slot in slots:
+                if lesioned and slot.module.name in lesioned:
+                    continue
                 slot.port.time = t_end
-                slot.module.step(slot.interval * self.base_dt, slot.port)
-        self._apply_interventions(active)
+                slot.module.step(dt, slot.port)
+        if active:
+            self._apply_interventions(active)
         self.bus.commit()
-        self.tick += 1
-        self._log_transitions(active, t_end)
+        self.tick = tick
+        if intervening:
+            self._log_transitions(active, t_end)
         self._notify()
 
     def run(self, duration: float, until: StopCondition | None = None) -> str | None:

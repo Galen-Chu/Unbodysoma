@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from unbodysoma import build_minimal_human, catalog
+from unbodysoma import build_grid_human, build_minimal_human, catalog
 from unbodysoma.core import BusPort, Engine, Module, ParamSpec, SignalSpec
 from unbodysoma.observe import HealthMonitor, RunWriter, load_run
 from unbodysoma.soma import Cardio
@@ -15,22 +15,24 @@ DOCS = Path(__file__).resolve().parents[1] / "docs"
 
 
 def preset_modules() -> list[Module]:
-    return build_minimal_human().modules
+    grid_only = [m for m in build_grid_human().modules if m.name not in {x.name for x in build_minimal_human().modules}]
+    return build_minimal_human().modules + grid_only
 
 
-def test_every_signal_in_the_preset_has_a_spec():
+def test_every_signal_in_the_presets_has_a_spec():
     assert build_minimal_human().unspecified_signals() == []
+    assert build_grid_human().unspecified_signals() == []
 
 
 @pytest.mark.parametrize("module", preset_modules(), ids=lambda m: m.name)
 def test_param_specs_match_the_constructor(module):
     """Guards against a ParamSpec drifting from the __init__ argument it describes."""
     signature = inspect.signature(type(module).__init__)
-    arguments = {n: p.default for n, p in signature.parameters.items() if n != "self"}
-    if not module.params:
-        return  # e.g. ScriptedWorld, whose arguments are not scalar parameters
+    arguments = {n: p.default for n, p in signature.parameters.items() if n != "self" and n not in module.config_args}
     assert {p.name: p.default for p in module.params} == arguments
-    assert module.get_params() == arguments  # stored under the same attribute names
+    recorded = module.get_params()
+    assert {k: recorded[k] for k in arguments} == arguments  # stored under the same attribute names
+    assert set(module.config_args) <= set(recorded)  # structural configuration is recorded too
 
 
 @pytest.mark.parametrize("module", preset_modules(), ids=lambda m: m.name)
@@ -86,6 +88,7 @@ def test_run_record_stores_parameters_specs_and_scenario(tmp_path):
     assert modules["world.scripted"]["params"]["events"] == [
         {"start": 1.0, "end": 2.0, "key": "world.threat", "value": 0.5}
     ]
+    assert modules["world.scripted"]["params"]["signals"] == ["world.threat", "world.food_available"]
     assert meta["signals"]["soma.cardio.heart_rate"]["unit"] == "bpm"
     assert meta["signals"]["world.threat"]["hi"] == 1.0
 

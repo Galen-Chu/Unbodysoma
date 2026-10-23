@@ -1,0 +1,88 @@
+# Phase 1 completion scenario: three days of autonomous life in a grid world.
+#
+# Food patches regrow slowly (10 % of capacity per hour), so a meal nearly empties
+# a patch and the organism must travel between patches. A predator visits a
+# different patch each day for an hour; a permanent danger zone sits between two
+# patches. The run starts at 08:00 on day 1.
+
+[scenario]
+name = "grid_72h"
+description = "Phase 1 completion: 72 h of sleeping, foraging and avoiding danger"
+duration_h = 72
+seed = 0
+base_dt = 0.05
+
+[organism]
+preset = "grid"
+
+[world]
+width = 20
+height = 20
+start = [10, 10]
+
+[[world.food]]
+x = 4
+y = 4
+regrow_per_hour = 0.1
+
+[[world.food]]
+x = 16
+y = 5
+regrow_per_hour = 0.1
+
+[[world.food]]
+x = 15
+y = 16
+regrow_per_hour = 0.1
+
+[[world.food]]
+x = 5
+y = 15
+regrow_per_hour = 0.1
+
+# A permanent danger zone between the two eastern patches.
+[[world.hazards]]
+x = 16
+y = 10.5
+radius = 3
+strength = 0.9
+
+# A predator visits every patch once a day, for an hour, at a different time of day
+# (start/end are seconds from 08:00 on day 1; the window repeats every 86400 s).
+[[world.hazards]]          # 11:00 at the north-east patch
+x = 15
+y = 16
+radius = 3.5
+start = 10800
+end = 14400
+every = 86400
+
+[[world.hazards]]          # 14:00 at the south-west patch
+x = 4
+y = 4
+radius = 3.5
+start = 21600
+end = 25200
+every = 86400
+
+[[world.hazards]]          # 17:00 at the north-west patch
+x = 5
+y = 15
+radius = 3.5
+start = 32400
+end = 36000
+every = 86400
+
+[[world.hazards]]          # 20:00 at the south-east patch
+x = 16
+y = 5
+radius = 3.5
+start = 43200
+end = 46800
+every = 86400
+
+[observe]
+record_every = 60.0
+monitor = true
+monitor_every = 10.0
+halt_on = "critical"

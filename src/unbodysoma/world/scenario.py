@@ -29,14 +29,16 @@ class Event:
 class ScriptedWorld(Module):
     name = "world.scripted"
     rate_hz = 10.0
+    config_args = ("events", "signals")
 
     def __init__(self, events: Iterable[Event] = (), signals: Iterable[str] = DEFAULT_WORLD_SIGNALS) -> None:
         self.events = tuple(events)
+        self.signals = tuple(signals)
         self.writes = tuple(sorted(set(signals) | {e.key for e in self.events}))
         self.signal_specs = tuple(s for s in WORLD_SIGNAL_SPECS if s.key in self.writes)
 
     def get_params(self) -> dict[str, Any]:
-        return {"events": [asdict(e) for e in self.events]}
+        return {"events": [asdict(e) for e in self.events], "signals": list(self.signals)}
 
     def setup(self, port: BusPort) -> None:
         for key in self.writes:

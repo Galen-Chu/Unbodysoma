@@ -1,0 +1,21 @@
+# The fear-response experiment with interoception silenced: the body still
+# reacts, but the mind cannot feel it, and felt arousal stays low.
+# One condition of examples/lesion_study.py.
+
+[scenario]
+name = "fear_without_interoception"
+duration_s = 300
+
+[organism]
+preset = "minimal"
+
+[[events]]
+start = 60
+end = 90
+key = "world.threat"
+value = 0.9
+
+[[interventions]]
+type = "lesion"
+module = "interface.interoception"
+mode = "silence"

@@ -9,10 +9,11 @@ from __future__ import annotations
 import argparse
 import math
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 
-from .core import Engine
-from .presets import build_minimal_human
+from .core import Engine, Module, SignalSpec
+from .presets import build_grid_human, build_minimal_human
 
 BEGIN = "<!-- BEGIN GENERATED: python -m unbodysoma.catalog -->"
 END = "<!-- END GENERATED -->"
@@ -32,24 +33,43 @@ def _value(x: object) -> str:
     return f"{x:g}" if isinstance(x, float) else str(x)
 
 
-def signal_table(engine: Engine) -> str:
-    specs = engine.signal_specs()
-    readers: dict[str, list[str]] = {}
-    for module in engine.modules:
-        for key in module.reads:
-            readers.setdefault(key, []).append(module.name)
+def presets() -> list[Engine]:
+    """Every shipped assembly; the catalogs describe their union."""
+    return [build_minimal_human(), build_grid_human()]
+
+
+def signal_table(engines: Sequence[Engine]) -> str:
+    specs: dict[str, SignalSpec] = {}
+    writers: dict[str, set[str]] = {}
+    readers: dict[str, set[str]] = {}
+    for engine in engines:
+        specs.update(engine.signal_specs())
+        for key in engine.signals():
+            writers.setdefault(key, set()).add(str(engine.writer_of(key)))
+        for module in engine.modules:
+            for key in module.reads:
+                readers.setdefault(key, set()).add(module.name)
     lines = ["| 訊號 | 單位 | 範圍 | 寫入者 | 讀取者 | 說明 |", "|---|---|---|---|---|---|"]
-    for key in engine.signals():
+    for key in sorted(writers):
         spec = specs.get(key)
         unit = spec.unit if spec else "—"
         rng = _range(spec.lo, spec.hi) if spec else "—"
         desc = spec.description if spec else "（未描述）"
-        who_reads = ", ".join(f"`{r}`" for r in sorted(readers.get(key, []))) or "—（預留）"
-        lines.append(f"| `{key}` | {unit} | {rng} | `{engine.writer_of(key)}` | {who_reads} | {desc} |")
+        who_writes = ", ".join(f"`{w}`" for w in sorted(writers[key]))
+        who_reads = ", ".join(f"`{r}`" for r in sorted(readers.get(key, set()))) or "—（預留）"
+        lines.append(f"| `{key}` | {unit} | {rng} | {who_writes} | {who_reads} | {desc} |")
     return "\n".join(lines)
 
 
-def parameter_catalog(engine: Engine) -> str:
+def _unique_modules(engines: Sequence[Engine]) -> list[Module]:
+    seen: dict[str, Module] = {}
+    for engine in engines:
+        for module in engine.modules:
+            seen.setdefault(module.name, module)
+    return list(seen.values())
+
+
+def parameter_catalog(engines: Sequence[Engine]) -> str:
     parts = [
         "# 參數 Parameters",
         "",
@@ -57,7 +77,7 @@ def parameter_catalog(engine: Engine) -> str:
         "> 預設值目前都是 L0 玩具值；個體差異與族群分布的規劃見 [VARIABILITY.md](VARIABILITY.md)。",
         "",
     ]
-    for module in engine.modules:
+    for module in _unique_modules(engines):
         if not module.params:
             continue
         cls = type(module)
@@ -80,14 +100,14 @@ def parameter_catalog(engine: Engine) -> str:
 
 def render(docs: Path) -> dict[Path, str]:
     """Expected content of every generated file."""
-    engine = build_minimal_human()
+    engines = presets()
     signals_path = docs / "SIGNALS.md"
     current = signals_path.read_text(encoding="utf-8")
     head, _, rest = current.partition(BEGIN)
     _, _, tail = rest.partition(END)
     return {
-        signals_path: f"{head}{BEGIN}\n{signal_table(engine)}\n{END}{tail}",
-        docs / "PARAMETERS.md": parameter_catalog(engine),
+        signals_path: f"{head}{BEGIN}\n{signal_table(engines)}\n{END}{tail}",
+        docs / "PARAMETERS.md": parameter_catalog(engines),
     }
 
 

@@ -33,6 +33,9 @@ flowchart LR
 | ③ 檢視與重播 | 存檔、倒帶、條件中斷 | 🟡 記憶體內快照與中斷已完成；快照存檔與重播介面尚未完成 | `Engine.snapshot` / `restore`、`run(until=…)` |
 | ④ 即時儀表板 | 時間序列、身體狀態圖、情感平面、訊號依賴圖 | ⬜ 規劃中 | — |
 | ⑤ 干預實驗 | 固定訊號、拿掉模組、分支實驗 | ✅ | `Engine.clamp` / `lesion` / `cancel` |
+| 分析 | 把紀錄變成可驗收的指標 | ✅ | `observe/metrics.py`（HRV、熵比、眾數放大比）、`observe/behavior.py`（行為事件、每日統計） |
+
+所有取樣型觀察者（`Recorder`、`RunWriter`、`HealthMonitor`）的取樣時鐘都對齊到**它第一次觀察到的時間**，所以在模擬中途才掛上也會照自己的間隔取樣（`test_observers_attached_mid_run_sample_on_their_own_clock`）。多日模擬建議把 `HealthMonitor(every=…)` 設為 10 秒左右：每 0.1 秒檢查約 50 條規則，會佔掉可觀的執行時間。
 
 ## 3. ① 執行紀錄
 
@@ -133,13 +136,13 @@ engine.cancel(intervention)
 
 ```text
      condition         peak HR     peak threat    peak arousal     min valence          alerts           ended
-        intact          160.58            1.00            1.00           -0.80               0       completed
-     no_intero          160.58            1.00            0.40           -0.80               0       completed
-  beta_blocker           65.00            1.00            0.43           -0.80               0       completed
-      no_heart           65.51            0.02            0.04            0.09               2  halted at t=30.0s
+        intact          160.39            1.00            1.00           -0.84               0       completed
+     no_intero          160.38            1.00            0.42           -0.83               0       completed
+  beta_blocker           65.00            1.00            0.45           -0.84               0       completed
+      no_heart           69.72            0.02            0.03            0.06               2  halted at t=30.0s
 ```
 
-拿掉內感受或固定心率之後，身體反應與威脅評估都還在，但**感受到的喚醒度**明顯降低。這正是「情緒有一部分來自感知自己的身體」這個假設的最小可運作示範（請記得這些都是 L0 玩具模型）。
+拿掉內感受或固定心率之後，身體反應與威脅評估都還在，但**感受到的喚醒度**明顯降低（`no_heart` 的峰值心率 69.72 是心臟被抑制前、靜止時的心率變異）。這正是「情緒有一部分來自感知自己的身體」這個假設的最小可運作示範（請記得這些都是 L0 玩具模型）。
 
 ## 7. ④ 即時儀表板（規劃）
 

@@ -18,10 +18,12 @@ class Interoception(Module):
 
     name = "interface.interoception"
     rate_hz = 10.0
-    reads = ("soma.cardio.heart_rate", "soma.metabolism.energy_reserve")
+    reads = ("soma.cardio.heart_rate", "soma.metabolism.energy_reserve", "soma.sleep.pressure", "soma.circadian.drive")
     signal_specs = (
         SignalSpec("intero.cardiac_arousal", "normalized", 0.0, 1.0, "Felt cardiac activation"),
         SignalSpec("intero.energy_deficit", "normalized", 0.0, 1.0, "Felt shortage of energy"),
+        SignalSpec("intero.sleep_pressure", "normalized", 0.0, 1.0, "Felt tiredness (homeostatic sleep pressure)"),
+        SignalSpec("intero.circadian", "normalized", -1.0, 1.0, "Felt circadian alerting signal"),
     )
     writes = tuple(s.key for s in signal_specs)
     params = (
@@ -52,11 +54,13 @@ class Interoception(Module):
     def set_state(self, state: dict[str, Any]) -> None:
         self._rng.setstate(state["rng"])
 
-    def _sense(self, value: float) -> float:
-        return clamp(value + self._rng.gauss(0.0, self.noise))
+    def _sense(self, value: float, lo: float = 0.0, hi: float = 1.0) -> float:
+        return clamp(value + self._rng.gauss(0.0, self.noise), lo, hi)
 
     def step(self, dt: float, port: BusPort) -> None:
         heart_rate = port.read("soma.cardio.heart_rate")
         reserve = port.read("soma.metabolism.energy_reserve")
         port.write("intero.cardiac_arousal", self._sense((heart_rate - self.resting_bpm) / self.bpm_span))
         port.write("intero.energy_deficit", self._sense(1.0 - reserve))
+        port.write("intero.sleep_pressure", self._sense(port.read("soma.sleep.pressure")))
+        port.write("intero.circadian", self._sense(port.read("soma.circadian.drive"), -1.0, 1.0))

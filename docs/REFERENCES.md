@@ -27,6 +27,8 @@
 - Guyton, A. C., Coleman, T. G., & Granger, H. J. (1972). Circulation: Overall regulation. *Annual Review of Physiology*, 34, 13–44. https://doi.org/10.1146/annurev.ph.34.030172.000305
 - Bergman, R. N., Ider, Y. Z., Bowden, C. R., & Cobelli, C. (1979). Quantitative estimation of insulin sensitivity. *American Journal of Physiology*, 236(6), E667–E677. https://doi.org/10.1152/ajpendo.1979.236.6.E667 （血糖-胰島素最小模型）
 - Borbély, A. A. (1982). A two process model of sleep regulation. *Human Neurobiology*, 1(3), 195–204.
+- Daan, S., Beersma, D. G., & Borbély, A. A. (1984). Timing of human sleep: Recovery process gated by a circadian pacemaker. *American Journal of Physiology*, 246(2), R161–R183. https://doi.org/10.1152/ajpregu.1984.246.2.R161 （睡眠壓力的時間常數 18.2 h / 4.2 h）
+- Czeisler, C. A., Duffy, J. F., Shanahan, T. L., Brown, E. N., Mitchell, J. F., Rimmer, D. W., et al. (1999). Stability, precision, and near-24-hour period of the human circadian pacemaker. *Science*, 284(5423), 2177–2181. https://doi.org/10.1126/science.284.5423.2177
 - Stolwijk, J. A. J. (1971). *A Mathematical Model of Physiological Temperature Regulation in Man*. NASA Contractor Report CR-1855.
 - Hester, R. L., Brown, A. J., Husband, L., Iliescu, R., Pruett, D., Summers, R., & Coleman, T. G. (2011). HumMod: A modeling environment for the simulation of integrative human physiology. *Frontiers in Physiology*, 2, 12. https://doi.org/10.3389/fphys.2011.00012
 
@@ -45,11 +47,16 @@
 - Vulkan, N. (2000). An economist's perspective on probability matching. *Journal of Economic Surveys*, 14(1), 101–118. https://doi.org/10.1111/1467-6419.00106
 - Kirk, R., Mediratta, I., Nalmpantis, C., Luketina, J., Hambro, E., Grefenstette, E., & Raileanu, R. (2024). Understanding the effects of RLHF on LLM generalisation and diversity. *ICLR 2024*. https://arxiv.org/abs/2310.06452 （偏好微調對輸出多樣性的影響）
 
+## 行為與動力學
+
+- Charnov, E. L. (1976). Optimal foraging, the marginal value theorem. *Theoretical Population Biology*, 9(2), 129–136. https://doi.org/10.1016/0040-5809(76)90040-X （網格世界中「食物點長回一定程度才值得前往」的依據）
+- Uhlenbeck, G. E., & Ornstein, L. S. (1930). On the theory of the Brownian motion. *Physical Review*, 36(5), 823–841. https://doi.org/10.1103/PhysRev.36.823 （HRV 與情緒波動所用的 Ornstein–Uhlenbeck 過程）
+
 ## 開源生理引擎與標準
 
 - **Pulse Physiology Engine** — Kitware, Inc. 開源全身生理引擎。<https://pulse.kitware.com>
 - **BioGears** — Applied Research Associates. 開源人體生理引擎。<https://www.biogearsengine.com>
 - **FMI (Functional Mock-up Interface)** — Modelica Association 的模型交換與共模擬標準。<https://fmi-standard.org>
 
-> 書目已於 2026-10-20 逐筆核對：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。
+> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。
 > 新增引用時請附上 DOI 或原始出處連結；如發現錯誤歡迎發 PR 修正。

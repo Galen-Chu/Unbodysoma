@@ -7,6 +7,7 @@ import pytest
 from unbodysoma import build_minimal_human
 from unbodysoma.core import BusPort, Engine, Module
 from unbodysoma.observe import FiniteRule, HealthMonitor, RangeRule, Recorder, RunWriter, SustainedRule, load_run
+from unbodysoma.observe.behavior import episodes, per_day, time_fraction
 from unbodysoma.world import Event
 
 THREAT = [Event(60.0, 90.0, "world.threat", 0.9)]
@@ -71,6 +72,24 @@ def test_engine_keeps_running_after_the_record_is_closed(tmp_path):
     assert run.times[-1] == pytest.approx(5.0)
     assert run.meta["ticks"] == 500
     assert run.events == []
+
+
+def test_observers_attached_mid_run_sample_on_their_own_clock(tmp_path):
+    """Regression: a sampling clock starting at 0 made late observers record every tick to catch up."""
+    engine = build_minimal_human()
+    engine.run(100.0)
+    recorder = Recorder(["soma.cardio.heart_rate"], every=10.0)
+    engine.observe(recorder)
+    monitor = HealthMonitor([FiniteRule()], every=10.0)
+    monitor.attach(engine)
+    evaluations: list[float] = []
+    original = monitor.rules[0].violations
+    monitor.rules[0].violations = lambda t, bus: evaluations.append(t) or original(t, bus)  # type: ignore[method-assign]
+    with RunWriter(tmp_path / "run", every=10.0).attach(engine):
+        engine.run(30.0)
+    assert recorder.times() == pytest.approx([100.01, 110.01, 120.01])
+    assert load_run(tmp_path / "run").times == pytest.approx([100.01, 110.01, 120.01])
+    assert evaluations == pytest.approx([100.01, 110.01, 120.01])
 
 
 def test_observers_do_not_change_results(tmp_path):
@@ -147,3 +166,19 @@ def test_sustained_rule_needs_exactly_one_threshold():
         SustainedRule("x", 1.0)
     with pytest.raises(ValueError):
         SustainedRule("x", 1.0, below=0.0, above=1.0)
+
+
+def test_behaviour_episodes_and_summaries():
+    times = [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 86400.0, 86401.0]
+    values = [0.0, 1.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0]
+    found = episodes(times, values)
+    assert [(e.start, e.end) for e in found] == [
+        (1.0, 3.0),
+        (4.0, 5.0),
+        (86400.0, 86401.0),
+    ]  # last one closed at the end
+    assert found[0].duration == 2.0
+    assert per_day(found, 2) == [2, 1]
+    assert time_fraction(values, 0.5) == pytest.approx(5 / 8)
+    with pytest.raises(ValueError):
+        episodes([0.0], [1.0, 2.0])

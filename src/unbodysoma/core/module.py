@@ -24,7 +24,10 @@ class Module(ABC):
 
     Tunable constants are declared in ``params`` (one ``ParamSpec`` per
     ``__init__`` argument, stored under the same attribute name) and outputs
-    are described in ``signal_specs``. See docs/adr/0006-declarative-parameter-and-signal-specs.md.
+    are described in ``signal_specs``. Constructor arguments that configure
+    structure rather than tune a model (a world layout, sensory channels) are
+    listed in ``config_args``: they are recorded in run records but have no
+    ``ParamSpec``. See docs/adr/0006-declarative-parameter-and-signal-specs.md.
     """
 
     name: str = "module"
@@ -34,6 +37,7 @@ class Module(ABC):
     state_fields: tuple[str, ...] = ()
     params: tuple[ParamSpec, ...] = ()
     signal_specs: tuple[SignalSpec, ...] = ()
+    config_args: tuple[str, ...] = ()
 
     def setup(self, port: BusPort) -> None:  # noqa: B027 - optional hook
         """Publish initial values. Called once before the first tick."""
@@ -43,8 +47,10 @@ class Module(ABC):
         """Advance internal state by ``dt`` seconds and publish outputs."""
 
     def get_params(self) -> dict[str, Any]:
-        """Current parameter values, as recorded in run records."""
-        return {spec.name: getattr(self, spec.name) for spec in self.params}
+        """Current parameter and configuration values, as recorded in run records."""
+        values = {name: getattr(self, name) for name in self.config_args}
+        values.update({spec.name: getattr(self, spec.name) for spec in self.params})
+        return values
 
     def get_state(self) -> dict[str, Any]:
         return {field: copy.deepcopy(getattr(self, field)) for field in self.state_fields}

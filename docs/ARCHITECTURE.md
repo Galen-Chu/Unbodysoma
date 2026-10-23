@@ -7,20 +7,20 @@
 ```mermaid
 flowchart TB
     subgraph L5["Observe 觀測層"]
-        REC["Recorder · RunWriter · HealthMonitor"]
+        REC["Recorder · RunWriter · HealthMonitor · metrics · behavior"]
         VIS["儀表板 / 重播（規劃中）"]
     end
     subgraph L4["Psyche 心智層"]
-        P["drives · affect · appraisal · action<br/>（規劃中：attention · memory · learning · self-model · language）"]
+        P["drives · affect · appraisal · action · navigation<br/>（規劃中：attention · memory · learning · self-model · language）"]
     end
     subgraph L3["Interface 介面層"]
         I["exteroception · interoception<br/>（規劃中：proprioception · motor · neuromodulation）"]
     end
     subgraph L2["Soma 身體層"]
-        S["cardio · endocrine · metabolism<br/>（規劃中：respiratory · thermo · sleep/circadian · immune · musculoskeletal）"]
+        S["cardio · endocrine · metabolism · circadian · sleep<br/>（規劃中：respiratory · thermo · immune · musculoskeletal）"]
     end
     subgraph L1["World 環境層"]
-        W["scripted scenarios · food<br/>（規劃中：網格世界 · 物理世界 · 其他代理人）"]
+        W["scripted scenarios · food · grid world<br/>（規劃中：物理世界 · 其他代理人）"]
     end
     subgraph L0["Core 引擎核心"]
         C["Engine（多速率排程 · 快照 · 干預） · SignalBus（雙緩衝） · Module 契約 · Param / Signal 規格"]
@@ -86,7 +86,9 @@ class Module(ABC):
 | 腎上腺素 | 秒到分鐘 | 2 Hz |
 | 皮質醇（HPA 軸） | 數十分鐘 | 2 Hz（時間常數 300–1800 s） |
 | 能量儲備 | 小時 | 1 Hz |
-| 晝夜節律（規劃中） | 24 h | — |
+| 睡眠壓力 | 小時（τ = 18.2 h / 4.2 h） | 1 Hz |
+| 晝夜節律 | 24 h | 1 Hz |
+| 行動選擇 | 秒到小時（以速率表示，與決策頻率無關） | 2 Hz |
 
 引擎採用**固定步長、多速率**排程（[ADR-0003](adr/0003-multi-rate-fixed-step-scheduling.md)）：
 
@@ -105,7 +107,8 @@ sequenceDiagram
     end
 ```
 
-- base tick 預設 `dt = 0.01 s`；每個模組每 `round(1 / (rate_hz · dt))` 個 tick 執行一次。
+- base tick 預設 `dt = 0.01 s`（網格世界預設 0.05 s，以便模擬數天）；每個模組每 `round(1 / (rate_hz · dt))` 個 tick 執行一次。
+- 引擎在啟動時把模組依執行間隔分組，每個 tick 每組只檢查一次是否到期；沒有干預時跳過所有干預相關的工作。目前 72 小時的網格世界模擬約需 100 秒。
 - 模組在**自己週期的結尾**被執行，傳入的 `dt` 是整個週期長度，所以它發布的值對齊它所代表的時間點。
 - 模組內部推薦用**解析解**（如 `relax()` 一階指數逼近）或穩定的積分法，避免慢模組大步長造成數值不穩定。
 
@@ -134,7 +137,8 @@ sequenceDiagram
 
 | 擴充點 | 說明 |
 |---|---|
-| 情境設定檔 | 以 TOML 描述生物體組成、參數與事件時間軸，不必寫 Python；`build_minimal_human(overrides=…)` 已提供同樣的參數覆寫機制 |
+| 情境設定檔 | ✔️ 已完成：以 TOML 描述預設生物體、參數、事件 / 世界配置、干預與觀測（[SCENARIOS.md](SCENARIOS.md)、[ADR-0008](adr/0008-toml-scenario-files.md)）；尚不能組裝全新的模組組合 |
+| 族群執行器 | 同一情境 × N 個個體的批次執行（可平行），輸出分布統計（[VARIABILITY.md](VARIABILITY.md)） |
 | 外部生理引擎轉接器 | 把 Pulse、BioGears 或 FMI（Functional Mock-up Interface）模型包成 `Module` |
 | 神經調節訊號 | `neuro.*`：多巴胺、血清素、正腎上腺素、乙醯膽鹼作為全域調節參數，影響學習率、注意力與探索 |
 | 語言 / 敘事層 | 可選的語言模型轉接器，**只能讀取**心智狀態並產生自述，不能直接改寫身體或情感 |
@@ -150,15 +154,21 @@ src/unbodysoma/
 ├── core/specs.py        ParamSpec、SignalSpec
 ├── core/engine.py       Engine：多速率排程、契約檢查、觀察者、快照、干預
 ├── core/interventions.py Clamp、Lesion
-├── core/dynamics.py     relax()、clamp()
-├── soma/                Cardio、Endocrine、Metabolism
-├── interface/           Exteroception、Interoception
-├── psyche/              Appraisal、Affect、Drives、ActionSelection（逃跑 / 進食）
+├── core/dynamics.py     relax()、clamp()、ou_step()（Ornstein–Uhlenbeck）
+├── soma/                Cardio（含 HRV）、Endocrine、Metabolism、Circadian、SleepHomeostat
+├── interface/           Exteroception（可設定的感覺通道）、Interoception
+├── psyche/              Appraisal、Affect、Drives（飢餓 / 睡意）、ActionSelection、Navigation
+├── psyche/policy.py     softmax()、sample()、switch()（以速率表示的行動切換）
 ├── world/scenario.py    Event、ScriptedWorld
 ├── world/food.py        FoodSource（進食 → 能量攝取）
+├── world/grid.py        GridWorld、FoodPatch、Hazard（環面網格世界）
 ├── observe/recorder.py  Recorder（記憶體內取樣）
 ├── observe/run.py       RunWriter、load_run（執行紀錄）
 ├── observe/health.py    HealthMonitor、規則
+├── observe/metrics.py   HRV 指標、熵比、眾數放大比
+├── observe/behavior.py  行為事件（episodes）、每日統計、時間比例
+├── config.py            TOML 情境檔的解析、驗證與執行
+├── __main__.py          命令列：python -m unbodysoma run / validate
 ├── catalog.py           由規格產生 SIGNALS.md 與 PARAMETERS.md
-└── presets.py           build_minimal_human(events, seed, overrides)
+└── presets.py           build_minimal_human(…)、build_grid_human(…)
 ```
