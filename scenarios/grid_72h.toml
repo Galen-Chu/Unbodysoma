@@ -40,6 +40,20 @@ x = 5
 y = 15
 regrow_per_hour = 0.1
 
+[[world.water]]
+x = 10
+y = 4
+
+[[world.water]]
+x = 10
+y = 16
+
+[[world.shelters]]
+x = 10
+y = 10
+radius = 1.0
+insulation = 0.8
+
 # A permanent danger zone between the two eastern patches.
 [[world.hazards]]
 x = 16

@@ -7,7 +7,7 @@
 ```mermaid
 flowchart TB
     subgraph L5["Observe 觀測層"]
-        REC["Recorder · RunWriter · HealthMonitor · metrics · behavior"]
+        REC["Recorder · RunWriter · HealthMonitor · metrics · behavior · Rerun"]
         VIS["儀表板 / 重播（規劃中）"]
     end
     subgraph L4["Psyche 心智層"]
@@ -17,10 +17,10 @@ flowchart TB
         I["exteroception · interoception<br/>（規劃中：proprioception · motor · neuromodulation）"]
     end
     subgraph L2["Soma 身體層"]
-        S["cardio · endocrine · metabolism · circadian · sleep<br/>（規劃中：respiratory · thermo · immune · musculoskeletal）"]
+        S["cardio · endocrine · metabolism · circadian · sleep · fluid · thermo<br/>（規劃中：respiratory · immune · musculoskeletal）"]
     end
     subgraph L1["World 環境層"]
-        W["scripted scenarios · food · grid world<br/>（規劃中：物理世界 · 其他代理人）"]
+        W["scripted scenarios · food · water · grid world（水源 · 庇護所 · 晝夜溫差）<br/>（規劃中：物理世界 · 其他代理人）"]
     end
     subgraph L0["Core 引擎核心"]
         C["Engine（多速率排程 · 快照 · 干預） · SignalBus（雙緩衝） · Module 契約 · Param / Signal 規格"]
@@ -155,20 +155,23 @@ src/unbodysoma/
 ├── core/engine.py       Engine：多速率排程、契約檢查、觀察者、快照、干預
 ├── core/interventions.py Clamp、Lesion
 ├── core/dynamics.py     relax()、clamp()、ou_step()（Ornstein–Uhlenbeck）
-├── soma/                Cardio（含 HRV）、Endocrine、Metabolism、Circadian、SleepHomeostat
+├── core/persist.py      save_snapshot()、load_snapshot()（快照檔）
+├── soma/                Cardio（含 HRV）、Endocrine、Metabolism、Circadian、SleepHomeostat、FluidBalance、Thermoregulation
 ├── interface/           Exteroception（可設定的感覺通道）、Interoception
 ├── psyche/              Appraisal、Affect、Drives（飢餓 / 睡意）、ActionSelection、Navigation
 ├── psyche/policy.py     softmax()、sample()、switch()（以速率表示的行動切換）
 ├── world/scenario.py    Event、ScriptedWorld
 ├── world/food.py        FoodSource（進食 → 能量攝取）
-├── world/grid.py        GridWorld、FoodPatch、Hazard（環面網格世界）
+├── world/water.py       WaterIntake（飲水 → 水分攝取）
+├── world/grid.py        GridWorld、FoodPatch、WaterSource、Shelter、Hazard（環面網格世界）
 ├── observe/recorder.py  Recorder（記憶體內取樣）
 ├── observe/run.py       RunWriter、load_run（執行紀錄）
 ├── observe/health.py    HealthMonitor、規則
 ├── observe/metrics.py   HRV 指標、熵比、眾數放大比
 ├── observe/behavior.py  行為事件（episodes）、每日統計、時間比例
+├── observe/rerun.py     RerunSink（選用：Rerun 即時檢視）
 ├── config.py            TOML 情境檔的解析、驗證與執行
-├── __main__.py          命令列：python -m unbodysoma run / validate
-├── catalog.py           由規格產生 SIGNALS.md 與 PARAMETERS.md
+├── __main__.py          命令列：python -m unbodysoma run / validate / replay
+├── catalog.py           由規格產生 SIGNALS.md、PARAMETERS.md 與 SIGNAL_GRAPH.md
 └── presets.py           build_minimal_human(…)、build_grid_human(…)
 ```

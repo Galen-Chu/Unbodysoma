@@ -9,9 +9,11 @@ python -m unbodysoma validate scenarios/*.toml                    # 只檢查，
 python -m unbodysoma run scenarios/fear_response.toml             # 執行並印出摘要
 python -m unbodysoma run scenarios/grid_72h.toml --out runs/grid  # 同時寫出執行紀錄
 python -m unbodysoma run scenarios/feeding.toml --seed 3 --hours 0.2
+python -m unbodysoma replay runs/grid                              # 重跑並逐位元驗證可重現
+python -m unbodysoma run scenarios/grid_72h.toml --rerun           # 以 Rerun 即時觀看（需要 unbodysoma[viz]）
 ```
 
-結束碼：`0` 完成、`1` 被健康監控停止、`2` 情境檔有錯。
+結束碼：`0` 完成（`replay`：結果相同）、`1` 被健康監控停止（`replay`：結果不同）、`2` 情境檔或紀錄有錯。
 
 ## 隨附的情境
 
@@ -20,7 +22,7 @@ python -m unbodysoma run scenarios/feeding.toml --seed 3 --hours 0.2
 | `fear_response.toml` | 60–90 秒出現威脅：評估、逃跑、恢復 |
 | `fear_without_interoception.toml` | 同上，但內感受被抑制：身體有反應，心智感覺不到 |
 | `feeding.toml` | 飢餓的生物體找到食物、被威脅打斷、吃到飽 |
-| `grid_72h.toml` | **Phase 1 完成情境**：在網格世界自主生活 72 小時（睡眠、覓食、躲避掠食者） |
+| `grid_72h.toml` | **Phase 1 完成情境**：在網格世界自主生活 72 小時（睡眠、覓食、飲水、體溫調節、躲避掠食者） |
 
 ## 格式
 
@@ -39,6 +41,8 @@ preset = "minimal"          # "minimal"（腳本化世界）或 "grid"（網格�
 initial_reserve = 0.4
 
 # --- 只用於 preset = "minimal" ---------------------------------------------
+# 可用的訊號：world.threat、world.food_available、world.water_available、world.in_shelter、
+# world.shelter_known、world.ambient_temperature（基準 22 °C，事件的值會加在基準上）
 [[events]]                  # 在 [start, end) 秒之間，把 value 加到訊號 key 上
 start = 60
 end = 90
@@ -56,6 +60,16 @@ x = 4
 y = 4
 capacity = 1.0              # 選填
 regrow_per_hour = 0.25      # 選填：每小時長回容量的比例
+
+[[world.water]]             # 不會枯竭的水源；必須在感覺範圍內才看得到
+x = 10
+y = 4
+
+[[world.shelters]]          # 庇護所：緩衝外面的溫度、擋住危險；生物體永遠記得回家的路
+x = 10
+y = 10
+radius = 1.0                # 選填
+insulation = 0.8            # 選填：擋掉外面溫度偏離舒適溫度的比例
 
 [[world.hazards]]
 x = 13

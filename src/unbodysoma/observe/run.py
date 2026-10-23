@@ -25,7 +25,8 @@ from ..core import BusReader, Engine
 _EPS = 1e-9
 
 
-def _git_revision() -> dict[str, Any] | None:
+def git_revision() -> dict[str, Any] | None:
+    """Current commit of the source tree, and whether it has uncommitted changes (None outside git)."""
     cwd = Path(__file__).resolve().parent
     try:
         commit = subprocess.run(
@@ -71,7 +72,7 @@ class RunWriter:
             "created": datetime.now(UTC).isoformat(timespec="seconds"),
             "unbodysoma": __version__,
             "python": platform.python_version(),
-            "git": _git_revision(),
+            "git": git_revision(),
             "base_dt": engine.base_dt,
             "sample_every": self.every,
             "config": self.config,

@@ -28,3 +28,4 @@ jobs:
       - run: python examples/feeding.py --runs runs/feeding
       - run: python examples/grid_life.py --hours 6
       - run: python -m unbodysoma run scenarios/fear_response.toml --out runs/fear
+      - run: python -m unbodysoma replay runs/fear

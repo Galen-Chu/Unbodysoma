@@ -20,7 +20,13 @@ class Affect(Module):
 
     name = "psyche.affect"
     rate_hz = 10.0
-    reads = ("intero.cardiac_arousal", "psyche.appraisal.threat", "psyche.drive.hunger")
+    reads = (
+        "intero.cardiac_arousal",
+        "psyche.appraisal.threat",
+        "psyche.drive.hunger",
+        "psyche.drive.thirst",
+        "psyche.drive.thermal_discomfort",
+    )
     signal_specs = (
         SignalSpec("psyche.affect.valence", "normalized", -1.0, 1.0, "Core affect: pleasant (+) vs unpleasant (-)"),
         SignalSpec("psyche.affect.arousal", "normalized", 0.0, 1.0, "Core affect: activation"),
@@ -32,6 +38,8 @@ class Affect(Module):
         ParamSpec("w_threat_arousal", 0.4, "", 0.0, 1.0, "Weight of appraised threat in arousal"),
         ParamSpec("w_threat_valence", 0.9, "", 0.0, 2.0, "Valence lost per unit appraised threat"),
         ParamSpec("w_hunger_valence", 0.5, "", 0.0, 2.0, "Valence lost per unit hunger"),
+        ParamSpec("w_thirst_valence", 0.5, "", 0.0, 2.0, "Valence lost per unit thirst"),
+        ParamSpec("w_thermal_valence", 0.4, "", 0.0, 2.0, "Valence lost per unit thermal discomfort"),
         ParamSpec("tau", 2.0, "s", 0.01, 600.0, "Time constant of affect"),
         ParamSpec("valence_sigma", 0.03, "normalized", 0.0, 0.5, "SD of spontaneous valence fluctuation"),
         ParamSpec("arousal_sigma", 0.02, "normalized", 0.0, 0.5, "SD of spontaneous arousal fluctuation"),
@@ -47,6 +55,8 @@ class Affect(Module):
         w_threat_arousal: float = 0.4,
         w_threat_valence: float = 0.9,
         w_hunger_valence: float = 0.5,
+        w_thirst_valence: float = 0.5,
+        w_thermal_valence: float = 0.4,
         tau: float = 2.0,
         valence_sigma: float = 0.03,
         arousal_sigma: float = 0.02,
@@ -58,6 +68,8 @@ class Affect(Module):
         self.w_threat_arousal = w_threat_arousal
         self.w_threat_valence = w_threat_valence
         self.w_hunger_valence = w_hunger_valence
+        self.w_thirst_valence = w_thirst_valence
+        self.w_thermal_valence = w_thermal_valence
         self.tau = tau
         self.valence_sigma = valence_sigma
         self.arousal_sigma = arousal_sigma
@@ -87,6 +99,8 @@ class Affect(Module):
             self.baseline_valence
             - self.w_threat_valence * threat
             - self.w_hunger_valence * hunger
+            - self.w_thirst_valence * port.read("psyche.drive.thirst")
+            - self.w_thermal_valence * port.read("psyche.drive.thermal_discomfort")
             + self.valence_drift,
             -1.0,
             1.0,

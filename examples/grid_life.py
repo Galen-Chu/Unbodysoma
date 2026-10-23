@@ -1,7 +1,8 @@
 """Grid life: the Phase 1 completion scenario, summarised day by day.
 
 Runs scenarios/grid_72h.toml (three days in a grid world with slowly regrowing
-food and daily predator visits) and prints when the organism slept, ate and fled.
+food, springs, a shelter, cold nights and daily predator visits) and prints when
+the organism slept, ate, drank and fled.
 
 Run:  python examples/grid_life.py [--hours 72] [--seed 0] [--runs runs/grid_life]
 """
@@ -17,7 +18,17 @@ from unbodysoma.observe import HealthMonitor, Recorder, RunWriter
 from unbodysoma.observe.behavior import episodes, time_fraction
 
 SCENARIO = Path(__file__).resolve().parents[1] / "scenarios" / "grid_72h.toml"
-KEYS = ("motor.sleeping", "motor.eating", "psyche.action.selected_flee", "world.threat", "soma.circadian.clock_hour")
+KEYS = (
+    "motor.sleeping",
+    "motor.eating",
+    "motor.drinking",
+    "psyche.action.selected_flee",
+    "world.threat",
+    "world.in_shelter",
+    "soma.thermo.core_temperature",
+    "soma.fluid.hydration",
+    "soma.circadian.clock_hour",
+)
 DAY = 86400.0
 
 
@@ -53,6 +64,7 @@ def main() -> None:
     found = {
         "sleep": episodes(t, recorder.column("motor.sleeping")),
         "meal": episodes(t, recorder.column("motor.eating")),
+        "drink": episodes(t, recorder.column("motor.drinking")),
         "flight": episodes(t, recorder.column("psyche.action.selected_flee")),
     }
     for day in range(int((scenario.duration_s + DAY - 1) // DAY)):
@@ -61,13 +73,19 @@ def main() -> None:
             today = [e for e in items if day * DAY <= e.start < (day + 1) * DAY]
             if kind == "sleep":
                 text = ", ".join(f"{at(e.start)}-{at(e.end)} ({e.duration / 3600:.1f} h)" for e in today)
-            elif kind == "meal":
+            elif kind in ("meal", "drink"):
                 text = ", ".join(f"{at(e.start)} ({e.duration / 60:.0f} min)" for e in today)
             else:
                 text = ", ".join(at(e.start) for e in today)
             print(f"  {kind + 's':8} {len(today):2d}  {text}")
     danger = 100 * time_fraction(recorder.column("world.threat"), 0.6)
-    print(f"\ntime in serious danger (threat > 0.6): {danger:.2f} %   health alerts: {len(monitor.alerts)}")
+    home = 100 * time_fraction(recorder.column("world.in_shelter"), 0.5)
+    core = recorder.column("soma.thermo.core_temperature")
+    hydration = min(recorder.column("soma.fluid.hydration"))
+    raised = [a.rule for a in monitor.alerts if a.raised]
+    print(f"\ntime at home: {home:.0f} %   in serious danger (threat > 0.6): {danger:.2f} %")
+    print(f"core temperature {min(core):.2f}-{max(core):.2f} C   lowest hydration {hydration:.2f}")
+    print(f"health alerts: {raised or 'none'}")
 
 
 if __name__ == "__main__":

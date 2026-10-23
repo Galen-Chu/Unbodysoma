@@ -112,3 +112,39 @@ def test_distribution_metrics():
     assert entropy_ratio(collapsed, human) < 0.5
     with pytest.raises(ValueError, match="sum to 1"):
         entropy_bits({"a": 3, "b": 1})  # raw counts are rejected, not silently misread
+
+
+def test_each_sensory_channel_has_its_own_random_stream():
+    """Adding a channel must never change the noise of the existing ones (docs/ARCHITECTURE.md §6)."""
+    from unbodysoma.core import BusPort, Engine, Module
+    from unbodysoma.interface import Interoception
+
+    body = {
+        "soma.cardio.heart_rate": 60.0 + 50.0,  # felt as 0.5 cardiac arousal
+        "soma.metabolism.energy_reserve": 0.5,
+        "soma.fluid.hydration": 0.5,
+        "soma.thermo.core_temperature": 37.0,
+        "soma.sleep.pressure": 0.5,
+        "soma.circadian.drive": 0.0,
+    }
+
+    class Body(Module):
+        name = "test.body"
+        writes = tuple(body)
+
+        def setup(self, port: BusPort) -> None:
+            self.step(0.0, port)
+
+        def step(self, dt: float, port: BusPort) -> None:
+            for key, value in body.items():
+                port.write(key, value)
+
+    engine = Engine()
+    engine.add(Body())
+    engine.add(Interoception(noise=0.01, seed=7))
+    recorder = Recorder(["intero.cardiac_arousal"], every=0.1)
+    engine.observe(recorder)
+    engine.run(1.0)
+    expected = random.Random(7)
+    felt = recorder.column("intero.cardiac_arousal")[1:]
+    assert felt == pytest.approx([0.5 + expected.gauss(0.0, 0.01) for _ in felt], abs=1e-12)

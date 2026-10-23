@@ -21,6 +21,7 @@ classifiers = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8", "ruff==0.17.*", "mypy==2.4.*"]
+viz = ["rerun-sdk==0.40.*"]  # live viewing; the API changes between minor versions
 
 [project.urls]
 Repository = "https://github.com/Galen-Chu/Unbodysoma"

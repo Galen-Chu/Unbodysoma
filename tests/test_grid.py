@@ -112,9 +112,15 @@ def test_timed_hazards_are_only_present_in_their_window():
 # -- the organism in the world -------------------------------------------------
 
 
-def organism(food=(), hazards=(), start=(10.0, 10.0), reserve: float = 0.8, seed: int = 0) -> Engine:
+def organism(
+    food=(), hazards=(), water=(), shelters=(), start=(10.0, 10.0), reserve: float = 0.8, seed: int = 0, **world
+):
+    """An organism in a world containing only what the test puts there."""
+    overrides = {"soma.metabolism": {"initial_reserve": reserve}}
+    if world:
+        overrides["world.grid"] = world
     return build_grid_human(
-        food=food, hazards=hazards, start=start, seed=seed, overrides={"soma.metabolism": {"initial_reserve": reserve}}
+        food=food, hazards=hazards, water=water, shelters=shelters, start=start, seed=seed, overrides=overrides
     )
 
 

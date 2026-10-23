@@ -11,7 +11,7 @@ import sys
 from dataclasses import replace
 from pathlib import Path
 
-from .config import ScenarioError, load_scenario
+from .config import ScenarioError, load_scenario, replay
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -23,9 +23,14 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--out", type=Path, help="write a run record to this directory")
     run.add_argument("--seed", type=int, help="override the scenario's seed")
     run.add_argument("--hours", type=float, help="override the scenario's duration")
+    run.add_argument("--rerun", action="store_true", help="stream to a Rerun viewer (needs unbodysoma[viz])")
+    run.add_argument("--rerun-save", type=Path, help="write a Rerun recording (.rrd) to this file")
 
     validate = commands.add_parser("validate", help="check scenario files without running them")
     validate.add_argument("scenarios", type=Path, nargs="+")
+
+    again = commands.add_parser("replay", help="re-run a recorded scenario and check it reproduces exactly")
+    again.add_argument("run", type=Path, help="a run record directory written by `run --out`")
 
     args = parser.parse_args(argv)
     try:
@@ -35,12 +40,23 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"ok  {path}  ({scenario.preset}, {scenario.duration_s / 3600:.2f} h)")
             return 0
 
+        if args.command == "replay":
+            outcome = replay(args.run)
+            for warning in outcome.warnings:
+                print(f"warning: {warning}")
+            print(f"{'identical' if outcome.identical else 'DIFFERENT'}: {outcome.detail}")
+            return 0 if outcome.identical else 1
+
         scenario = load_scenario(args.scenario)
         if args.seed is not None:
             scenario = replace(scenario, seed=args.seed)
         if args.hours is not None:
             scenario = replace(scenario, duration_s=args.hours * 3600.0)
-        result = scenario.run(out=args.out)
+        try:
+            result = scenario.run(out=args.out, rerun_spawn=args.rerun, rerun_save=args.rerun_save)
+        except ImportError as error:
+            print(f"error: {error}", file=sys.stderr)
+            return 2
     except ScenarioError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2

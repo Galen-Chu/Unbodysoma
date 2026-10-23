@@ -30,8 +30,8 @@ flowchart LR
 |---|---|---|---|
 | ① 執行紀錄 | 每次模擬一個自我描述的資料夾 | ✅ | `observe/run.py`：`RunWriter`、`load_run` |
 | ② 健康監控 | 數值與生理合理性檢查、警報、必要時停止 | ✅ | `observe/health.py`：`HealthMonitor`、規則 |
-| ③ 檢視與重播 | 存檔、倒帶、條件中斷 | 🟡 記憶體內快照與中斷已完成；快照存檔與重播介面尚未完成 | `Engine.snapshot` / `restore`、`run(until=…)` |
-| ④ 即時儀表板 | 時間序列、身體狀態圖、情感平面、訊號依賴圖 | ⬜ 規劃中 | — |
+| ③ 檢視與重播 | 存檔、倒帶、條件中斷、重播驗證 | ✅ | `Engine.snapshot` / `restore`、`core.save_snapshot` / `load_snapshot`、`run(until=…)`、`python -m unbodysoma replay` |
+| ④ 即時儀表板 | 時間序列、身體狀態圖、情感平面、訊號依賴圖 | 🟡 Rerun 即時檢視與自動產生的訊號依賴圖已完成；專屬儀表板規劃中 | `observe/rerun.py`、[SIGNAL_GRAPH.md](SIGNAL_GRAPH.md) |
 | ⑤ 干預實驗 | 固定訊號、拿掉模組、分支實驗 | ✅ | `Engine.clamp` / `lesion` / `cancel` |
 | 分析 | 把紀錄變成可驗收的指標 | ✅ | `observe/metrics.py`（HRV、熵比、眾數放大比）、`observe/behavior.py`（行為事件、每日統計） |
 
@@ -110,7 +110,21 @@ engine.run(300, until=lambda bus: bus.read("soma.cardio.heart_rate") > 180)  # �
 
 `restore` **不會**還原已排定的干預、觀察者與事件紀錄。這是刻意的設計，讓你可以從同一個時間點分出不同的實驗分支。
 
-**尚未完成：** 快照寫入磁碟（需要處理亂數狀態的序列化）、從執行紀錄重播、時間軸拖曳介面。
+**存檔與重播（[ADR-0009](adr/0009-persisted-snapshots-and-replay.md)）：**
+
+```python
+from unbodysoma.core import load_snapshot, save_snapshot
+
+save_snapshot(engine.snapshot(), "day2.json")  # 嚴格 JSON：亂數狀態、tuple、無限大都能完整保存
+engine.restore(load_snapshot("day2.json"))  # 在另一個程序中接著跑，結果與不中斷完全相同
+```
+
+```bash
+python -m unbodysoma run scenarios/feeding.toml --out runs/feeding
+python -m unbodysoma replay runs/feeding      # identical: 180000 ticks reproduced bit for bit
+```
+
+重播會依紀錄中的情境原文、種子與執行長度重跑，逐位元比對 `signals.csv` 與 `events.jsonl`，並指出第一個不一致之處；原文與雜湊不符時拒絕重播。
 
 ## 6. ⑤ 干預實驗
 
@@ -139,7 +153,7 @@ engine.cancel(intervention)
         intact          160.39            1.00            1.00           -0.84               0       completed
      no_intero          160.38            1.00            0.42           -0.83               0       completed
   beta_blocker           65.00            1.00            0.45           -0.84               0       completed
-      no_heart           69.72            0.02            0.03            0.06               2  halted at t=30.0s
+      no_heart           69.72            0.02            0.04            0.06               2  halted at t=30.0s
 ```
 
 拿掉內感受或固定心率之後，身體反應與威脅評估都還在，但**感受到的喚醒度**明顯降低（`no_heart` 的峰值心率 69.72 是心臟被抑制前、靜止時的心率變異）。這正是「情緒有一部分來自感知自己的身體」這個假設的最小可運作示範（請記得這些都是 L0 玩具模型）。
@@ -150,8 +164,14 @@ engine.cancel(intervention)
 
 | 階段 | 做法 | 用途 |
 |---|---|---|
-| 近期 | 接入 [Rerun](https://rerun.io)：以觀察者把訊號與事件串流過去 | 即時時間序列、時間軸拖曳、幾乎不用寫前端 |
-| 中期 | 從 `meta.json` 中的讀寫宣告自動產生訊號依賴圖，並即時標上數值 | 看出因果路徑 |
+| ✅ 已完成 | 接入 [Rerun](https://rerun.io)（`observe/rerun.py`，`pip install "unbodysoma[viz]"`）：訊號、事件與網格世界地圖 | 即時時間序列、時間軸拖曳、幾乎不用寫前端 |
+| 🟡 部分完成 | 從模組的讀寫宣告自動產生訊號依賴圖（[SIGNAL_GRAPH.md](SIGNAL_GRAPH.md)）；即時標上數值尚未完成 | 看出因果路徑 |
 | Phase 2 | 專屬網頁儀表板：人體狀態圖、valence × arousal 情感平面軌跡、警報時間軸 | 展示與教學 |
 
-可選相依（如 Rerun）會放在 `pip install unbodysoma[viz]` 之類的額外選項，核心維持零外部相依。
+```bash
+pip install "unbodysoma[viz]"
+python -m unbodysoma run scenarios/grid_72h.toml --rerun              # 開啟 Rerun 檢視器即時觀看
+python -m unbodysoma run scenarios/grid_72h.toml --rerun-save run.rrd # 或存成檔案之後再看
+```
+
+Rerun 是選用相依，版本固定在 0.40.x（它的 API 在小版本之間會變動）；核心維持零外部相依。掛上 Rerun 不會改變模擬結果（`test_streaming_to_rerun_does_not_change_the_simulation`）。

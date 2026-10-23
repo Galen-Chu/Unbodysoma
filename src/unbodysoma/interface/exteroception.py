@@ -31,9 +31,26 @@ CHANNELS = {
     "food_dir_y": Channel("world.food_dir_y", -1.0, 1.0, "Sensed direction to the nearest food (y)"),
     "threat_dir_x": Channel("world.threat_dir_x", -1.0, 1.0, "Sensed direction to the strongest threat (x)"),
     "threat_dir_y": Channel("world.threat_dir_y", -1.0, 1.0, "Sensed direction to the strongest threat (y)"),
+    "water": Channel("world.water_available", 0.0, 1.0, "Sensed water within reach"),
+    "water_dir_x": Channel("world.water_dir_x", -1.0, 1.0, "Sensed direction to the nearest water (x)"),
+    "water_dir_y": Channel("world.water_dir_y", -1.0, 1.0, "Sensed direction to the nearest water (y)"),
+    "in_shelter": Channel("world.in_shelter", 0.0, 1.0, "Sensed being inside a shelter"),
+    "shelter_known": Channel("world.shelter_known", 0.0, 1.0, "Knowing a shelter exists"),
+    "shelter_dir_x": Channel("world.shelter_dir_x", -1.0, 1.0, "Remembered direction to the nearest shelter (x)"),
+    "shelter_dir_y": Channel("world.shelter_dir_y", -1.0, 1.0, "Remembered direction to the nearest shelter (y)"),
 }
-BASIC_CHANNELS = ("threat", "food")
-SPATIAL_CHANNELS = (*BASIC_CHANNELS, "food_dir_x", "food_dir_y", "threat_dir_x", "threat_dir_y")
+BASIC_CHANNELS = ("threat", "food", "water", "in_shelter", "shelter_known")
+SPATIAL_CHANNELS = (
+    *BASIC_CHANNELS,
+    "food_dir_x",
+    "food_dir_y",
+    "threat_dir_x",
+    "threat_dir_y",
+    "water_dir_x",
+    "water_dir_y",
+    "shelter_dir_x",
+    "shelter_dir_y",
+)
 
 
 class Exteroception(Module):

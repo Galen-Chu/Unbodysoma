@@ -3,6 +3,7 @@ from .dynamics import clamp, ou_step, relax
 from .engine import Engine, Snapshot
 from .interventions import Clamp, Lesion
 from .module import Module
+from .persist import load_snapshot, save_snapshot
 from .specs import ParamSpec, SignalSpec
 
 __all__ = [
@@ -17,6 +18,8 @@ __all__ = [
     "SignalSpec",
     "Snapshot",
     "clamp",
+    "load_snapshot",
     "ou_step",
     "relax",
+    "save_snapshot",
 ]

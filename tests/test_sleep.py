@@ -13,6 +13,7 @@ pytestmark = pytest.mark.slow
 
 HOUR = 3600.0
 FOOD = Event(0.0, 1e9, "world.food_available", 1.0)
+WATER = Event(0.0, 1e9, "world.water_available", 1.0)
 KEYS = (
     "motor.sleeping",
     "motor.exertion",
@@ -24,7 +25,7 @@ KEYS = (
 )
 
 
-def simulate(hours: float, events=(FOOD,), seed: int = 0, setup=None, every: float = 60.0) -> Recorder:
+def simulate(hours: float, events=(FOOD, WATER), seed: int = 0, setup=None, every: float = 60.0) -> Recorder:
     engine: Engine = build_minimal_human(events, seed=seed, base_dt=0.05)  # starts at 08:00
     if setup:
         setup(engine)
@@ -100,7 +101,7 @@ def test_sleep_pressure_follows_the_two_process_shape(two_days):
 
 def test_a_threat_wakes_the_sleeper_who_then_sleeps_again():
     at_2am = 18.0 * HOUR
-    rec = simulate(22.0, events=(FOOD, Event(at_2am, at_2am + 60.0, "world.threat", 0.9)), every=10.0)
+    rec = simulate(22.0, events=(FOOD, WATER, Event(at_2am, at_2am + 60.0, "world.threat", 0.9)), every=10.0)
     times, sleeping, exertion = rec.times(), rec.column("motor.sleeping"), rec.column("motor.exertion")
     assert all(s for t, s in zip(times, sleeping, strict=True) if at_2am - 600 <= t < at_2am)  # soundly asleep before
     assert max(e for t, e in zip(times, exertion, strict=True) if at_2am <= t < at_2am + 90) > 0.5  # woke and fled

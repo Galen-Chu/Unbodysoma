@@ -1,7 +1,19 @@
 """World: the environment the organism lives in."""
 
 from .food import FoodSource
-from .grid import FoodPatch, GridWorld, Hazard
+from .grid import FoodPatch, GridWorld, Hazard, Shelter, WaterSource
 from .scenario import DEFAULT_WORLD_SIGNALS, Event, ScriptedWorld
+from .water import WaterIntake
 
-__all__ = ["DEFAULT_WORLD_SIGNALS", "Event", "FoodPatch", "FoodSource", "GridWorld", "Hazard", "ScriptedWorld"]
+__all__ = [
+    "DEFAULT_WORLD_SIGNALS",
+    "Event",
+    "FoodPatch",
+    "FoodSource",
+    "GridWorld",
+    "Hazard",
+    "ScriptedWorld",
+    "Shelter",
+    "WaterIntake",
+    "WaterSource",
+]

@@ -98,6 +98,47 @@ def parameter_catalog(engines: Sequence[Engine]) -> str:
     return "\n".join(parts)
 
 
+_LAYERS = {"world": "World 環境層", "interface": "Interface 介面層", "soma": "Soma 身體層", "psyche": "Psyche 心智層"}
+
+
+def dependency_graph(engine: Engine) -> str:
+    """Mermaid flowchart: one node per module, one edge per writer -> reader pair, labelled with the signals."""
+    node = {m.name: m.name.replace(".", "_") for m in engine.modules}
+    lines = ["flowchart LR"]
+    for layer, title in _LAYERS.items():
+        members = [m for m in engine.modules if m.name.split(".")[0] == layer]
+        if members:
+            lines.append(f'    subgraph {layer}["{title}"]')
+            lines += [f'        {node[m.name]}["{m.name}"]' for m in members]
+            lines.append("    end")
+    edges: dict[tuple[str, str], list[str]] = {}
+    for module in engine.modules:
+        for key in module.reads:
+            writer = engine.writer_of(key)
+            if writer is not None and writer != module.name:
+                edges.setdefault((writer, module.name), []).append(key.split(".", 1)[1])
+    for (writer, reader), keys in sorted(edges.items()):
+        label = ", ".join(sorted(keys)[:2]) + (f" +{len(keys) - 2}" if len(keys) > 2 else "")
+        lines.append(f'    {node[writer]} -->|"{label}"| {node[reader]}')
+    return "\n".join(lines)
+
+
+def graph_document(engines: Sequence[Engine]) -> str:
+    names = {"world.scripted": "minimal：腳本化世界", "world.grid": "grid：網格世界"}
+    parts = [
+        "# 訊號依賴圖 Signal graph",
+        "",
+        "> 本文件由 `python -m unbodysoma.catalog` 從模組的 `reads` / `writes` 宣告自動產生，**請勿手動編輯**。",
+        "> 每條邊代表「寫入者 → 讀取者」，標籤是經過的訊號（省略最外層的命名空間，"
+        "例如 `soma.cardio.heart_rate` 寫成 `cardio.heart_rate`）；訊號的意義見 [SIGNALS.md](SIGNALS.md)。",
+        "",
+    ]
+    for engine in engines:
+        title = next((names[m.name] for m in engine.modules if m.name in names), "preset")
+        parts += [f"## {title}", "", "```mermaid", dependency_graph(engine), "```", ""]
+    return "\n".join(parts)
+
+
 def render(docs: Path) -> dict[Path, str]:
     """Expected content of every generated file."""
     engines = presets()
@@ -108,6 +149,7 @@ def render(docs: Path) -> dict[Path, str]:
     return {
         signals_path: f"{head}{BEGIN}\n{signal_table(engines)}\n{END}{tail}",
         docs / "PARAMETERS.md": parameter_catalog(engines),
+        docs / "SIGNAL_GRAPH.md": graph_document(engines),
     }
 
 

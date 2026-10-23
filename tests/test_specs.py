@@ -9,7 +9,7 @@ from unbodysoma import build_grid_human, build_minimal_human, catalog
 from unbodysoma.core import BusPort, Engine, Module, ParamSpec, SignalSpec
 from unbodysoma.observe import HealthMonitor, RunWriter, load_run
 from unbodysoma.soma import Cardio
-from unbodysoma.world import Event
+from unbodysoma.world import DEFAULT_WORLD_SIGNALS, Event
 
 DOCS = Path(__file__).resolve().parents[1] / "docs"
 
@@ -88,7 +88,8 @@ def test_run_record_stores_parameters_specs_and_scenario(tmp_path):
     assert modules["world.scripted"]["params"]["events"] == [
         {"start": 1.0, "end": 2.0, "key": "world.threat", "value": 0.5}
     ]
-    assert modules["world.scripted"]["params"]["signals"] == ["world.threat", "world.food_available"]
+    assert modules["world.scripted"]["params"]["signals"] == list(DEFAULT_WORLD_SIGNALS)
+    assert modules["world.scripted"]["params"]["baselines"] == {"world.ambient_temperature": 22.0}
     assert meta["signals"]["soma.cardio.heart_rate"]["unit"] == "bpm"
     assert meta["signals"]["world.threat"]["hi"] == 1.0
 
@@ -113,3 +114,16 @@ def test_spec_checks_can_be_turned_off():
 def test_generated_catalogs_are_up_to_date():
     for path, expected in catalog.render(DOCS).items():
         assert path.read_text(encoding="utf-8") == expected, f"{path.name} is stale: run python -m unbodysoma.catalog"
+
+
+def test_signal_graph_shows_the_known_causal_links():
+    graph = catalog.dependency_graph(build_grid_human())
+    assert '    soma_cardio -->|"cardio.heart_rate"| interface_interoception' in graph.splitlines()
+    assert any(
+        line.startswith("    psyche_action -->") and line.endswith("psyche_navigation") for line in graph.splitlines()
+    )
+    assert any(
+        line.startswith("    psyche_navigation -->") and line.endswith("world_grid") for line in graph.splitlines()
+    )
+    for module in build_grid_human().modules:
+        assert f'["{module.name}"]' in graph  # every module is a node

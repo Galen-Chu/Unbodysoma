@@ -3,6 +3,6 @@
 from .core import Engine, Module
 from .presets import build_grid_human, build_minimal_human
 
-__version__ = "0.2.0"  # single source: pyproject reads it
+__version__ = "0.3.0"  # single source: pyproject reads it
 
 __all__ = ["Engine", "Module", "__version__", "build_grid_human", "build_minimal_human"]

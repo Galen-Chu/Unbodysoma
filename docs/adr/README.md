@@ -12,6 +12,7 @@
 | [0006](0006-declarative-parameter-and-signal-specs.md) | 參數與訊號的宣告式規格 | 已採用 |
 | [0007](0007-probabilistic-action-selection.md) | 機率式行動選擇：效用、softmax 與以速率表示的切換 | 已採用 |
 | [0008](0008-toml-scenario-files.md) | 以 TOML 情境檔描述實驗 | 已採用 |
+| [0009](0009-persisted-snapshots-and-replay.md) | 快照存檔、重播驗證與選用的視覺化相依 | 已採用 |
 
 ## 格式
 

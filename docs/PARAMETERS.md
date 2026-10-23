@@ -11,6 +11,14 @@
 |---|---|---|---|---|---|
 | `intake_rate` | 0.0003 | fraction/s | [0, 0.01] | Reserve refilled per second of eating (≈ 0.3 per 15 min) | L0 toy value |
 
+## `world.water`
+
+`unbodysoma.world.water.WaterIntake`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `intake_rate` | 0.002 | fraction/s | [0, 0.1] | Hydration restored per second of drinking (≈ 0.24 per 2 min) | L0 toy value |
+
 ## `interface.exteroception`
 
 `unbodysoma.interface.exteroception.Exteroception`
@@ -28,6 +36,8 @@
 |---|---|---|---|---|---|
 | `resting_bpm` | 60 | bpm | [30, 120] | Heart rate felt as zero activation | L0 toy value |
 | `bpm_span` | 100 | bpm | [10, 250] | Heart-rate rise felt as full activation | L0 toy value |
+| `comfortable_core` | 37 | °C | [35, 39] | Core temperature felt as neither cold nor hot | L0 toy value |
+| `thermal_span` | 2 | °C | [0.1, 10] | Core deviation felt as extreme cold or heat | L0 toy value |
 | `noise` | 0.01 | normalized | [0, 1] | SD of interoceptive noise (inverse of interoceptive accuracy) | L0 toy value |
 | `seed` | 1 | — | [0, ∞] | Random seed of the noise | run setting |
 
@@ -94,11 +104,43 @@
 | `initial_reserve` | 0.8 | fraction | [0, 1] | Energy reserve at t = 0 | L0 toy value |
 | `hours_to_empty_at_rest` | 48 | h | [1, 500] | Time for a full reserve to drain at rest | calibrated: about three meals a day |
 | `exertion_cost` | 4 | — | [0, 20] | Extra drain per unit exertion, relative to basal | L0 toy value |
+| `shiver_cost` | 3 | — | [0, 20] | Extra drain per unit shivering, relative to basal | L0 toy value |
 | `sleep_metabolic_factor` | 0.9 | — | [0.5, 1] | Basal drain during sleep, relative to awake rest | L0 toy value |
 | `glucose_setpoint` | 90 | mg/dL | [60, 130] | Defended fasting glucose | L0 toy value |
 | `k_adrenaline` | 40 | mg/dL | [0, 150] | Glucose mobilized per unit adrenaline | L0 toy value |
 | `glucose_tau` | 120 | s | [1, 3600] | Time constant of glucose regulation | L0 toy value |
 | `glucose_defense_reserve` | 0.1 | fraction | [0.01, 1] | Reserve below which glucose can no longer be defended | L0 toy value |
+
+## `soma.fluid`
+
+`unbodysoma.soma.fluid.FluidBalance`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `initial_hydration` | 0.9 | fraction | [0, 1] | Hydration at t = 0 | L0 toy value |
+| `hours_to_empty_at_rest` | 48 | h | [1, 500] | Time for a full reserve to be lost at rest without drinking | calibrated: a few drinks a day |
+| `exertion_cost` | 2 | — | [0, 20] | Extra loss per unit exertion, relative to basal | L0 toy value |
+| `sweat_cost` | 6 | — | [0, 50] | Extra loss per unit sweating, relative to basal | L0 toy value |
+| `sleep_loss_factor` | 0.8 | — | [0.3, 1] | Basal loss during sleep, relative to awake rest | L0 toy value |
+| `osmolality_at_full` | 285 | mOsm/kg | [250, 320] | Osmolality when fully hydrated | L0 mapping onto the normal range |
+| `osmolality_span` | 40 | mOsm/kg | [1, 100] | Osmolality rise from full to empty reserve | L0 mapping onto the normal range |
+
+## `soma.thermo`
+
+`unbodysoma.soma.thermo.Thermoregulation`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `setpoint` | 37 | °C | [35, 39] | Defended core temperature | L0 toy value |
+| `initial_temperature` | 37 | °C | [30, 45] | Core temperature at t = 0 | L0 toy value |
+| `basal_heat` | 2.25 | °C/h | [0, 50] | Warming rate from resting metabolism | calibrated: 37 °C at 22 °C |
+| `exertion_heat` | 2 | — | [0, 20] | Extra heat per unit exertion, relative to basal | L0 toy value |
+| `conductance` | 0.15 | 1/h | [0.01, 10] | Heat loss per °C of core-to-ambient difference | L0 toy value |
+| `shiver_heat` | 4 | °C/h | [0, 50] | Warming rate at full shivering | L0 toy value |
+| `sweat_cooling` | 8 | °C/h | [0, 100] | Cooling rate at full sweating | L0 toy value |
+| `shiver_offset` | 0.3 | °C | [0, 3] | How far below the setpoint shivering starts | L0 toy value |
+| `sweat_offset` | 0.2 | °C | [0, 3] | How far above the setpoint sweating starts | L0 toy value |
+| `response_span` | 0.8 | °C | [0.05, 5] | Deviation beyond the onset at which a response is maximal | L0 toy value |
 
 ## `psyche.appraisal`
 
@@ -120,6 +162,8 @@
 | `w_threat_arousal` | 0.4 | — | [0, 1] | Weight of appraised threat in arousal | L0 toy value |
 | `w_threat_valence` | 0.9 | — | [0, 2] | Valence lost per unit appraised threat | L0 toy value |
 | `w_hunger_valence` | 0.5 | — | [0, 2] | Valence lost per unit hunger | L0 toy value |
+| `w_thirst_valence` | 0.5 | — | [0, 2] | Valence lost per unit thirst | L0 toy value |
+| `w_thermal_valence` | 0.4 | — | [0, 2] | Valence lost per unit thermal discomfort | L0 toy value |
 | `tau` | 2 | s | [0.01, 600] | Time constant of affect | L0 toy value |
 | `valence_sigma` | 0.03 | normalized | [0, 0.5] | SD of spontaneous valence fluctuation | L0 toy value |
 | `arousal_sigma` | 0.02 | normalized | [0, 0.5] | SD of spontaneous arousal fluctuation | L0 toy value |
@@ -134,8 +178,13 @@
 |---|---|---|---|---|---|
 | `threshold` | 0.2 | normalized | [0, 1] | Energy deficit below which no hunger is felt | L0 toy value |
 | `span` | 0.6 | normalized | [0.01, 1] | Deficit above threshold that is felt as maximal hunger | L0 toy value |
-| `tau` | 30 | s | [0.1, 3600] | Time constant of hunger | L0 toy value |
-| `sleep_hunger_suppression` | 0.5 | — | [0, 1] | Share of felt hunger suppressed during sleep | L0 toy value |
+| `tau` | 30 | s | [0.1, 3600] | Time constant of hunger and thirst | L0 toy value |
+| `sleep_hunger_suppression` | 0.5 | — | [0, 1] | Share of felt hunger and thirst suppressed in sleep | L0 toy value |
+| `thirst_threshold` | 0.15 | normalized | [0, 1] | Water deficit below which no thirst is felt | L0 toy value |
+| `thirst_span` | 0.5 | normalized | [0.01, 1] | Deficit above threshold felt as maximal thirst | L0 toy value |
+| `thermal_deadband` | 0.1 | normalized | [0, 1] | Felt temperature deviation that is still comfortable | L0 toy value |
+| `thermal_span` | 0.5 | normalized | [0.01, 1] | Deviation beyond the deadband felt as maximal discomfort | L0 toy value |
+| `thermal_tau` | 60 | s | [0.1, 3600] | Time constant of thermal discomfort | L0 toy value |
 | `sleepiness_tau` | 300 | s | [1, 7200] | Time over which felt sleepiness is integrated | L0 toy value |
 | `sleep_onset_pressure` | 0.573 | normalized | [0, 1] | Mean upper threshold H0 of sleep pressure | calibrated: 16 h wake / 8 h sleep, onset ≈ 23:00 |
 | `wake_pressure` | 0.193 | normalized | [0, 1] | Mean lower threshold L0 of sleep pressure | calibrated: 16 h wake / 8 h sleep, onset ≈ 23:00 |
@@ -157,6 +206,16 @@
 | `eat_commitment` | 0.4 | — | [0, 2] | Extra bonus for continuing a meal (sets how sated it ends) | L0 toy value |
 | `k_explore` | 1.5 | — | [0, 20] | Utility gain of searching for food per unit hunger | L0 toy value |
 | `explore_threshold` | 0.4 | normalized | [0, 1] | Hunger at which searching for food breaks even | L0 toy value |
+| `k_drink` | 2 | — | [0, 20] | Utility gain of drinking per unit thirst above threshold | L0 toy value |
+| `drink_threshold` | 0.3 | normalized | [0, 1] | Thirst at which starting to drink breaks even | L0 toy value |
+| `drink_commitment` | 0.4 | — | [0, 2] | Extra bonus for continuing to drink (sets how sated it ends) | L0 toy value |
+| `k_seek_water` | 1.5 | — | [0, 20] | Utility gain of searching for water per unit thirst | L0 toy value |
+| `seek_water_threshold` | 0.35 | normalized | [0, 1] | Thirst at which searching for water breaks even | L0 toy value |
+| `k_shelter` | 1.5 | — | [0, 20] | Utility gain of going to shelter per unit thermal discomfort | L0 toy value |
+| `shelter_threshold` | 0.3 | normalized | [0, 1] | Thermal discomfort at which sheltering breaks even | L0 toy value |
+| `k_home` | 4 | — | [0, 50] | Utility gain of going home to sleep per unit sleepiness | L0 toy value |
+| `home_onset` | 0.8 | normalized | [0, 1] | Sleepiness at which going home to sleep breaks even | L0 toy value |
+| `outside_penalty` | 0.5 | — | [0, 5] | Utility lost by falling asleep outside a known shelter | L0 toy value |
 | `k_sleep` | 8 | — | [0, 50] | How sharply sleep wins once sleepiness passes sleep_onset | L0 toy value |
 | `sleep_onset` | 0.95 | normalized | [0, 1] | Sleepiness at which falling asleep breaks even | L0 toy value |
 | `sleep_depth` | 5 | — | [0, 50] | Utility of staying asleep per unit sleepiness | L0 toy value |
@@ -164,8 +223,10 @@
 | `resume_window` | 1800 | s | [0, 14400] | How long after waking unfinished sleep can resume | L0 toy value |
 | `unfinished_sleep` | 0.05 | normalized | [0, 1] | Sleepiness above which an awakening is premature | L0 toy value |
 | `food_seen` | 0.5 | normalized | [0, 1] | Sensed food level that counts as food within reach | L0 toy value |
+| `water_seen` | 0.5 | normalized | [0, 1] | Sensed water level that counts as water within reach | L0 toy value |
+| `shelter_seen` | 0.5 | normalized | [0, 1] | Sensed level that counts as inside / knowing a shelter | L0 toy value |
 | `flee_exertion` | 0.8 | normalized | [0, 1] | Exertion while fleeing | L0 toy value |
-| `explore_exertion` | 0.3 | normalized | [0, 1] | Exertion while exploring | L0 toy value |
+| `explore_exertion` | 0.3 | normalized | [0, 1] | Exertion while searching or travelling | L0 toy value |
 | `tau` | 1 | s | [0.01, 60] | Time constant of exertion changes | L0 toy value |
 | `seed` | 4 | — | [0, ∞] | Random seed of the choices | run setting |
 
@@ -181,6 +242,11 @@
 | `depletion_per_s` | 0.00166667 | 1/s | [0, 1] | Share of a patch eaten per second of eating | L0 toy value |
 | `open_threshold` | 0.25 | fraction | [0, 1] | Share of capacity at which a patch is worth approaching | L0 toy value |
 | `empty_threshold` | 0.05 | fraction | [0, 1] | Share of capacity at which a patch being eaten runs out | L0 toy value |
+| `temperature_mean` | 15 | °C | [-40, 50] | Daily mean outside temperature | L0 toy value |
+| `temperature_amplitude` | 8 | °C | [0, 30] | Half the day-night temperature swing | L0 toy value |
+| `warmest_hour` | 15 | h | [0, 24] | Clock hour of the warmest outside temperature | L0 toy value |
+| `comfortable_temperature` | 20 | °C | [0, 40] | Temperature a shelter buffers toward | L0 toy value |
+| `start_hour` | 8 | h | [0, 24] | Clock time at t = 0 | run setting |
 
 ## `psyche.navigation`
 

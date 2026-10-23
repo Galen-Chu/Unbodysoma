@@ -75,6 +75,10 @@ valence* = clamp(0.1 − 0.9·threat − 0.5·hunger, −1, 1)
 ```
 hunger*     = clamp((intero.energy_deficit − 0.2) / 0.6) · (1 − 0.5·sleeping)
 hunger      ← relax(hunger, hunger*, dt, τ = 30 s)
+thirst*     = clamp((intero.water_deficit − 0.15) / 0.5) · (1 − 0.5·sleeping)
+thirst      ← relax(thirst, thirst*, dt, τ = 30 s)
+discomfort* = clamp((|intero.thermal| − 0.1) / 0.5)          （冷或熱都算）
+discomfort  ← relax(discomfort, discomfort*, dt, τ = 60 s)
 
 H = 0.573 + 0.1·C,  L = 0.193 + 0.1·C                 （入睡 / 起床門檻，C = intero.circadian）
 sleepiness* = clamp((S − L) / (H − L), −1, 1)          （S = intero.sleep_pressure）
@@ -83,11 +87,12 @@ sleepiness  ← relax(sleepiness, sleepiness*, dt, τ = 300 s)
 
 - 睡意在 S 碰到入睡門檻時為 1、降到起床門檻時為 0，再低就轉為負值（休息足夠），這正是結束睡眠的訊號。
 - 睡意必須經過時間積分：把每一刻的感知雜訊直接送進行動選擇的指數型轉換率，會讓睡眠在半夜隨機結束（見 [ADR-0007](adr/0007-probabilistic-action-selection.md)）。
-- 睡眠時感受到的飢餓減半，醒來後約 30 秒內恢復，形成「起床就想吃早餐」的行為。
+- 睡眠時感受到的飢餓與口渴減半，醒來後約 30 秒內恢復，形成「起床就想吃早餐」的行為。
+- 情感的 valence 也會因口渴（權重 0.5）與溫度不適（權重 0.4）而下降。
 
 ### 4.4 行動選擇 ActionSelection `psyche/action.py`
 
-五個行動以效用競爭（[ADR-0007](adr/0007-probabilistic-action-selection.md)）；只有前提成立的行動才可選：
+八個行動以效用競爭（[ADR-0007](adr/0007-probabilistic-action-selection.md)）；只有前提成立的行動才可選：
 
 | 行動 | 前提 | 效用 | 輸出 |
 |---|---|---|---|
@@ -95,9 +100,13 @@ sleepiness  ← relax(sleepiness, sleepiness*, dt, τ = 300 s)
 | `flee` | — | `2.5 · (threat − 0.4)` | `motor.exertion → 0.8` |
 | `eat` | 感覺到食物在手邊 | `2.0 · (hunger − 0.35)` | `motor.eating = 1` |
 | `explore` | 手邊沒有食物 | `1.5 · (hunger − 0.4)`（覓食） | `motor.exertion → 0.3` |
-| `sleep` | — | 清醒時 `8 · (sleepiness − 0.95)`；睡著時 `min(1, 5 · sleepiness)` | `motor.sleeping = 1` |
+| `drink` | 感覺到水在手邊 | `2.0 · (thirst − 0.3)` | `motor.drinking = 1` |
+| `seek_water` | 手邊沒有水 | `1.5 · (thirst − 0.35)`（找水） | `motor.exertion → 0.3` |
+| `seek_shelter` | 知道有庇護所，且不在裡面 | `max(1.5 · (discomfort − 0.3), 4 · (sleepiness − 0.8))` | `motor.exertion → 0.3` |
+| `sleep` | — | 清醒時 `8 · (sleepiness − 0.95)`，在已知庇護所之外再減 0.5；睡著時 `min(1, 5 · sleepiness)` | `motor.sleeping = 1` |
 
-- 目前的行動有 `stickiness = 0.1` 的加成，進食再加 `eat_commitment = 0.4`，形成「吃到飽才停」的遲滯。
+- 目前的行動有 `stickiness = 0.1` 的加成，進食與飲水再各加 `0.4` 的承諾加成，形成「吃（喝）到飽才停」的遲滯。
+- 回庇護所有兩個理由：冷熱不適，或「快想睡了」。後者讓生物體在睡意接近入睡門檻前先回家，所以在網格世界中 100% 的睡眠都發生在庇護所內。
 - **切換是連續時間的過程**：從 a 轉到 b 的速率為 `r₀ · exp((u_b − u_a) / 2T)`，`T = 0.015`、`r₀ = 1/60 s⁻¹`。行為因此不受決策頻率影響，長期的時間分配等於 `softmax(u, T)`（即發布的 `psyche.action.p_*`），`T = 0` 則重現眾數塌縮。
 - 睡眠的效用上限（1.0）低於完全威脅下的逃跑效用（1.5），所以危險永遠叫得醒。
 - 被提早叫醒時（睡意仍 > 0.05），30 分鐘內可以再度入睡；自然醒（睡意 ≤ 0）則不會。
@@ -108,7 +117,8 @@ sleepiness  ← relax(sleepiness, sleepiness*, dt, τ = 300 s)
 把選中的行動變成移動指令 `motor.move_x / move_y`：
 
 - `flee`：朝感覺到的威脅反方向全速跑；
-- `explore`：朝感覺到的最近食物走（半速）；感覺範圍內沒有食物時，以相關隨機漫步搜尋（方向以 `wander_sigma` 擴散）；
+- `explore` / `seek_water`：朝感覺到的最近食物 / 水源走（半速）；感覺範圍內沒有時，以相關隨機漫步搜尋（方向以 `wander_sigma` 擴散）；
+- `seek_shelter`：朝庇護所走。庇護所的方向**永遠已知**，這是刻意的假設，代表動物記得自己巢穴的位置（歸巢能力）；食物與水則必須在感覺範圍內才看得到；
 - 其他行動：停在原地。
 
 在網格世界裡，這讓「飢餓 → 搜尋 → 找到食物點 → 進食」與「掠食者出現 → 逃離 → 稍後回來」成為完整的感覺運動迴路（`scenarios/grid_72h.toml`）。
@@ -120,3 +130,4 @@ sleepiness  ← relax(sleepiness, sleepiness*, dt, τ = 300 s)
 - 學習的獎賞訊號是「恆定誤差的減少」就夠了，還是需要額外的好奇心 / 資訊增益項？
 - 語言模型若要接入，如何確保它是「被身體約束的表達」而不是「無視身體的角色扮演」？
 - 語言模型有眾數塌縮的傾向：需要符合人類分布的**選擇**應由心智層的機率模型決定，LLM 只負責表達（見 [VARIABILITY.md](VARIABILITY.md) §9）。
+- **多個需求應如何合成情感？** 目前 valence 是各需求代價的線性加總，所以三個「中等」需求就會變成「強烈負面」：在 72 小時情境中，清晨又餓、又渴、又冷地出門吃早餐時，曾出現 4–9 分鐘的 valence < −0.5，觸發 `prolonged_negative_valence`。人類在這種情境下大概只是「有點不舒服」。飽和式的合成（例如由最迫切的需求主導）可能更合理，但這是模型層面的決定，應以行為資料而不是以「讓測試通過」為依據來改。

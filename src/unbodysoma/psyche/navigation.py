@@ -23,8 +23,14 @@ class Navigation(Module):
     reads = (
         "psyche.action.selected_flee",
         "psyche.action.selected_explore",
+        "psyche.action.selected_seek_water",
+        "psyche.action.selected_seek_shelter",
         "extero.food_dir_x",
         "extero.food_dir_y",
+        "extero.water_dir_x",
+        "extero.water_dir_y",
+        "extero.shelter_dir_x",
+        "extero.shelter_dir_y",
         "extero.threat_dir_x",
         "extero.threat_dir_y",
     )
@@ -71,10 +77,13 @@ class Navigation(Module):
             if threat is not None:
                 self.heading = math.atan2(-threat[1], -threat[0])
             move = (self.flee_fraction * math.cos(self.heading), self.flee_fraction * math.sin(self.heading))
-        elif port.read("psyche.action.selected_explore") > 0.5:
-            food = self._direction(port, "food")
-            if food is not None:
-                self.heading = math.atan2(food[1], food[0])
-            move = (self.walk_fraction * math.cos(self.heading), self.walk_fraction * math.sin(self.heading))
+        else:
+            for action, goal in (("explore", "food"), ("seek_water", "water"), ("seek_shelter", "shelter")):
+                if port.read(f"psyche.action.selected_{action}") > 0.5:
+                    direction = self._direction(port, goal)
+                    if direction is not None:
+                        self.heading = math.atan2(direction[1], direction[0])
+                    move = (self.walk_fraction * math.cos(self.heading), self.walk_fraction * math.sin(self.heading))
+                    break
         port.write("motor.move_x", move[0])
         port.write("motor.move_y", move[1])

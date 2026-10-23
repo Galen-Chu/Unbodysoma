@@ -12,8 +12,8 @@
 | 晝夜節律 Circadian | 晝夜相位、時鐘時間 | 警覺度、睡眠時機、荷爾蒙節律 | ✅ L0（無光照輸入的正弦節律） | 光照驅動的振盪器模型 |
 | 睡眠恆定 Sleep | 睡眠壓力（process S） | 疲倦、睡眠時機 | ✅ L1 時間常數（Daan 等人，1984） | Borbély 雙歷程模型的完整版本 |
 | 呼吸 Respiratory | 呼吸頻率、潮氣量、血氧、CO₂ | 窒息感、恐慌、呼吸調節情緒 | ⬜（目前只有固定的呼吸頻率帶動 RSA） | 化學感受器回饋模型 |
-| 體溫 Thermoregulation | 核心 / 皮膚溫度 | 冷熱不適、行為性體溫調節 | ⬜ | Stolwijk 體溫調節模型 |
-| 水分與電解質 | 血漿滲透壓、血容量 | 口渴 | ⬜ | — |
+| 體溫 Thermoregulation | 核心溫度、顫抖、流汗 | 冷熱不適、行為性體溫調節 | ✅ L0（集總模型；尚無皮膚溫度） | Stolwijk 體溫調節模型 |
+| 水分與電解質 | 體內水分、血漿滲透壓 | 口渴 | ✅ L0（單一水分儲備；尚無電解質） | — |
 | 免疫 Immune | 發炎指標 | 生病行為（疲倦、退縮、食慾下降） | ⬜ | 細胞激素簡化模型 |
 | 肌肉骨骼 | 肌力、疲勞、乳酸 | 費力感、運動成本 | ⬜ | — |
 | 痛覺 Nociception | 組織損傷 | 疼痛、迴避學習 | ⬜ | — |
@@ -48,7 +48,7 @@ cortisol   ← relax(cortisol, cortisol*, dt, τ = 300 s（上升）/ 1800 s（�
 ### 2.3 代謝 `soma/metabolism.py`
 
 ```
-drain    = (1 / 48 h) · (1 + 4·exertion) · (0.9 if sleeping else 1)
+drain    = (1 / 48 h) · (1 + 4·exertion + 3·shivering) · (0.9 if sleeping else 1)
 reserve  ← clamp(reserve + (food_intake − drain)·dt)
 glucose* = (90 + 40·adrenaline) · min(1, reserve / 0.1)
 glucose  ← relax(glucose, glucose*, dt, τ = 120 s)
@@ -80,6 +80,30 @@ drive = cos(2π · (hour − 19) / 24)        （晚上 7 點最高，早上 7 �
 ```
 
 兩個時間常數來自 Daan、Beersma 與 Borbély（1984）。睡意與入睡 / 起床的門檻在心智層的 `Drives` 計算（見 [PSYCHE.md](PSYCHE.md) §4.3），因為那是大腦對 S 與 C 的解讀。門檻值是我們自己的校準（清醒 16 小時、睡 8 小時、約 23 點入睡），**不是**文獻數值。實際行為：每晚約 22:00–22:45 入睡，睡 7.3–7.9 小時，約 06:00 起床；剝奪睡眠後，壓力會累積到在下午強迫入睡（`tests/test_sleep.py`）。
+
+### 2.6 水分平衡 `soma/fluid.py`
+
+```
+loss        = (1 / 48 h) · (1 + 2·exertion + 6·sweating) · (0.8 if sleeping else 1)
+hydration   ← clamp(hydration + (water_intake − loss)·dt)
+osmolality  = 285 + 40 · (1 − hydration)  mOsm/kg
+water_intake = 2×10⁻³ /s · world.water_available · motor.drinking     （world/water.py；約 2 分鐘補回 0.24）
+```
+
+滲透壓是由水分儲備換算而來（L0 映射）：充分補水時約 285，在口渴開始出現的地方（水分約 0.7）約 297，與正常範圍約 285–295 mOsm/kg 的上緣相符。流汗會耗水，所以炎熱時體溫調節與水分平衡互相牽制。水分低於 0.15 時，健康監控發出 `dehydration` 警告。
+
+### 2.7 體溫調節 `soma/thermo.py`
+
+```
+production = 2.25 · (1 + 2·exertion) + 4 · shivering        （°C/h）
+loss       = 0.15 · (T − T_ambient) + 8 · sweating
+dT/dt      = production − loss
+shivering  = clamp((37 − 0.3 − T) / 0.8),   sweating = clamp((T − 37 − 0.2) / 0.8)
+```
+
+集總的核心溫度模型：靜止時在 22 °C 正好平衡於 37 °C。顫抖產熱但耗能（代謝讀取 `soma.thermo.shivering`），流汗散熱但耗水（水分平衡讀取 `soma.thermo.sweating`）。實際行為：13 °C 只帶來輕微不適；夜間 7 °C 待在戶外會穩定在約 36.3 °C 並強烈想回庇護所；5 °C 時持續顫抖、能量消耗增加；38 °C 時持續流汗、水分流失加快（`tests/test_water_heat.py`）。核心溫度超出 35–39 °C 時發出 `thermal_stress` 警告，超出 32–41 °C 為 critical。
+
+第一版的參數讓 13 °C 就使核心每小時下降 4.5 °C，生物體因此吃到一半就冷得跑回家。我們把散熱放慢到約十分之三，以反映人體的大熱容量與血管收縮；這仍是 L0 校準值，不是文獻數值。
 
 ## 3. 從 L0 走向 L1 的工作方式
 

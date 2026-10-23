@@ -104,13 +104,16 @@ class SustainedRule(Rule):
 
 
 def default_rules() -> list[Rule]:
-    """Sanity limits for the Phase 0 organism. Thresholds are coarse, not clinical."""
+    """Sanity limits for the organism. Thresholds are coarse, not clinical."""
     return [
         FiniteRule(),
         RangeRule("soma.cardio.heart_rate", 30.0, 220.0, "critical", name="heart_rate_survivable"),
         RangeRule("soma.cardio.heart_rate", 40.0, 180.0, "warning", name="heart_rate_abnormal"),
         RangeRule("soma.metabolism.glucose", 50.0, 200.0, "warning", name="glucose_abnormal"),
         RangeRule("soma.metabolism.energy_reserve", 0.05, 1.0, "warning", name="starvation"),
+        RangeRule("soma.fluid.hydration", 0.15, 1.0, "warning", name="dehydration"),
+        RangeRule("soma.thermo.core_temperature", 35.0, 39.0, "warning", name="thermal_stress"),
+        RangeRule("soma.thermo.core_temperature", 32.0, 41.0, "critical", name="core_temperature_survivable"),
         # docs/ETHICS.md §3: prolonged strongly negative states must be visible.
         SustainedRule("psyche.affect.valence", 120.0, below=-0.5, name="prolonged_negative_valence"),
     ]

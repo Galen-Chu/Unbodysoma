@@ -9,8 +9,8 @@ from .core import Engine, Module
 from .interface import Exteroception, Interoception
 from .interface.exteroception import SPATIAL_CHANNELS
 from .psyche import ActionSelection, Affect, Appraisal, Drives, Navigation
-from .soma import Cardio, Circadian, Endocrine, Metabolism, SleepHomeostat
-from .world import Event, FoodPatch, FoodSource, GridWorld, Hazard, ScriptedWorld
+from .soma import Cardio, Circadian, Endocrine, FluidBalance, Metabolism, SleepHomeostat, Thermoregulation
+from .world import Event, FoodPatch, FoodSource, GridWorld, Hazard, ScriptedWorld, Shelter, WaterIntake, WaterSource
 
 Factory = tuple[str, Callable[..., Module], dict[str, Any]]
 Overrides = Mapping[str, Mapping[str, Any]]
@@ -25,6 +25,8 @@ def _body_and_mind(seed: int) -> list[Factory]:
         (Cardio.name, Cardio, {"seed": seed + 2}),
         (Endocrine.name, Endocrine, {}),
         (Metabolism.name, Metabolism, {}),
+        (FluidBalance.name, FluidBalance, {}),
+        (Thermoregulation.name, Thermoregulation, {}),
         (Appraisal.name, Appraisal, {}),
         (Affect.name, Affect, {"seed": seed + 3}),
         (Drives.name, Drives, {}),
@@ -57,6 +59,7 @@ def build_minimal_human(
     factories: list[Factory] = [
         (ScriptedWorld.name, ScriptedWorld, {"events": tuple(events)}),
         (FoodSource.name, FoodSource, {}),
+        (WaterIntake.name, WaterIntake, {}),
         (Exteroception.name, Exteroception, {"seed": seed}),
         *_body_and_mind(seed),
     ]
@@ -70,11 +73,15 @@ DEFAULT_FOOD = (
     FoodPatch(5.0, 15.0),
 )
 DEFAULT_HAZARDS = (Hazard(13.0, 13.0, radius=3.0),)  # guards the patch at (15, 16)
+DEFAULT_WATER = (WaterSource(10.0, 4.0), WaterSource(10.0, 16.0))
+DEFAULT_SHELTERS = (Shelter(10.0, 10.0),)
 
 
 def build_grid_human(
     food: Iterable[FoodPatch] = DEFAULT_FOOD,
     hazards: Iterable[Hazard] = DEFAULT_HAZARDS,
+    water: Iterable[WaterSource] = DEFAULT_WATER,
+    shelters: Iterable[Shelter] = DEFAULT_SHELTERS,
     width: float = 20.0,
     height: float = 20.0,
     start: tuple[float, float] = (10.0, 10.0),
@@ -82,11 +89,21 @@ def build_grid_human(
     base_dt: float = 0.05,
     overrides: Overrides | None = None,
 ) -> Engine:
-    """The same organism living in a 2D grid world: it has to find food, avoid hazards and move."""
-    world = {"width": width, "height": height, "food": tuple(food), "hazards": tuple(hazards), "start": start}
+    """The same organism living in a 2D grid world: it has to find food and water, avoid hazards and move,
+    and can shelter from cold, heat and danger."""
+    world = {
+        "width": width,
+        "height": height,
+        "food": tuple(food),
+        "hazards": tuple(hazards),
+        "water": tuple(water),
+        "shelters": tuple(shelters),
+        "start": start,
+    }
     factories: list[Factory] = [
         (GridWorld.name, GridWorld, world),
         (FoodSource.name, FoodSource, {}),
+        (WaterIntake.name, WaterIntake, {}),
         (Exteroception.name, Exteroception, {"seed": seed, "channels": SPATIAL_CHANNELS}),
         *_body_and_mind(seed),
         (Navigation.name, Navigation, {"seed": seed + 5}),

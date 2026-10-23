@@ -8,17 +8,21 @@ silently ignored typo in an experiment definition is worse than a crash.
 from __future__ import annotations
 
 import hashlib
+import json
 import math
+import tempfile
 import tomllib
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
+from . import __version__
 from .core import Engine
 from .observe import HealthMonitor, RunWriter
+from .observe.run import git_revision
 from .presets import build_grid_human, build_minimal_human
-from .world import Event, FoodPatch, Hazard
+from .world import Event, FoodPatch, Hazard, Shelter, WaterSource
 
 
 class ScenarioError(ValueError):
@@ -29,7 +33,9 @@ _TOP = {"scenario", "organism", "events", "world", "interventions", "observe"}
 _SCENARIO = {"name", "description", "duration_s", "duration_h", "seed", "base_dt"}
 _ORGANISM = {"preset", "overrides"}
 _EVENT = {"start", "end", "key", "value"}
-_WORLD = {"width", "height", "start", "food", "hazards"}
+_WORLD = {"width", "height", "start", "food", "hazards", "water", "shelters"}
+_WATER = {"x", "y"}
+_SHELTER = {"x", "y", "radius", "insulation"}
 _FOOD = {"x", "y", "capacity", "regrow_per_hour"}
 _HAZARD = {"x", "y", "radius", "strength", "start", "end", "every"}
 _CLAMP = {"type", "key", "value", "start", "end"}
@@ -108,12 +114,23 @@ class Scenario:
                 raise ScenarioError(f"interventions[{i}]: {error}") from error
         return engine
 
-    def run(self, out: str | Path | None = None) -> RunResult:
+    def run(
+        self, out: str | Path | None = None, rerun_spawn: bool = False, rerun_save: str | Path | None = None
+    ) -> RunResult:
         engine = self.build()
+        if rerun_spawn or rerun_save is not None:
+            from .observe.rerun import RerunSink
+
+            RerunSink(every=self.record_every, spawn=rerun_spawn, save=rerun_save).attach(engine)
         monitor = HealthMonitor(every=self.monitor_every, halt_on=self.halt_on).attach(engine) if self.monitor else None
         writer = None
         if out is not None:
-            config = {"scenario": self.name, "seed": self.seed, "source_sha256": _sha256(self.source)}
+            config = {
+                "scenario": self.name,
+                "seed": self.seed,
+                "duration_s": self.duration_s,
+                "source_sha256": _sha256(self.source),
+            }
             writer = RunWriter(out, every=self.record_every, config={**config, "source": self.source}).attach(engine)
         try:
             stopped = engine.run(self.duration_s)
@@ -143,6 +160,67 @@ class RunResult:
                 f"alerts     {len(raised)}" + "".join(f"\n  t={a.t:.0f}s {a.severity}: {a.message}" for a in raised)
             )
         return "\n".join(lines)
+
+
+@dataclass
+class ReplayResult:
+    identical: bool
+    detail: str
+    warnings: list[str]
+
+
+def _first_difference(original: Path, replayed: Path) -> str | None:
+    a = original.read_text(encoding="utf-8").splitlines()
+    b = replayed.read_text(encoding="utf-8").splitlines()
+    for i, (x, y) in enumerate(zip(a, b, strict=False)):
+        if x != y:
+            return f"{original.name} line {i + 1}: recorded {x[:120]!r}, replayed {y[:120]!r}"
+    if len(a) != len(b):
+        return f"{original.name}: recorded {len(a)} lines, replayed {len(b)}"
+    return None
+
+
+def replay(run_dir: str | Path) -> ReplayResult:
+    """Re-run the scenario stored in a run record and compare the outputs bit for bit.
+
+    Only records written by ``Scenario.run`` (or ``python -m unbodysoma run``) carry
+    the scenario source needed to replay them.
+    """
+    run_dir = Path(run_dir)
+    if not (run_dir / "meta.json").is_file():
+        raise ScenarioError(f"{run_dir}: not a run record (no meta.json)")
+    meta = json.loads((run_dir / "meta.json").read_text(encoding="utf-8"))
+    config = meta.get("config", {})
+    if "source" not in config:
+        raise ScenarioError(f"{run_dir}: this run record was not produced from a scenario file, nothing to replay")
+    if _sha256(config["source"]) != config.get("source_sha256"):
+        raise ScenarioError(f"{run_dir}: the stored scenario source does not match its checksum")
+    scenario = parse_scenario(config["source"], name=str(config.get("scenario", "scenario")))
+    scenario = replace(
+        scenario, seed=int(config["seed"]), duration_s=float(config.get("duration_s", scenario.duration_s))
+    )
+
+    warnings = []
+    if meta.get("unbodysoma") != __version__:
+        warnings.append(f"recorded with unbodysoma {meta.get('unbodysoma')}, replaying with {__version__}")
+    recorded_git = (meta.get("git") or {}).get("commit")
+    current = git_revision()
+    if recorded_git and current and recorded_git != current.get("commit"):
+        warnings.append(f"recorded at commit {recorded_git[:7]}, replaying at {current['commit'][:7]}")
+
+    with tempfile.TemporaryDirectory() as tmp:
+        out = Path(tmp) / "replay"
+        scenario.run(out=out)
+        replayed_meta = json.loads((out / "meta.json").read_text(encoding="utf-8"))
+        if replayed_meta.get("ticks") != meta.get("ticks"):
+            return ReplayResult(
+                False, f"ran {replayed_meta.get('ticks')} ticks, recorded {meta.get('ticks')}", warnings
+            )
+        for name in ("signals.csv", "events.jsonl"):
+            difference = _first_difference(run_dir / name, out / name)
+            if difference:
+                return ReplayResult(False, difference, warnings)
+    return ReplayResult(True, f"{meta.get('ticks')} ticks reproduced bit for bit", warnings)
 
 
 def _sha256(text: str) -> str:
@@ -233,6 +311,14 @@ def parse_scenario(text: str, name: str = "scenario") -> Scenario:
                 _keys(h, _HAZARD, where, required={"x", "y"})
                 hazards.append(Hazard(**{k: _number(h, k, where) for k in h}))
             layout["hazards"] = hazards
+        for key, allowed, cls in (("water", _WATER, WaterSource), ("shelters", _SHELTER, Shelter)):
+            if key in world:
+                items = []
+                for i, item in enumerate(_records(world[key], f"world.{key}")):
+                    where = f"world.{key}[{i}]"
+                    _keys(item, allowed, where, required={"x", "y"})
+                    items.append(cls(**{k: _number(item, k, where) for k in item}))
+                layout[key] = items
         scenario.world = layout
 
     for i, iv in enumerate(_records(data.get("interventions", []), "interventions")):

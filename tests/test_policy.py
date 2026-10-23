@@ -50,8 +50,13 @@ def choices(situation: dict[str, float], decisions: int = 2000, **params) -> Cou
 AMBIVALENT = {
     "psyche.appraisal.threat": 0.0,
     "psyche.drive.hunger": 0.35,
+    "psyche.drive.thirst": 0.0,
+    "psyche.drive.thermal_discomfort": 0.0,
     "psyche.drive.sleepiness": 0.0,
     "extero.food": 1.0,
+    "extero.water": 0.0,
+    "extero.in_shelter": 0.0,
+    "extero.shelter_known": 0.0,
 }
 # No commitment bonuses, and fast reconsideration so that 2000 decisions sample the long-run budget well.
 NO_BIAS = {"stickiness": 0.0, "eat_commitment": 0.0, "reconsideration_rate": 1.0}

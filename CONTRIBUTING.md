@@ -7,6 +7,7 @@
 ```bash
 python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
+pip install -e ".[viz]"      # 選用：Rerun 即時檢視
 
 pytest                     # 測試（含數分鐘的多日模擬）
 pytest -m "not slow"       # 快速測試：略過多日模擬
@@ -15,6 +16,7 @@ ruff format .              # 格式化
 mypy                       # 型別檢查（strict）
 python -m unbodysoma.catalog   # 修改參數或訊號規格後，重新產生 docs/SIGNALS.md 與 docs/PARAMETERS.md
 python -m unbodysoma validate scenarios/*.toml   # 檢查情境檔
+python -m unbodysoma replay runs/<紀錄>          # 驗證一份執行紀錄可以逐位元重現
 ```
 
 CI 會依序執行 lint、格式、型別檢查、文件是否過時、測試與所有範例；請在提交前先在本機跑過。
