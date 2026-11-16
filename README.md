@@ -216,6 +216,7 @@ docs/            設計文件與架構決策紀錄（ADR）
 | [OBSERVABILITY.md](docs/OBSERVABILITY.md) | 觀測與監控：執行紀錄、健康監控、快照倒帶、干預實驗、儀表板規劃 |
 | [VARIABILITY.md](docs/VARIABILITY.md) | 變異與統計真實性：避免「平均人」與眾數塌縮、已實作的變異、實作中的教訓 |
 | [ROADMAP.md](docs/ROADMAP.md) | 分階段路線圖與待討論的開放問題 |
+| [BACKLOG.md](docs/BACKLOG.md) | 跨階段開發優化盤點：L1 深化、引擎效能、觀測、生態整合（2026-11-16 歸檔） |
 | [ETHICS.md](docs/ETHICS.md) | 醫療免責、意識宣稱、模擬負面狀態的倫理準則 |
 | [REFERENCES.md](docs/REFERENCES.md) | 理論與既有模型參考文獻 |
 | [adr/](docs/adr/) | 架構決策紀錄 |
