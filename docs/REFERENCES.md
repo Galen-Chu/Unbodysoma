@@ -26,6 +26,8 @@
 
 - Guyton, A. C., Coleman, T. G., & Granger, H. J. (1972). Circulation: Overall regulation. *Annual Review of Physiology*, 34, 13–44. https://doi.org/10.1146/annurev.ph.34.030172.000305
 - Bergman, R. N., Ider, Y. Z., Bowden, C. R., & Cobelli, C. (1979). Quantitative estimation of insulin sensitivity. *American Journal of Physiology*, 236(6), E667–E677. https://doi.org/10.1152/ajpendo.1979.236.6.E667 （血糖-胰島素最小模型）
+- Dalla Man, C., Rizza, R. A., & Cobelli, C. (2006). Mixed meal simulation model of glucose-insulin system. *2006 International Conference of the IEEE Engineering in Medicine and Biology Society*, 307–310. https://doi.org/10.1109/iembs.2006.260810 （口服輸入的雙區間腸道吸收）
+- American Diabetes Association. (2021). 2. Classification and diagnosis of diabetes: *Standards of Medical Care in Diabetes—2021*. *Diabetes Care*, 44(Suppl. 1), S15–S33. https://doi.org/10.2337/dc21-s002 （血糖曲線驗收範圍：空腹 < 100、2 小時 < 140 mg/dL）
 - Borbély, A. A. (1982). A two process model of sleep regulation. *Human Neurobiology*, 1(3), 195–204.
 - Daan, S., Beersma, D. G., & Borbély, A. A. (1984). Timing of human sleep: Recovery process gated by a circadian pacemaker. *American Journal of Physiology*, 246(2), R161–R183. https://doi.org/10.1152/ajpregu.1984.246.2.R161 （睡眠壓力的時間常數 18.2 h / 4.2 h）
 - Czeisler, C. A., Duffy, J. F., Shanahan, T. L., Brown, E. N., Mitchell, J. F., Rimmer, D. W., et al. (1999). Stability, precision, and near-24-hour period of the human circadian pacemaker. *Science*, 284(5423), 2177–2181. https://doi.org/10.1126/science.284.5423.2177
@@ -62,5 +64,5 @@
 
 - **abyssal-garden** — Noniv. 單檔 WebGPU 程序化海底世界（MIT）：密度場地形、Surface Nets、生態規則撒點、決定論種子。管線分析與採用評估見 [WORLDGEN.md](WORLDGEN.md)。<https://github.com/Noniv/abyssal-garden>
 
-> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。
+> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。2026-11-16 新增的 Dalla Man 與 ADA 兩筆已對照 Crossref（DOI、卷頁、年份一致）。
 > 新增引用時請附上 DOI 或原始出處連結；如發現錯誤歡迎發 PR 修正。

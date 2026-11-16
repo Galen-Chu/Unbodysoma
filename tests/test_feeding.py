@@ -71,7 +71,10 @@ def test_threat_interrupts_a_meal_which_then_resumes():
 def test_starvation_is_flagged_by_the_health_monitor():
     engine = hungry([], reserve=0.08)
     monitor = HealthMonitor().attach(engine)
-    rec = record(engine, 3600.0, every=10.0)
+    # 2 h, not 1: with the L1 glucose-insulin core the defended level collapses
+    # on the glucose-effectiveness timescale (~40 min), so hypoglycemia shows
+    # up in the second hour (docs/SOMA.md §2.3).
+    rec = record(engine, 7200.0, every=10.0)
     raised = {a.rule for a in monitor.alerts if a.raised}
     assert {"starvation", "glucose_abnormal"} <= raised
     assert monitor.worst == "warning"  # unhealthy, but no model bug

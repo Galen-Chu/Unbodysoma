@@ -106,9 +106,18 @@
 | `exertion_cost` | 4 | — | [0, 20] | Extra drain per unit exertion, relative to basal | L0 toy value |
 | `shiver_cost` | 3 | — | [0, 20] | Extra drain per unit shivering, relative to basal | L0 toy value |
 | `sleep_metabolic_factor` | 0.9 | — | [0.5, 1] | Basal drain during sleep, relative to awake rest | L0 toy value |
-| `glucose_setpoint` | 90 | mg/dL | [60, 130] | Defended fasting glucose | L0 toy value |
-| `k_adrenaline` | 40 | mg/dL | [0, 150] | Glucose mobilized per unit adrenaline | L0 toy value |
-| `glucose_tau` | 120 | s | [1, 3600] | Time constant of glucose regulation | L0 toy value |
+| `glucose_setpoint` | 90 | mg/dL | [60, 130] | Defended fasting glucose | ADA (2021): normal fasting 70–99 mg/dL; 90 mid-range |
+| `glucose_effectiveness` | 0.026 | 1/min | [0.002, 0.1] | Insulin-independent glucose disposal per unit glucose (S_G) | Bergman et al. (1979): typical value |
+| `insulin_action_rate` | 0.05 | 1/min | [0.005, 0.5] | Rate of insulin-action dynamics (p2) | Bergman et al. (1979): typical value |
+| `insulin_action_gain` | 5e-05 | 1/min per μU/mL | [1e-06, 0.001] | Insulin action gained per unit plasma insulin above basal (p3) | calibrated: post-meal X ≈ 0.04 1/min at ΔI ≈ 40 μU/mL |
+| `insulin_basal` | 8 | μU/mL | [0, 60] | Fasting plasma insulin | typical fasting 5–15 μU/mL |
+| `insulin_secretion_gain` | 0.13 | μU/mL/min per mg/dL | [0, 2] | Insulin secreted per mg/dL of glucose above the threshold | calibrated: post-meal insulin peaks 50–80 μU/mL |
+| `insulin_threshold` | 100 | mg/dL | [60, 180] | Glucose above which insulin secretion turns on | calibrated: fasting + 10 mg/dL |
+| `insulin_tau` | 420 | s | [60, 3600] | Time constant of insulin clearance | insulin half-life ≈ 5 min (τ = 7 min) |
+| `glucose_volume` | 112 | dL | [20, 400] | Glucose distribution volume | 1.6 dL/kg × 70 kg reference body |
+| `gut_glucose_per_reserve` | 230000 | mg | [10000, 3e+06] | Oral glucose mass per unit of reserve refilled | calibrated: a full meal's refill ≈ 55–60 g carbohydrate |
+| `gut_tau` | 2100 | s | [60, 14400] | Time constant of each gut compartment (two in series) | Dalla Man et al. (2006) family: appearance peaks ≈ 40 min |
+| `adrenaline_glucose_production` | 2.5 | mg/dL/min | [0, 20] | Hepatic glucose output per unit adrenaline (glycogenolysis) | calibrated: ≈ +30 mg/dL sustained, as in the L0 model |
 | `glucose_defense_reserve` | 0.1 | fraction | [0.01, 1] | Reserve below which glucose can no longer be defended | L0 toy value |
 
 ## `soma.fluid`

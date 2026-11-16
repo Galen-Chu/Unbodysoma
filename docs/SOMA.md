@@ -8,7 +8,7 @@
 |---|---|---|---|---|
 | 心血管 Cardio | 心率、心率變異、血壓、心輸出量 | 喚醒度最主要的內感受來源 | ✅ L0（心率 + HRV） | Guyton 循環調節模型 |
 | 內分泌 Endocrine | 腎上腺素、皮質醇、胰島素、昇糖素、褪黑激素 | 壓力反應、能量動員、身心雙向橋梁 | ✅ L0（腎上腺素、有晝夜節律的皮質醇） | HPA 軸動態模型 |
-| 代謝 Metabolism | 血糖、肝醣、脂肪、能量儲備 | 飢餓、疲勞、認知資源 | ✅ L0（單一能量池 + 血糖） | Bergman 最小模型 |
+| 代謝 Metabolism | 血糖、胰島素、肝醣、脂肪、能量儲備 | 飢餓、疲勞、認知資源 | ✅ L1 血糖-胰島素（Bergman 最小模型＋雙區間腸道）；能量池仍 L0 | Dalla Man 膳食模型（完整膳食動力學） |
 | 晝夜節律 Circadian | 晝夜相位、時鐘時間 | 警覺度、睡眠時機、荷爾蒙節律 | ✅ L0（無光照輸入的正弦節律） | 光照驅動的振盪器模型 |
 | 睡眠恆定 Sleep | 睡眠壓力（process S） | 疲倦、睡眠時機 | ✅ L1 時間常數（Daan 等人，1984） | Borbély 雙歷程模型的完整版本 |
 | 呼吸 Respiratory | 呼吸頻率、潮氣量、血氧、CO₂ | 窒息感、恐慌、呼吸調節情緒 | ⬜（目前只有固定的呼吸頻率帶動 RSA） | 化學感受器回饋模型 |
@@ -45,24 +45,34 @@ cortisol   ← relax(cortisol, cortisol*, dt, τ = 300 s（上升）/ 1800 s（�
 
 上升快、下降慢的不對稱時間常數，是壓力荷爾蒙「來得快去得慢」的最小表現。皮質醇的基線有晨間高峰（早上約 0.30、晚上約 0.11）。皮質醇目前尚無下游讀者，是為記憶鞏固、免疫抑制、代謝等未來模組預留的慢速訊號。
 
-### 2.3 代謝 `soma/metabolism.py`
+### 2.3 代謝 `soma/metabolism.py`（血糖-胰島素：L1；能量池：L0）
+
+**能量池（L0，Phase 1 不變——飢餓迴路依賴它）：**
 
 ```
 drain    = (1 / 48 h) · (1 + 4·exertion + 3·shivering) · (0.9 if sleeping else 1)
 reserve  ← clamp(reserve + (food_intake − drain)·dt)
-glucose* = (90 + 40·adrenaline) · min(1, reserve / 0.1)
-glucose  ← relax(glucose, glucose*, dt, τ = 120 s)
 ```
 
-48 小時的儲備（校準為一天約三餐）讓一天的消耗約為儲備的一半，夜間 8 小時的睡眠只消耗約 0.15，起床後會餓但不會挨餓。
+48 小時的儲備（校準為一天約三餐）讓一天的消耗約為儲備的一半。能量攝取 `world.food_intake` 由環境層的 `world/food.py` 計算（`3×10⁻⁴ /s · world.food_available · motor.eating`）；飢餓迴路因此閉合：儲備下降 → 能量不足感 → 飢餓 → 進食 → 攝取 → 儲備回升。
 
-能量攝取 `world.food_intake` 由環境層的 `world/food.py` 計算：只有在**食物在手邊**且**正在進食**時才有攝取。
+**血糖-胰島素核心（L1，2026-11-16）**：結構採 Bergman、Ider、Bowden 與 Cobelli（1979）的最小模型；口服輸入採 Dalla Man、Rizza 與 Cobelli（2006）膳食模型家族的雙區間腸道；驗收範圍取 ADA（2021）正常值。方程（每分鐘速率）：
 
 ```
-food_intake = 3×10⁻⁴ /s · world.food_available · motor.eating      （約每 15 分鐘補回 0.3 的儲備）
+gut₁  ← gut₁ + food_intake · 2.3×10⁵ mg · dt                       （進食沉積口服葡萄糖）
+flowᵢ = gutᵢ / τ_gut （兩區間串聯，τ_gut = 2100 s）
+Ra    = flow₂ / V_G    （血漿出現率；V_G = 112 dL ≈ 1.6 dL/kg × 70 kg）
+I     ← I + [k_sec·max(0, G − 100) − (I − I_b)/τ_I]·dt            （分泌與清除；I_b = 8 μU/mL，τ_I = 7 min）
+X     ← X + [−p₂·X + p₃·(I − I_b)]·dt                             （延遲的胰島素作用；p₂ = 0.05/min）
+G_b'  = 90 · min(1, reserve / 0.1)                                 （捱餓時防線潰堤——延續 L0 行為）
+dG    = −(S_G + X)·G + S_G·G_b' + Ra + k_adr·adrenaline           （S_G = 0.026/min；k_adr = 2.5 mg/dL/min）
 ```
 
-飢餓迴路因此是閉合的：儲備下降 → 內感受的能量不足 → 飢餓 → 看到食物就進食 → 攝取 → 儲備回升 → 飢餓消退。
+實際曲線（`tests/test_metabolism_l1.py` 驗收）：空腹 90（ADA 正常 70–99）；一餐（進食 750 s ≈ 52 g）峰值約 157 於 42 分（文獻 30–60 分）、2 小時 108（ADA 正常 < 140）、4 小時回到空腹 ±15 內；連續兩餐（≈ 83 g）峰值約 184，仍在健康範圍；胰島素峰值約 56–79 μU/mL、3 小時回基礎值。腎上腺素持續動員血糖約 +30–45 mg/dL（肝醣分解），與 L0 同量級。劑量校準（每單位儲備 2.3×10⁵ mg ≈ 一餐 55–60 g 醣類）使生物體自己的進食模式（含偶發的連續兩餐）全程不觸發 `glucose_abnormal` 警戒（72 小時情境驗收）。
+
+**時間尺度的變化**：葡萄糖效能的時間常數 τ = 1/S_G ≈ 40 分鐘是文獻性質，因此捱餓造成的低血糖在第 2 小時才跌破 50 mg/dL——L0 的「1 小時內崩落」是快速追蹤的人工產物（`tests/test_feeding.py` 的捱餓測試已延長至 2 小時）。
+
+**整合邊界**：血糖-胰島素核心目前供給內感受與健康監控，讀 `soma.endocrine.adrenaline`、吃同一條 `world.food_intake` 訊號；能量池仍是飢餓迴路的驅動——把儲備整合為淨葡萄糖平衡是後續工作（§3 的「讀寫同一組訊號」原則）。
 
 ### 2.4 晝夜節律 `soma/circadian.py`（process C）
 

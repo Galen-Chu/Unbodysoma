@@ -89,6 +89,7 @@
 | `soma.fluid.osmolality` | mOsm/kg | [250, 350] | `soma.fluid` | —（預留） | Plasma osmolality |
 | `soma.metabolism.energy_reserve` | fraction | [0, 1] | `soma.metabolism` | `interface.interoception` | Lumped energy store (1 = full) |
 | `soma.metabolism.glucose` | mg/dL | [0, 600] | `soma.metabolism` | —（預留） | Blood glucose |
+| `soma.metabolism.insulin` | μU/mL | [0, 400] | `soma.metabolism` | —（預留） | Plasma insulin |
 | `soma.sleep.pressure` | normalized | [0, 1] | `soma.sleep` | `interface.interoception` | Homeostatic sleep pressure (process S) |
 | `soma.thermo.core_temperature` | °C | [30, 45] | `soma.thermo` | `interface.interoception` | Core body temperature |
 | `soma.thermo.shivering` | normalized | [0, 1] | `soma.thermo` | `soma.metabolism` | Shivering intensity (heat production, energy cost) |
