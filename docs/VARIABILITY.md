@@ -57,7 +57,7 @@ Unbodysoma 很容易犯同一種錯誤，只是形式不同：
 | 靜止心率 | `Cardio.resting_bpm` | 65 bpm | 成人族群分布；與年齡、性別、體能的關係 |
 | 最大心率 | `Cardio.max_bpm` | 190 bpm | 隨年齡下降（如 Tanaka 等人 2001 年的迴歸式 208 − 0.7 × 年齡），且個體間差異不小 |
 | 心率對腎上腺素 / 運動的增益 | `Cardio.k_adrenaline`、`k_exertion` | 40、70 | 壓力反應性的個體差異 |
-| 皮質醇基線與反應 | `Endocrine.cortisol_baseline`、`cortisol_gain`、`cortisol_tau_rise` / `cortisol_tau_fall` | 0.2、0.75、300 / 1800 s | 個體差異大；有晝夜節律（Phase 1 晝夜模組完成後才有意義） |
+| 皮質醇基線與反應 | `Endocrine.cortisol_baseline`、`car_amplitude`、`acth_gain`、`cortisol_feedback` | 0.2、0.5、0.45、4.0 | 個體差異大（CAR 幅度與壓力反應性尤甚）；晝夜節律自 Phase 1 起已內建 |
 | 能量消耗速率 | `Metabolism.hours_to_empty_at_rest` | 16 h | 基礎代謝率的族群分布，與體重、體組成相關 |
 | 喚醒對威脅評估的放大 | `Appraisal.arousal_bias` | 0.5 | 對應**焦慮特質**；族群中應呈現連續分布，高端對應焦慮傾向 |
 | 情感基線與權重 | `Affect.baseline_valence`、`w_*` 權重 | 0.1；0.6 / 0.4 / 0.9 / 0.5 | 對應正向 / 負向情感特質；身體訊號在情感中的比重也因人而異 |

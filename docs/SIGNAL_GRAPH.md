@@ -37,6 +37,7 @@ flowchart LR
     interface_interoception -->|"circadian, energy_deficit +3"| psyche_drives
     psyche_action -->|"sleeping"| psyche_drives
     psyche_action -->|"exertion, sleeping"| soma_cardio
+    psyche_action -->|"sleeping"| soma_endocrine
     psyche_action -->|"exertion, sleeping"| soma_fluid
     psyche_action -->|"exertion, sleeping"| soma_metabolism
     psyche_action -->|"sleeping"| soma_sleep
@@ -105,6 +106,7 @@ flowchart LR
     psyche_action -->|"sleeping"| psyche_drives
     psyche_action -->|"action.selected_explore, action.selected_flee +2"| psyche_navigation
     psyche_action -->|"exertion, sleeping"| soma_cardio
+    psyche_action -->|"sleeping"| soma_endocrine
     psyche_action -->|"exertion, sleeping"| soma_fluid
     psyche_action -->|"exertion, sleeping"| soma_metabolism
     psyche_action -->|"sleeping"| soma_sleep

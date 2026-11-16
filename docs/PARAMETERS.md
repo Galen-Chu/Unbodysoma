@@ -89,11 +89,16 @@
 | `cortisol_baseline` | 0.2 | normalized | [0, 1] | Cortisol level without threat | L0 toy value |
 | `cortisol_circadian_amplitude` | 0.1 | normalized | [0, 0.2] | Daily swing of the cortisol baseline | L0 toy value |
 | `cortisol_peak_hour` | 8 | h | [0, 24] | Clock hour of the daily cortisol peak | L0 toy value |
-| `cortisol_gain` | 0.75 | — | [0, 1] | Share of the headroom above baseline reached at full threat | L0 toy value |
+| `car_amplitude` | 0.5 | normalized | [0, 2] | Cortisol awakening response amplitude, as a share of the range | Clow et al. (2010): +50–75% over the first 30–45 min after waking |
+| `car_tau` | 1500 | s | [60, 7200] | Time constant of each awakening-response stage (two in series) | Clow et al. (2010): the response peaks 30–45 min after waking |
+| `acth_gain` | 0.45 | — | [0, 1] | Stress drive into the pituitary-adrenal cascade at full threat | calibrated: peak response +40–90% of baseline (Dickerson & Kemeny, 2004) |
+| `acth_tau_rise` | 360 | s | [10, 3600] | Rise time constant of the stress drive | Dickerson & Kemeny (2004): responses peak 20–40 min after onset |
+| `acth_tau_fall` | 1500 | s | [10, 7200] | Recovery time constant of the stress drive | Dickerson & Kemeny (2004): recovery within 1–2 h |
+| `cortisol_feedback` | 4 | — | [0, 50] | Suppression of the stress drive per unit cortisol above baseline | standard HPA negative feedback; calibrated |
 | `adrenaline_tau_rise` | 3 | s | [0.1, 60] | Time constant of adrenaline release | L0 toy value |
 | `adrenaline_tau_fall` | 40 | s | [1, 600] | Time constant of adrenaline clearance | L0 toy value |
-| `cortisol_tau_rise` | 300 | s | [10, 7200] | Time constant of cortisol release | L0 toy value |
-| `cortisol_tau_fall` | 1800 | s | [60, 36000] | Time constant of cortisol clearance | L0 toy value |
+| `cortisol_tau_rise` | 600 | s | [10, 7200] | Time constant of cortisol release | L0 toy value |
+| `cortisol_tau_fall` | 3000 | s | [60, 36000] | Time constant of cortisol clearance | L0 toy value |
 
 ## `soma.metabolism`
 
