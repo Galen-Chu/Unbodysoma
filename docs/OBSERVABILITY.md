@@ -158,20 +158,23 @@ engine.cancel(intervention)
 
 拿掉內感受或固定心率之後，身體反應與威脅評估都還在，但**感受到的喚醒度**明顯降低（`no_heart` 的峰值心率 69.72 是心臟被抑制前、靜止時的心率變異）。這正是「情緒有一部分來自感知自己的身體」這個假設的最小可運作示範（請記得這些都是 L0 玩具模型）。
 
-## 7. ④ 即時儀表板（規劃）
+## 7. ④ 儀表板（離線版完成；即時版規劃）
 
 **原則：先定好資料格式，再做畫面。** 儀表板只是執行紀錄與事件串流的另一種讀者，不需要改動引擎。
 
 | 階段 | 做法 | 用途 |
 |---|---|---|
 | ✅ 已完成 | 接入 [Rerun](https://rerun.io)（`observe/rerun.py`，`pip install "unbodysoma[viz]"`）：訊號、事件與網格世界地圖 | 即時時間序列、時間軸拖曳、幾乎不用寫前端 |
+| ✅ 已完成（2026-11-16） | **離線網頁儀表板**（`observe/dashboard.py`）：`python -m unbodysoma dashboard <run>` 產生自足式 HTML——每訊號統計表與火花線、事件摘要、valence × arousal 情感平面軌跡；零相依、無時間戳、決定論輸出 | 展示與教學、單檔分享 |
 | 🟡 部分完成 | 從模組的讀寫宣告自動產生訊號依賴圖（[SIGNAL_GRAPH.md](SIGNAL_GRAPH.md)）；即時標上數值尚未完成 | 看出因果路徑 |
-| Phase 2 | 專屬網頁儀表板：人體狀態圖、valence × arousal 情感平面軌跡、警報時間軸 | 展示與教學 |
+| 規劃 | 人體狀態圖（解剖式面板）與警報時間軸併入離線儀表板 | 展示與教學 |
 
 ```bash
 pip install "unbodysoma[viz]"
 python -m unbodysoma run scenarios/grid_72h.toml --rerun              # 開啟 Rerun 檢視器即時觀看
 python -m unbodysoma run scenarios/grid_72h.toml --rerun-save run.rrd # 或存成檔案之後再看
+python -m unbodysoma run scenarios/grid_72h.toml --out runs/three-days
+python -m unbodysoma dashboard runs/three-days                        # 產出 runs/three-days/dashboard.html
 ```
 
 Rerun 是選用相依，版本固定在 0.40.x（它的 API 在小版本之間會變動）；核心維持零外部相依。掛上 Rerun 不會改變模擬結果（`test_streaming_to_rerun_does_not_change_the_simulation`）。

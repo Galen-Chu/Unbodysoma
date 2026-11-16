@@ -32,6 +32,8 @@
 - Clow, A., Hucklebridge, F., Stalder, T., Evans, P., & Thorn, L. (2010). The cortisol awakening response: More than a measure of HPA axis function. *Neuroscience & Biobehavioral Reviews*, 35(1), 97–103. https://doi.org/10.1016/j.neubiorev.2009.12.011 （甦醒反應：醒後 30–45 分內 +50–75%）
 - Whipp, B. J., & Wasserman, K. (1972). Oxygen uptake kinetics for various intensities of constant-load work. *Journal of Applied Physiology*, 33(3), 351–356. https://doi.org/10.1152/jappl.1972.33.3.351 （運動起始的指數動力學：基本分量 τ ≈ 20–45 s）
 - Cole, C. R., Blackstone, E. H., Pashkow, F. J., Snader, C. E., & Lauer, M. S. (1999). Heart-rate recovery immediately after exercise as a predictor of mortality. *New England Journal of Medicine*, 341(18), 1351–1357. https://doi.org/10.1056/nejm199910283411804 （心率恢復：健康者運動後第一分鐘下降 ≥ 12 bpm）
+- Cretikos, M. A., Bellomo, R., Hillman, K., Chen, J., Finfer, S., & Flabouris, A. (2008). Respiratory rate: the neglected vital sign. *Medical Journal of Australia*, 188(11), 657–659. https://doi.org/10.5694/j.1326-5377.2008.tb01825.x （靜止呼吸率正常帶 12–20/min）
+- O'Driscoll, B. R., Howard, L. S., & Davison, A. G. (2008). BTS guideline for emergency oxygen use in adult patients. *Thorax*, 63(Suppl. 6), vi1–vi68. https://doi.org/10.1136/thx.2008.102947 （多數成人目標血氧飽和度 94–98 %）
 - Borbély, A. A. (1982). A two process model of sleep regulation. *Human Neurobiology*, 1(3), 195–204.
 - Daan, S., Beersma, D. G., & Borbély, A. A. (1984). Timing of human sleep: Recovery process gated by a circadian pacemaker. *American Journal of Physiology*, 246(2), R161–R183. https://doi.org/10.1152/ajpregu.1984.246.2.R161 （睡眠壓力的時間常數 18.2 h / 4.2 h）
 - Czeisler, C. A., Duffy, J. F., Shanahan, T. L., Brown, E. N., Mitchell, J. F., Rimmer, D. W., et al. (1999). Stability, precision, and near-24-hour period of the human circadian pacemaker. *Science*, 284(5423), 2177–2181. https://doi.org/10.1126/science.284.5423.2177
@@ -68,5 +70,5 @@
 
 - **abyssal-garden** — Noniv. 單檔 WebGPU 程序化海底世界（MIT）：密度場地形、Surface Nets、生態規則撒點、決定論種子。管線分析與採用評估見 [WORLDGEN.md](WORLDGEN.md)。<https://github.com/Noniv/abyssal-garden>
 
-> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。2026-11-16 新增的 Dalla Man、ADA、Dickerson & Kemeny、Clow、Whipp & Wasserman、Cole 等六筆已對照 Crossref（DOI、卷頁、作者、年份一致）。
+> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。2026-11-16 新增的 Dalla Man、ADA、Dickerson & Kemeny、Clow、Whipp & Wasserman、Cole、Cretikos、O'Driscoll 等八筆已對照 Crossref（DOI、卷頁、作者、年份一致）。
 > 新增引用時請附上 DOI 或原始出處連結；如發現錯誤歡迎發 PR 修正。

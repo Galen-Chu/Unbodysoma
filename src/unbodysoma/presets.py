@@ -9,7 +9,7 @@ from .core import Engine, Module
 from .interface import Exteroception, Interoception
 from .interface.exteroception import SPATIAL_CHANNELS
 from .psyche import ActionSelection, Affect, Appraisal, Drives, Navigation
-from .soma import Cardio, Circadian, Endocrine, FluidBalance, Metabolism, SleepHomeostat, Thermoregulation
+from .soma import Cardio, Circadian, Endocrine, FluidBalance, Metabolism, Respiration, SleepHomeostat, Thermoregulation
 from .world import Event, FoodPatch, FoodSource, GridWorld, Hazard, ScriptedWorld, Shelter, WaterIntake, WaterSource
 
 Factory = tuple[str, Callable[..., Module], dict[str, Any]]
@@ -25,6 +25,7 @@ def _body_and_mind(seed: int) -> list[Factory]:
         (Cardio.name, Cardio, {"seed": seed + 2}),
         (Endocrine.name, Endocrine, {}),
         (Metabolism.name, Metabolism, {}),
+        (Respiration.name, Respiration, {}),
         (FluidBalance.name, FluidBalance, {}),
         (Thermoregulation.name, Thermoregulation, {}),
         (Appraisal.name, Appraisal, {}),

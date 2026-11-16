@@ -106,7 +106,9 @@ python examples/feeding.py                 # 飢餓迴路：進食、被威脅�
 python examples/grid_life.py               # 網格世界的三天（約 3 分鐘）：睡眠、覓食、飲水、避寒、躲避掠食者
 python -m unbodysoma run scenarios/fear_response.toml --out runs/fear   # 以 TOML 情境檔執行實驗
 python -m unbodysoma replay runs/fear      # 重跑並逐位元驗證可重現
+python -m unbodysoma dashboard runs/fear   # 產出自足式 HTML 儀表板（統計表、火花線、情感平面）
 pip install -e ".[viz]" && python -m unbodysoma run scenarios/grid_72h.toml --rerun   # 選用：Rerun 即時觀看
+python examples/population.py              # 12 個抽樣個體跑同一協議，輸出族群平均 ± 標準差
 pytest                                     # 執行測試（含多日模擬；快速版：pytest -m "not slow"）
 mypy                                       # 型別檢查（strict）
 python -m unbodysoma.catalog               # 由規格重新產生 SIGNALS.md、PARAMETERS.md、SIGNAL_GRAPH.md

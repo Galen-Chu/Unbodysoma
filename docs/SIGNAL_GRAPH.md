@@ -22,6 +22,7 @@ flowchart LR
         soma_cardio["soma.cardio"]
         soma_endocrine["soma.endocrine"]
         soma_metabolism["soma.metabolism"]
+        soma_respiration["soma.respiration"]
         soma_fluid["soma.fluid"]
         soma_thermo["soma.thermo"]
     end
@@ -40,6 +41,7 @@ flowchart LR
     psyche_action -->|"sleeping"| soma_endocrine
     psyche_action -->|"exertion, sleeping"| soma_fluid
     psyche_action -->|"exertion, sleeping"| soma_metabolism
+    psyche_action -->|"exertion, sleeping"| soma_respiration
     psyche_action -->|"sleeping"| soma_sleep
     psyche_action -->|"exertion"| soma_thermo
     psyche_action -->|"eating"| world_food
@@ -55,6 +57,7 @@ flowchart LR
     soma_circadian -->|"circadian.clock_hour"| soma_endocrine
     soma_endocrine -->|"endocrine.adrenaline"| soma_cardio
     soma_endocrine -->|"endocrine.adrenaline"| soma_metabolism
+    soma_endocrine -->|"endocrine.adrenaline"| soma_respiration
     soma_fluid -->|"fluid.hydration"| interface_interoception
     soma_metabolism -->|"metabolism.energy_reserve"| interface_interoception
     soma_sleep -->|"sleep.pressure"| interface_interoception
@@ -88,6 +91,7 @@ flowchart LR
         soma_cardio["soma.cardio"]
         soma_endocrine["soma.endocrine"]
         soma_metabolism["soma.metabolism"]
+        soma_respiration["soma.respiration"]
         soma_fluid["soma.fluid"]
         soma_thermo["soma.thermo"]
     end
@@ -109,6 +113,7 @@ flowchart LR
     psyche_action -->|"sleeping"| soma_endocrine
     psyche_action -->|"exertion, sleeping"| soma_fluid
     psyche_action -->|"exertion, sleeping"| soma_metabolism
+    psyche_action -->|"exertion, sleeping"| soma_respiration
     psyche_action -->|"sleeping"| soma_sleep
     psyche_action -->|"exertion"| soma_thermo
     psyche_action -->|"eating"| world_food
@@ -126,6 +131,7 @@ flowchart LR
     soma_circadian -->|"circadian.clock_hour"| soma_endocrine
     soma_endocrine -->|"endocrine.adrenaline"| soma_cardio
     soma_endocrine -->|"endocrine.adrenaline"| soma_metabolism
+    soma_endocrine -->|"endocrine.adrenaline"| soma_respiration
     soma_fluid -->|"fluid.hydration"| interface_interoception
     soma_metabolism -->|"metabolism.energy_reserve"| interface_interoception
     soma_sleep -->|"sleep.pressure"| interface_interoception

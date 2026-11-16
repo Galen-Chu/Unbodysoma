@@ -32,8 +32,18 @@ def main(argv: list[str] | None = None) -> int:
     again = commands.add_parser("replay", help="re-run a recorded scenario and check it reproduces exactly")
     again.add_argument("run", type=Path, help="a run record directory written by `run --out`")
 
+    board = commands.add_parser("dashboard", help="render a run record as a self-contained HTML page")
+    board.add_argument("run", type=Path, help="a run record directory written by `run --out`")
+    board.add_argument("--out", type=Path, help="output path (default: <run>/dashboard.html)")
+
     args = parser.parse_args(argv)
     try:
+        if args.command == "dashboard":
+            from .observe.dashboard import write_dashboard
+
+            print(f"dashboard  {write_dashboard(args.run, args.out)}")
+            return 0
+
         if args.command == "validate":
             for path in args.scenarios:
                 scenario = load_scenario(path)

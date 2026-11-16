@@ -128,6 +128,23 @@
 | `adrenaline_glucose_production` | 2.5 | mg/dL/min | [0, 20] | Hepatic glucose output per unit adrenaline (glycogenolysis) | calibrated: ≈ +30 mg/dL sustained, as in the L0 model |
 | `glucose_defense_reserve` | 0.1 | fraction | [0.01, 1] | Reserve below which glucose can no longer be defended | L0 toy value |
 
+## `soma.respiration`
+
+`unbodysoma.soma.pulmonary.Respiration`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `resting_rate` | 14 | breaths/min | [8, 25] | Breathing rate at rest | Cretikos et al. (2008): normal adult range 12–20/min |
+| `exertion_rate_gain` | 1.2 | breaths/min per exertion | [0, 4] | Breathing rate added per unit exertion, relative to rest | calibrated: moderate exercise reaches the mid-20s to 30s |
+| `adrenaline_rate_gain` | 4 | breaths/min | [0, 20] | Breathing rate added at full adrenaline | L0 toy value |
+| `sleep_rate_factor` | 0.85 | — | [0.5, 1] | Breathing rate during sleep, relative to rest | sleep lowers ventilation; calibrated |
+| `resting_ventilation` | 6 | L/min | [3, 12] | Minute ventilation at rest | typical adult resting ventilation ≈ 6 L/min |
+| `exertion_ventilation_gain` | 26 | L/min per exertion | [0, 100] | Minute ventilation added per unit exertion | calibrated: moderate exercise ≈ 3–5 × rest |
+| `resting_spo2` | 97.5 | % | [94, 100] | Arterial saturation at rest | O'Driscoll et al. (2008): target range 94–98 % |
+| `exertion_spo2_dip` | 2.5 | % | [0, 8] | Saturation dip at full exertion (healthy exercise desaturation is small) | calibrated: healthy adults stay ≥ 94 % during moderate exercise |
+| `rate_tau` | 10 | s | [1, 300] | Time constant of breathing-rate changes | L0 toy value |
+| `ventilation_tau` | 15 | s | [1, 300] | Time constant of ventilation changes | L0 toy value |
+
 ## `soma.fluid`
 
 `unbodysoma.soma.fluid.FluidBalance`
@@ -181,6 +198,7 @@
 | `w_hunger_valence` | 0.5 | — | [0, 2] | Valence lost per unit hunger | L0 toy value |
 | `w_thirst_valence` | 0.5 | — | [0, 2] | Valence lost per unit thirst | L0 toy value |
 | `w_thermal_valence` | 0.4 | — | [0, 2] | Valence lost per unit thermal discomfort | L0 toy value |
+| `need_saturation` | 1 | — | [0, 1] | Blend of multi-need valence pooling: 0 = linear sum, 1 = saturating union | decided by behavioral data, 2026-11-16 (docs/PSYCHE.md §5) |
 | `tau` | 2 | s | [0.01, 600] | Time constant of affect | L0 toy value |
 | `valence_sigma` | 0.03 | normalized | [0, 0.5] | SD of spontaneous valence fluctuation | L0 toy value |
 | `arousal_sigma` | 0.02 | normalized | [0, 0.5] | SD of spontaneous arousal fluctuation | L0 toy value |

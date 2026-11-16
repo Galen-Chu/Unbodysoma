@@ -46,6 +46,71 @@ def rmssd_ms(rr: Sequence[float]) -> float:
     return 1000.0 * math.sqrt(mean(d * d for d in diffs))
 
 
+# -- spectral heart-rate variability -------------------------------------------
+
+# Frequency bands of the Task Force of the ESC and NASPE (1996), in Hz.
+LF_BAND = (0.04, 0.15)
+HF_BAND = (0.15, 0.4)
+
+
+def _interpolate_rr(rr: Sequence[float], hz: float = 4.0) -> list[float]:
+    """Resample the RR series (values at beat times) onto an even grid, in ms."""
+    beats = [0.0]
+    for interval in rr:
+        beats.append(beats[-1] + interval)
+    step = 1.0 / hz
+    grid, j = [], 0
+    t = beats[1]
+    while t <= beats[-1] - 1e-9:
+        while j + 2 < len(beats) and beats[j + 1] < t:
+            j += 1
+        span = beats[j + 1] - beats[j]
+        frac = (t - beats[j]) / span if span > 0 else 0.0
+        grid.append(1000.0 * (rr[j] * (1.0 - frac) + rr[min(j + 1, len(rr) - 1)] * frac))
+        t += step
+    return grid
+
+
+def _goertzel_power(x: Sequence[float], freq: float, fs: float) -> float:
+    """Squared amplitude of ``x`` at ``freq`` (Goertzel; fractional bins allowed)."""
+    coeff = 2.0 * math.cos(2.0 * math.pi * freq / fs)
+    s1 = s2 = 0.0
+    for v in x:
+        s0 = v + coeff * s1 - s2
+        s2, s1 = s1, s0
+    return s1 * s1 + s2 * s2 - coeff * s1 * s2
+
+
+def band_powers(rr: Sequence[float], hz: float = 4.0) -> tuple[float, float]:
+    """(LF, HF) spectral power in ms² over the Task Force (1996) bands.
+
+    The RR series is resampled onto an even grid, the mean is removed, and
+    power is summed over a 0.005 Hz grid within each band (Goertzel per bin).
+    """
+    grid = _interpolate_rr(rr, hz)
+    if len(grid) < 16:
+        raise ValueError("need at least a few beats for spectral analysis")
+    baseline = mean(grid)
+    x = [v - baseline for v in grid]
+    n = len(x)
+
+    def power(band: tuple[float, float]) -> float:
+        freqs = []
+        f = band[0]
+        while f <= band[1]:
+            freqs.append(f)
+            f += 0.005
+        return sum(2.0 * _goertzel_power(x, fq, hz) / (n * hz) for fq in freqs)
+
+    return power(LF_BAND), power(HF_BAND)
+
+
+def lf_hf_ratio(rr: Sequence[float]) -> float:
+    """LF / HF power ratio; < 1 means vagal (HF) dominance, as at rest."""
+    lf, hf = band_powers(rr)
+    return lf / hf if hf > 0 else math.inf
+
+
 # -- distributions ------------------------------------------------------------
 
 

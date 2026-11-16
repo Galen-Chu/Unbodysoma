@@ -52,21 +52,21 @@
 - [x] 代謝升級：血糖-胰島素核心採 Bergman（1979）最小模型＋Dalla Man（2006）雙區間腸道；ADA（2021）曲線驗收（`tests/test_metabolism_l1.py`）— 2026-11-16；能量池仍 L0，其完整整合待後續
 - [x] 內分泌升級：皮質醇路徑採 HPA 延遲＋甦醒反應（CAR）＋負回饋（Dickerson & Kemeny 2004、Clow 等 2010 曲線驗收，`tests/test_endocrine_l1.py`）— 2026-11-16；腎上腺素仍 L0（秒級動力學）
 - [x] 心血管升級：雙路徑速率動力學（神經快路徑＋代謝慢路徑）＋年齡天花板（Whipp & Wasserman 1972、Tanaka 2001、Cole 1999 曲線驗收，`tests/test_cardio_l1.py`）— 2026-11-16；血壓／心輸出量仍無
-- [ ] 專屬的身心狀態儀表板（自 Phase 1 移入）
-- [ ] 情感的多需求合成方式（線性加總 vs. 飽和式），以行為資料決定
+- [x] 專屬的身心狀態儀表板：`python -m unbodysoma dashboard <run>` 產生自足式 HTML（統計表、全訊號火花線、情感平面軌跡；決定論輸出）— 2026-11-16，`observe/dashboard.py`
+- [x] 情感的多需求合成方式：以 `grid_72h` 對照實驗決定採**飽和聯集**（多需求負面情緒 0.37 %→0.17 %，單一威脅反應不變）— 2026-11-16，`Affect.need_saturation`、`tests/test_affect_saturation.py`（見 [PSYCHE.md](PSYCHE.md) §5）
 
-- [ ] 核心子系統升級到 L1（附引用與參數表）
-- [ ] 對照文獻反應曲線的驗證測試（例：葡萄糖耐受試驗、運動心率反應、急性壓力的皮質醇曲線）
-- [ ] 呼吸系統與血氧
-- [ ] 外部生理引擎轉接器的可行性評估（Pulse / BioGears / FMI）
-- [ ] 效能分析，決定是否需要原生核心
-- [ ] 參數規格與族群定義檔：從族群分布抽樣個體（見 [VARIABILITY.md](VARIABILITY.md)）
-- [ ] 族群執行器與分布層級的驗收指標（眾數放大比、熵比、HRV 指標）
-- [ ] 心率變異（HRV）的頻譜結構
+- [x] 核心子系統升級到 L1（附引用與參數表）— 心血管／內分泌／代謝／呼吸四個子系統，見 §2 各節
+- [x] 對照文獻反應曲線的驗證測試（例：葡萄糖耐受試驗、運動心率反應、急性壓力的皮質醇曲線）— `tests/test_{metabolism,endocrine,cardio,pulmonary}_l1.py` 共 23 項
+- [x] 呼吸系統與血氧 — `soma/pulmonary.py`（Cretikos 2008、O'Driscoll 2008 驗收）
+- [x] 外部生理引擎轉接器的可行性評估（Pulse / BioGears / FMI）— 評估完成，暫不整合、保留 oracle 路線（[ADR-0011](adr/0011-external-physiology-engines-deferred.md)）
+- [x] 效能分析，決定是否需要原生核心 — 量測 1741× 實時，暫不需要（[ADR-0012](adr/0012-native-core-not-needed-yet.md)）
+- [x] 參數規格與族群定義檔：從族群分布抽樣個體（見 [VARIABILITY.md](VARIABILITY.md)）— `population.py` 的 `POPULATION_SPEC`＋`sample_individual`（截斷常態、範圍取自參數規格）
+- [x] 族群執行器與分布層級的驗收指標（眾數放大比、熵比、HRV 指標）— `run_population`＋`population_action_metrics`（動作分布的熵比與眾數放大比、每人 RMSSD）、`examples/population.py`
+- [x] 心率變異（HRV）的頻譜結構 — `metrics.band_powers`／`lf_hf_ratio`（Task Force 1996 的 LF/HF 帶，Goertzel），靜止時 HF 主導、交感活化時 HF 崩落（`tests/test_hrv_spectral.py`）
 
 **完成情境：** 至少三個子系統的典型反應曲線落在文獻容許範圍內，並有自動化測試把關。
 
-**曲線部分達成（2026-11-16）：** 代謝（血糖-胰島素，`test_metabolism_l1.py`）、內分泌（HPA 皮質醇，`test_endocrine_l1.py`）、心血管（速率動力學與年齡天花板，`test_cardio_l1.py`）三個子系統的典型反應曲線均已落入文獻容許範圍並有自動化測試把關。Phase 2 其餘項目（儀表板、呼吸系統、族群執行器等）持續進行。
+**達成（2026-11-16）：** 心血管／內分泌／代謝／呼吸四個子系統的典型反應曲線均落入文獻容許範圍並有自動化測試把關；族群執行器與分布級驗收指標就位。Phase 2 完成情境與全部清單項目收尾——後續深化（能量池整合、RSA-呼吸耦合、血壓／心輸出量、L2 保真度）轉入 Phase 3 之後的漸進工作。
 
 ## Phase 3 — 會學習的心智
 

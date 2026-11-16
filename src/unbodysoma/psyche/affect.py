@@ -40,6 +40,15 @@ class Affect(Module):
         ParamSpec("w_hunger_valence", 0.5, "", 0.0, 2.0, "Valence lost per unit hunger"),
         ParamSpec("w_thirst_valence", 0.5, "", 0.0, 2.0, "Valence lost per unit thirst"),
         ParamSpec("w_thermal_valence", 0.4, "", 0.0, 2.0, "Valence lost per unit thermal discomfort"),
+        ParamSpec(
+            "need_saturation",
+            1.0,
+            "",
+            0.0,
+            1.0,
+            "Blend of multi-need valence pooling: 0 = linear sum, 1 = saturating union",
+            source="decided by behavioral data, 2026-11-16 (docs/PSYCHE.md §5)",
+        ),
         ParamSpec("tau", 2.0, "s", 0.01, 600.0, "Time constant of affect"),
         ParamSpec("valence_sigma", 0.03, "normalized", 0.0, 0.5, "SD of spontaneous valence fluctuation"),
         ParamSpec("arousal_sigma", 0.02, "normalized", 0.0, 0.5, "SD of spontaneous arousal fluctuation"),
@@ -57,6 +66,7 @@ class Affect(Module):
         w_hunger_valence: float = 0.5,
         w_thirst_valence: float = 0.5,
         w_thermal_valence: float = 0.4,
+        need_saturation: float = 1.0,
         tau: float = 2.0,
         valence_sigma: float = 0.03,
         arousal_sigma: float = 0.02,
@@ -70,6 +80,7 @@ class Affect(Module):
         self.w_hunger_valence = w_hunger_valence
         self.w_thirst_valence = w_thirst_valence
         self.w_thermal_valence = w_thermal_valence
+        self.need_saturation = need_saturation
         self.tau = tau
         self.valence_sigma = valence_sigma
         self.arousal_sigma = arousal_sigma
@@ -95,16 +106,21 @@ class Affect(Module):
             + self.w_threat_arousal * threat
             + self.arousal_drift
         )
-        valence_target = clamp(
-            self.baseline_valence
-            - self.w_threat_valence * threat
-            - self.w_hunger_valence * hunger
-            - self.w_thirst_valence * port.read("psyche.drive.thirst")
-            - self.w_thermal_valence * port.read("psyche.drive.thermal_discomfort")
-            + self.valence_drift,
-            -1.0,
-            1.0,
+        # How unmet demands combine into negative valence: a linear sum lets
+        # several mild needs out-vote a single strong one (PSYCHE.md §5), a
+        # saturating union (1 - prod(1 - pull)) does not; need_saturation blends.
+        pulls = (
+            self.w_threat_valence * threat,
+            self.w_hunger_valence * hunger,
+            self.w_thirst_valence * port.read("psyche.drive.thirst"),
+            self.w_thermal_valence * port.read("psyche.drive.thermal_discomfort"),
         )
+        linear = sum(pulls)
+        union = 1.0
+        for pull in pulls:
+            union *= 1.0 - clamp(pull, 0.0, 1.0)
+        negative_pull = (1.0 - self.need_saturation) * linear + self.need_saturation * (1.0 - union)
+        valence_target = clamp(self.baseline_valence - negative_pull + self.valence_drift, -1.0, 1.0)
         self.arousal = relax(self.arousal, arousal_target, dt, self.tau)
         self.valence = relax(self.valence, valence_target, dt, self.tau)
         port.write("psyche.affect.valence", self.valence)

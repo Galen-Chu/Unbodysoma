@@ -53,10 +53,10 @@
 | `intero.water_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives` | Felt shortage of water |
 | `motor.drinking` | normalized | [0, 1] | `psyche.action` | `world.water` | Drinking behaviour (1 = drinking) |
 | `motor.eating` | normalized | [0, 1] | `psyche.action` | `world.food`, `world.grid` | Eating behaviour (1 = eating) |
-| `motor.exertion` | normalized | [0, 1] | `psyche.action` | `soma.cardio`, `soma.fluid`, `soma.metabolism`, `soma.thermo` | Physical effort being exerted |
+| `motor.exertion` | normalized | [0, 1] | `psyche.action` | `soma.cardio`, `soma.fluid`, `soma.metabolism`, `soma.respiration`, `soma.thermo` | Physical effort being exerted |
 | `motor.move_x` | normalized | [-1, 1] | `psyche.navigation` | `world.grid` | Movement command (x); length 1 = full speed |
 | `motor.move_y` | normalized | [-1, 1] | `psyche.navigation` | `world.grid` | Movement command (y); length 1 = full speed |
-| `motor.sleeping` | indicator | [0, 1] | `psyche.action` | `psyche.drives`, `soma.cardio`, `soma.fluid`, `soma.metabolism`, `soma.sleep` | 1 while asleep |
+| `motor.sleeping` | indicator | [0, 1] | `psyche.action` | `psyche.drives`, `soma.cardio`, `soma.endocrine`, `soma.fluid`, `soma.metabolism`, `soma.respiration`, `soma.sleep` | 1 while asleep |
 | `psyche.action.p_drink` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing drink |
 | `psyche.action.p_eat` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing eat |
 | `psyche.action.p_explore` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing explore |
@@ -83,13 +83,16 @@
 | `soma.cardio.heart_rate` | bpm | [0, 300] | `soma.cardio` | `interface.interoception` | Heart rate |
 | `soma.circadian.clock_hour` | h | [0, 24] | `soma.circadian` | `soma.endocrine` | Local clock time |
 | `soma.circadian.drive` | normalized | [-1, 1] | `soma.circadian` | `interface.interoception` | Circadian alerting signal (+1 at its daily peak) |
-| `soma.endocrine.adrenaline` | normalized | [0, 1] | `soma.endocrine` | `soma.cardio`, `soma.metabolism` | Circulating adrenaline (sympathetic arousal) |
+| `soma.endocrine.adrenaline` | normalized | [0, 1] | `soma.endocrine` | `soma.cardio`, `soma.metabolism`, `soma.respiration` | Circulating adrenaline (sympathetic arousal) |
 | `soma.endocrine.cortisol` | normalized | [0, 1] | `soma.endocrine` | —（預留） | Circulating cortisol (HPA axis) |
 | `soma.fluid.hydration` | fraction | [0, 1] | `soma.fluid` | `interface.interoception` | Body-water reserve (1 = well hydrated) |
 | `soma.fluid.osmolality` | mOsm/kg | [250, 350] | `soma.fluid` | —（預留） | Plasma osmolality |
 | `soma.metabolism.energy_reserve` | fraction | [0, 1] | `soma.metabolism` | `interface.interoception` | Lumped energy store (1 = full) |
 | `soma.metabolism.glucose` | mg/dL | [0, 600] | `soma.metabolism` | —（預留） | Blood glucose |
 | `soma.metabolism.insulin` | μU/mL | [0, 400] | `soma.metabolism` | —（預留） | Plasma insulin |
+| `soma.respiration.minute_ventilation` | L/min | [2, 120] | `soma.respiration` | —（預留） | Minute ventilation |
+| `soma.respiration.rate` | breaths/min | [4, 60] | `soma.respiration` | —（預留） | Breathing rate |
+| `soma.respiration.spo2` | % | [70, 100] | `soma.respiration` | —（預留） | Arterial oxygen saturation |
 | `soma.sleep.pressure` | normalized | [0, 1] | `soma.sleep` | `interface.interoception` | Homeostatic sleep pressure (process S) |
 | `soma.thermo.core_temperature` | °C | [30, 45] | `soma.thermo` | `interface.interoception` | Core body temperature |
 | `soma.thermo.shivering` | normalized | [0, 1] | `soma.thermo` | `soma.metabolism` | Shivering intensity (heat production, energy cost) |
