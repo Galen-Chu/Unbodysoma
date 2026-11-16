@@ -58,5 +58,9 @@
 - **BioGears** — Applied Research Associates. 開源人體生理引擎。<https://www.biogearsengine.com>
 - **FMI (Functional Mock-up Interface)** — Modelica Association 的模型交換與共模擬標準。<https://fmi-standard.org>
 
+## 程序化生成參考實作
+
+- **abyssal-garden** — Noniv. 單檔 WebGPU 程序化海底世界（MIT）：密度場地形、Surface Nets、生態規則撒點、決定論種子。管線分析與採用評估見 [WORLDGEN.md](WORLDGEN.md)。<https://github.com/Noniv/abyssal-garden>
+
 > 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。
 > 新增引用時請附上 DOI 或原始出處連結；如發現錯誤歡迎發 PR 修正。

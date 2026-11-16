@@ -210,6 +210,7 @@ docs/            設計文件與架構決策紀錄（ADR）
 | [SIGNAL_GRAPH.md](docs/SIGNAL_GRAPH.md) | 模組之間的訊號依賴圖（自動產生） |
 | [PARAMETERS.md](docs/PARAMETERS.md) | 所有模組參數：預設值、單位、有效範圍、來源（自動產生） |
 | [SCENARIOS.md](docs/SCENARIOS.md) | TOML 情境檔格式與命令列 |
+| [WORLDGEN.md](docs/WORLDGEN.md) | 程序化世界生成：abyssal-garden 管線分析（Phase 4 設計輸入，研究筆記） |
 | [OBSERVABILITY.md](docs/OBSERVABILITY.md) | 觀測與監控：執行紀錄、健康監控、快照倒帶、干預實驗、儀表板規劃 |
 | [VARIABILITY.md](docs/VARIABILITY.md) | 變異與統計真實性：避免「平均人」與眾數塌縮、已實作的變異、實作中的教訓 |
 | [ROADMAP.md](docs/ROADMAP.md) | 分階段路線圖與待討論的開放問題 |
