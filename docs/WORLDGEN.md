@@ -89,4 +89,4 @@ abyssal-garden 是這個問題的一份完整、可讀、可跑的參考實作�
 1. 世界生成放核心（`world/worldgen.py`，純 Python）還是選用相依（numpy／GPU）？——比照開放問題 1（Rust 核心）與 ADR-0009 的處理方式。
 2. TOML 情境檔是否增加 `[worldgen]` 區段（種子＋密度場參數，取代手工座標）？——屆時另立 ADR，延續 ADR-0008 的嚴格驗證態度。
 3. 生成結果是否寫入 `meta.json` 的可追溯鏈（種子＋參數＋SHA-256），讓一份執行紀錄能重建它來自哪個世界？
-4. 獨立的程序化生成模板 repo（跨 Unbodysoma／遊戲／影片使用）與本專案的邊界如何切？
+4. **已定案（[ADR-0010](adr/0010-world-sources-external-generators.md)，2026-11-16）**：世界生成由外部產生器供應 TOML（參考實作：[sanctuary-g-code](https://github.com/Galen-Chu/sanctuary-g-code)），本專案不建立程式相依；產生的世界可收進 `scenarios/` 並保留 provenance 檔頭。

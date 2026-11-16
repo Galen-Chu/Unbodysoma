@@ -21,7 +21,7 @@ jobs:
       - run: ruff format --check .
       - run: mypy
       - run: python -m unbodysoma.catalog --check
-      - run: python -m unbodysoma validate scenarios/fear_response.toml scenarios/fear_without_interoception.toml scenarios/feeding.toml scenarios/grid_72h.toml
+      - run: python -m unbodysoma validate scenarios/fear_response.toml scenarios/fear_without_interoception.toml scenarios/feeding.toml scenarios/grid_72h.toml scenarios/sanctuary_meadow_s1.toml
       - run: pytest -q
       - run: python examples/fear_response.py
       - run: python examples/lesion_study.py --runs runs/lesion_study
