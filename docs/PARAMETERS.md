@@ -68,10 +68,13 @@
 | 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
 |---|---|---|---|---|---|
 | `resting_bpm` | 65 | bpm | [30, 120] | Resting heart rate | L0 toy value |
-| `max_bpm` | 190 | bpm | [100, 230] | Ceiling of the heart-rate response | L0 toy value |
+| `age_years` | 35 | years | [5, 100] | Chronological age (scales the maximal heart rate) | Tanaka et al. (2001): HR_max = 208 − 0.7 × age |
 | `k_adrenaline` | 40 | bpm | [0, 150] | Heart-rate gain per unit adrenaline | L0 toy value |
 | `k_exertion` | 70 | bpm | [0, 150] | Heart-rate gain per unit exertion | L0 toy value |
-| `tau` | 5 | s | [0.1, 120] | Time constant of heart-rate changes | L0 toy value |
+| `tau` | 5 | s | [0.1, 120] | Time constant of the fast (neural) heart-rate response | L0 toy value |
+| `fast_exertion_share` | 0.25 | — | [0, 1] | Share of the exercise response carried by the fast path | calibrated: central command / vagal withdrawal cover the initial jump |
+| `exertion_tau_rise` | 40 | s | [5, 300] | Time constant of the rising exercise response (fundamental component) | Whipp & Wasserman (1972): τ ≈ 20–45 s |
+| `exertion_tau_fall` | 60 | s | [5, 600] | Time constant of heart-rate recovery after exercise | calibrated: the 1-min recovery meets Cole et al. (1999) |
 | `sleep_bpm_drop` | 8 | bpm | [0, 30] | Fall of the resting heart rate during sleep | L0 toy value |
 | `rsa_amplitude` | 3 | bpm | [0, 20] | Respiratory sinus arrhythmia amplitude at rest | L0 toy value |
 | `respiration_hz` | 0.25 | Hz | [0.05, 1] | Breathing rate that paces the RSA | L0 toy value |

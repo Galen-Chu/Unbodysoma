@@ -157,7 +157,9 @@ def test_breakpoint_pauses_and_run_can_resume():
     engine = build_minimal_human(THREAT, seed=0)
     reason = engine.run(300.0, until=lambda bus: bus.read("soma.cardio.heart_rate") > 120.0)
     assert reason == "breakpoint"
-    assert 60.0 < engine.time < 70.0
+    # L1 kinetics: the fast path clears 120 bpm shortly after threat onset,
+    # while the slow exercise component is still building (docs/SOMA.md §2.1).
+    assert 60.0 < engine.time < 80.0
     assert engine.run(10.0) is None
 
 

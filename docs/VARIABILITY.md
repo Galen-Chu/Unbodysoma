@@ -55,7 +55,7 @@ Unbodysoma 很容易犯同一種錯誤，只是形式不同：
 | 參數 | 位置 | 現值 | 需要的統計知識 |
 |---|---|---|---|
 | 靜止心率 | `Cardio.resting_bpm` | 65 bpm | 成人族群分布；與年齡、性別、體能的關係 |
-| 最大心率 | `Cardio.max_bpm` | 190 bpm | 隨年齡下降（如 Tanaka 等人 2001 年的迴歸式 208 − 0.7 × 年齡），且個體間差異不小 |
+| 年齡（心率天花板） | `Cardio.age_years` | 35 歲（HR_max ≈ 183.5 bpm） | Tanaka 等人（2001）迴歸式的族群分布；迴歸殘差的個體差異不小 |
 | 心率對腎上腺素 / 運動的增益 | `Cardio.k_adrenaline`、`k_exertion` | 40、70 | 壓力反應性的個體差異 |
 | 皮質醇基線與反應 | `Endocrine.cortisol_baseline`、`car_amplitude`、`acth_gain`、`cortisol_feedback` | 0.2、0.5、0.45、4.0 | 個體差異大（CAR 幅度與壓力反應性尤甚）；晝夜節律自 Phase 1 起已內建 |
 | 能量消耗速率 | `Metabolism.hours_to_empty_at_rest` | 16 h | 基礎代謝率的族群分布，與體重、體組成相關 |

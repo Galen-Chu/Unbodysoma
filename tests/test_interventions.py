@@ -66,7 +66,10 @@ def test_beta_blocker_dissociates_felt_arousal_from_appraised_threat():
     blocked_engine.clamp("soma.cardio.heart_rate", 65.0)
     blocked = record(blocked_engine)
 
-    assert max(window(intact, "psyche.affect.arousal", 60, 100)) > 0.9
+    # L1 cardiac kinetics grade the exercise component of the response, so the
+    # intact arousal peak sits a little below the old instant-jump level; the
+    # dissociation (intact ≫ blocked) is what this test asserts.
+    assert max(window(intact, "psyche.affect.arousal", 60, 100)) > 0.85
     assert max(window(blocked, "psyche.affect.arousal", 60, 100)) < 0.5
     assert mean(window(blocked, "psyche.affect.valence", 70, 90)) < -0.5
 
@@ -80,8 +83,9 @@ def test_silenced_interoception_blunts_emotional_arousal():
     rec = record(engine)
     assert max(rec.column("intero.cardiac_arousal")) == 0.0
     assert max(window(rec, "psyche.affect.arousal", 60, 100)) < 0.5
-    # The body still reacts — only the mind's view of it is gone.
-    assert max(window(rec, "soma.cardio.heart_rate", 60, 100)) > 140.0
+    # The body still reacts — only the mind's view of it is gone. (L1 kinetics
+    # bring the flight response up on the exercise time course, hence 135.)
+    assert max(window(rec, "soma.cardio.heart_rate", 60, 100)) > 135.0
 
 
 def test_frozen_module_holds_outputs_and_state():
