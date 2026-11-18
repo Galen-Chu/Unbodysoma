@@ -16,6 +16,7 @@
 | [0010](0010-world-sources-external-generators.md) | 世界來源：手工情境，或外部產生器的 TOML | 已採用 |
 | [0011](0011-external-physiology-engines-deferred.md) | 外部生理引擎：評估完成，暫不整合（保留 oracle 路線） | 已採用 |
 | [0012](0012-native-core-not-needed-yet.md) | 原生核心：量測後決定暫不需要（1741× 實時） | 已採用 |
+| [0013](0013-subsystem-focus-track.md) | 軌道調整：身心子系統深化為主軸，沿生物組織尺度逐步扎根 | 已採用 |
 
 ## 格式
 

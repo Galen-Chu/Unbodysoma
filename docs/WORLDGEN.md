@@ -1,6 +1,6 @@
 # 程序化世界生成 Worldgen（abyssal-garden 管線分析）
 
-> 狀態：研究筆記——Phase 4「具身於物理世界」的設計輸入，**尚未形成決策**；若未來採用任何一部分，屆時另立 ADR。
+> 狀態：研究筆記——具身與世界（支撐軌道，原 Phase 4「具身於物理世界」，見 [ADR-0013](adr/0013-subsystem-focus-track.md)）的設計輸入，**尚未形成決策**；若未來採用任何一部分，屆時另立 ADR。
 > 日期：2026-11-16
 > 來源：[Noniv/abyssal-garden](https://github.com/Noniv/abyssal-garden)（MIT 授權）——單一 97 KB 的 HTML 檔，以 WebGPU 在瀏覽器裡程序化生成一整個海底世界：無圖片、無 3D 模型、無音效檔；地形、約兩百萬片海帶與植物、沉船、蝠鱝、魚群與整個音景，全部由程式碼在頁面載入時生成。可讀原始碼在其 repo 的 `source/src/`（world / math / main / shaders / audio / quality 共六個模組）。
 

@@ -11,6 +11,16 @@
 - Russell, J. A. (1980). A circumplex model of affect. *Journal of Personality and Social Psychology*, 39(6), 1161–1178. https://doi.org/10.1037/h0077714
 - Varela, F. J., Thompson, E., & Rosch, E. (1991). *The Embodied Mind: Cognitive Science and Human Experience*. MIT Press.
 
+## 學習與制約（身心深化軌道的對照基礎，ADR-0013）
+
+- Rescorla, R. A., & Wagner, A. R. (1972). A theory of Pavlovian conditioning: Variations in the effectiveness of reinforcement and nonreinforcement. In A. H. Black & W. F. Prokasy (Eds.), *Classical Conditioning II: Current Research and Theory* (pp. 64–99). Appleton-Century-Crofts. （制約獲得與消弱的增量學習規則——Phase 4 古典制約的模型形態）
+- Rescorla, R. A. (1988). Behavioral studies of Pavlovian conditioning. *Annual Review of Neuroscience*, 11, 329–352. https://doi.org/10.1146/annurev.ne.11.030188.001553 （獲得、消弱、自發恢復、阻斷等現象的行為數據整理——驗收測試的對照來源）
+- Kamin, L. J. (1969). Predictability, surprise, attention, and conditioning. In B. A. Campbell & R. M. Church (Eds.), *Punishment and Aversive Behavior* (pp. 279–296). Appleton-Century-Crofts. （阻斷效應：已建立的線索阻斷新線索的學習）
+- Schultz, W., Dayan, P., & Montague, P. R. (1997). A neural substrate of prediction and reward. *Science*, 275(5306), 1593–1599. https://doi.org/10.1126/science.275.5306.1593 （多巴胺作為獎賞預測誤差——`neuro.*` 獎賞軸的模型基礎）
+- Kandel, E. R. (2001). The molecular biology of memory storage: A dialogue between genes and synapses. *Science*, 294(5544), 1030–1038. https://doi.org/10.1126/science.1067020 （海兔習慣化、敏感化與制約的經典量化工作——非聯結學習的時間過程對照）
+- Ardiel, E. L., & Rankin, C. H. (2010). An elegant mind: Learning and memory in *Caenorhabditis elegans*. *Learning & Memory*, 17(4), 191–201. https://doi.org/10.1101/lm.960510 （線蟲的非聯結與聯結學習範式總評——微生物級能力的行為數據入口）
+- Berg, H. C., & Brown, D. A. (1972). Chemotaxis in *Escherichia coli* analysed by three-dimensional tracking. *Nature*, 239(5374), 500–504. https://doi.org/10.1038/239500a0 （趨化的偏置隨機漫步（run-and-tumble）——導航 wander 行為的文獻對照）
+
 ## 預測處理與主動推論
 
 - Friston, K. (2010). The free-energy principle: A unified brain theory? *Nature Reviews Neuroscience*, 11(2), 127–138. https://doi.org/10.1038/nrn2787
@@ -70,5 +80,5 @@
 
 - **abyssal-garden** — Noniv. 單檔 WebGPU 程序化海底世界（MIT）：密度場地形、Surface Nets、生態規則撒點、決定論種子。管線分析與採用評估見 [WORLDGEN.md](WORLDGEN.md)。<https://github.com/Noniv/abyssal-garden>
 
-> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。2026-11-16 新增的 Dalla Man、ADA、Dickerson & Kemeny、Clow、Whipp & Wasserman、Cole、Cretikos、O'Driscoll 等八筆已對照 Crossref（DOI、卷頁、作者、年份一致）。
+> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。2026-11-16 新增的 Dalla Man、ADA、Dickerson & Kemeny、Clow、Whipp & Wasserman、Cole、Cretikos、O'Driscoll 等八筆已對照 Crossref（DOI、卷頁、作者、年份一致）。2026-11-18 新增的 Rescorla（1988）、Schultz、Kandel（2001）、Ardiel & Rankin、Berg & Brown 五筆已對照 doi.org／Crossref 核對（DOI、卷期頁、作者、年份一致）；Rescorla & Wagner（1972）與 Kamin（1969）為書籍章節，無 DOI，對照原著書目。
 > 新增引用時請附上 DOI 或原始出處連結；如發現錯誤歡迎發 PR 修正。

@@ -3,7 +3,7 @@
 > 一個「心智從身體長出來」的模擬人體引擎。
 > *An embodied human simulation engine in which the mind emerges from — and feeds back into — the regulation of a simulated body.*
 
-![status](https://img.shields.io/badge/status-Phase%201%20complete%20%C2%B7%20pre--alpha-orange)
+![status](https://img.shields.io/badge/status-Phase%202%20complete%20%C2%B7%20pre--alpha-orange)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -21,9 +21,13 @@
 > 核心假設：**心智能力不是外掛在身體上的軟體，而是一個為了讓身體活下去而演化出的調節系統。**
 > 詳見 [docs/VISION.md](docs/VISION.md)。
 
-## 目前狀態：Phase 1 — 最小可行生物體（完成）
+## 目前狀態：Phase 2 — 生理保真度（完成），下一步：身心子系統深化
 
-目前是一個刻意簡化（L0 玩具等級）但有**多條完整閉環**的生物體，能在腳本化世界或 2D 網格世界中生活：
+**Phase 2（2026-11-16 完成）**把四個子系統（心血管／內分泌／代謝／呼吸）升級到文獻模型（L1）並以自動化測試對照文獻反應曲線驗收；加上頻譜 HRV、族群執行器（個體差異抽樣與分布級驗收指標）與自足式 HTML 儀表板。
+
+**下一軌道（[ADR-0013](docs/adr/0013-subsystem-focus-track.md)，2026-11-18）**：以身心子系統深化為主軸，沿生物能力帶逐級往上——微生物級（習慣化／敏感化、獎賞基礎）→ 無脊椎動物級（制約與記憶）→ 脊椎動物級（注意、預測與規劃）→ 人類級（自我、語言、社會）；每一級都以文獻行為數據驗收。
+
+底下的迴路與行為是 Phase 1 打下的基礎，目前依然成立——目前是一個刻意簡化（生理 L1／情感 L0）但有**多條完整閉環**的生物體，能在腳本化世界或 2D 網格世界中生活：
 
 ```text
 威脅迴路：
@@ -216,7 +220,7 @@ docs/            設計文件與架構決策紀錄（ADR）
 | [OBSERVABILITY.md](docs/OBSERVABILITY.md) | 觀測與監控：執行紀錄、健康監控、快照倒帶、干預實驗、儀表板規劃 |
 | [VARIABILITY.md](docs/VARIABILITY.md) | 變異與統計真實性：避免「平均人」與眾數塌縮、已實作的變異、實作中的教訓 |
 | [ROADMAP.md](docs/ROADMAP.md) | 分階段路線圖與待討論的開放問題 |
-| [BACKLOG.md](docs/BACKLOG.md) | 跨階段開發優化盤點：L1 深化、引擎效能、觀測、生態整合（2026-11-16 歸檔） |
+| [BACKLOG.md](docs/BACKLOG.md) | 跨階段開發優化盤點：模型深化、引擎效能、觀測、生態整合（2026-11-16 歸檔；2026-11-18 依 ADR-0013 重排） |
 | [ETHICS.md](docs/ETHICS.md) | 醫療免責、意識宣稱、模擬負面狀態的倫理準則 |
 | [REFERENCES.md](docs/REFERENCES.md) | 理論與既有模型參考文獻 |
 | [adr/](docs/adr/) | 架構決策紀錄 |
@@ -228,10 +232,12 @@ docs/            設計文件與架構決策紀錄（ADR）
 |---|---|
 | Phase 0 ✅ | 引擎骨架、最小閉環生物體、文件 |
 | Phase 1 ✅ | 最小可行生物體：進食、飲水、體溫調節、睡眠與晝夜節律、機率式多行動競爭、HRV、網格世界（水源 / 庇護所 / 晝夜溫差）、TOML 情境檔、快照存檔與重播驗證、Rerun 即時檢視；72 小時完成情境 |
-| **Phase 2**（下一步） | 生理保真度：文獻模型（L1）、對照文獻曲線驗證、外部生理引擎轉接；專屬儀表板；族群執行器 |
-| Phase 3 | 會學習的心智：記憶、以內感受為獎賞的學習、預測處理 / 主動推論 |
-| Phase 4 | 具身於 3D 世界：感覺運動迴路、物理模擬 |
-| Phase 5 | 自我模型、語言與社會互動 |
+| Phase 2 ✅ | 生理保真度：文獻模型（L1）＋對照文獻曲線的自動驗收（心血管／內分泌／代謝／呼吸）、頻譜 HRV、族群執行器、專屬儀表板 |
+| **Phase 3**（下一步） | 身心深化 I：微生物級——痛覺、`neuro.*` 神經調節、習慣化／敏感化、恆定誤差獎賞（能量池整合） |
+| Phase 4 | 身心深化 II：無脊椎動物級——古典／操作制約、消弱與阻斷、情節式記憶、場所趨避 |
+| Phase 5 | 身心深化 III：脊椎動物級——注意力、預測性調節（allostasis）、主動推論對照 |
+| Phase 6 | 人類級：自我模型、語言與社會互動 |
+| 支撐軌道 | 世界與具身（原 Phase 4 的 3D 物理）、身體子系統深化、生態整合——依心智實驗需求拉入（ADR-0013） |
 
 完整內容見 [docs/ROADMAP.md](docs/ROADMAP.md)。
 
