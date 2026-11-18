@@ -65,7 +65,7 @@ flowchart LR
     soma_endocrine -->|"endocrine.adrenaline"| soma_metabolism
     soma_endocrine -->|"endocrine.adrenaline"| soma_respiration
     soma_fluid -->|"fluid.hydration"| interface_interoception
-    soma_metabolism -->|"metabolism.energy_reserve"| interface_interoception
+    soma_metabolism -->|"metabolism.energy_reserve, metabolism.glucose +1"| interface_interoception
     soma_neuro -->|"dopamine, serotonin"| psyche_affect
     soma_neuro -->|"norepinephrine"| psyche_appraisal
     soma_nociception -->|"nociception.pain"| interface_interoception
@@ -150,7 +150,7 @@ flowchart LR
     soma_endocrine -->|"endocrine.adrenaline"| soma_metabolism
     soma_endocrine -->|"endocrine.adrenaline"| soma_respiration
     soma_fluid -->|"fluid.hydration"| interface_interoception
-    soma_metabolism -->|"metabolism.energy_reserve"| interface_interoception
+    soma_metabolism -->|"metabolism.energy_reserve, metabolism.glucose +1"| interface_interoception
     soma_neuro -->|"dopamine, serotonin"| psyche_affect
     soma_neuro -->|"norepinephrine"| psyche_appraisal
     soma_nociception -->|"nociception.pain"| interface_interoception

@@ -27,7 +27,7 @@ SIGNALS = {
     "soma.metabolism.energy_reserve": "reserve",
     "psyche.affect.valence": "valence",
 }
-SHOW_AT = (0, 60, 120, 180, 300, 390, 410, 425, 450, 600, 900, 1200, 1300, 1500, 1800)
+SHOW_AT = (0, 60, 120, 180, 300, 390, 410, 425, 450, 600, 900, 1200, 1500, 1800, 2400, 3000, 3600)
 
 
 def main() -> None:
@@ -40,7 +40,7 @@ def main() -> None:
     engine.observe(recorder)
     monitor = HealthMonitor().attach(engine)
     writer = RunWriter(args.runs, config={"scenario": "feeding"}).attach(engine) if args.runs else None
-    engine.run(1800.0)
+    engine.run(3600.0)  # through the hour of gut absorption that stores the meal
     if writer:
         writer.close()
 

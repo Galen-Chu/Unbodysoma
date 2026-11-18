@@ -38,6 +38,12 @@
 | `bpm_span` | 100 | bpm | [10, 250] | Heart-rate rise felt as full activation | L0 toy value |
 | `comfortable_core` | 37 | °C | [35, 39] | Core temperature felt as neither cold nor hot | L0 toy value |
 | `thermal_span` | 2 | °C | [0.1, 10] | Core deviation felt as extreme cold or heat | L0 toy value |
+| `satiety_basal` | 8 | μU/mL | [0, 60] | Insulin felt as no satiety (fasting level) | matches the metabolism module's fasting insulin |
+| `satiety_span` | 20 | μU/mL | [1, 200] | Insulin rise above fasting felt as fully fed | calibrated: a meal's incretin phase satiates within ~10–15 min |
+| `w_satiety` | 0.4 | — | [0, 1] | Share of the store deficit suppressed while fully fed | L0 toy value |
+| `dip_level` | 85 | mg/dL | [40, 120] | Glucose below this starts to feel acutely hungry | below the defended fasting level (90): a real dip, not just fasting |
+| `dip_span` | 20 | mg/dL | [5, 80] | Glucose drop below the dip level felt as maximal | L0 toy value |
+| `w_dip` | 0.5 | — | [0, 2] | Extra deficit per unit glucose dip (acute hunger beyond the store deficit) | L0 toy value |
 | `noise` | 0.01 | normalized | [0, 1] | SD of interoceptive noise (inverse of interoceptive accuracy) | L0 toy value |
 | `seed` | 1 | — | [0, ∞] | Random seed of the noise | run setting |
 
@@ -114,6 +120,8 @@
 | `exertion_cost` | 4 | — | [0, 20] | Extra drain per unit exertion, relative to basal | L0 toy value |
 | `shiver_cost` | 3 | — | [0, 20] | Extra drain per unit shivering, relative to basal | L0 toy value |
 | `sleep_metabolic_factor` | 0.9 | — | [0.5, 1] | Basal drain during sleep, relative to awake rest | L0 toy value |
+| `storage_share` | 1.5 | — | [0, 3] | Share of the positive net glucose flux stored in the reserve | calibrated: one typical meal refills about what it did in Phase 1 |
+| `incretin_gain` | 6700 | μU/mL per fraction | [0, 50000] | Insulin secreted per unit of food intake while eating (the incretin/cephalic phase) | calibrated: insulin rises ≈ 2 μU/mL per minute of eating, satiating within ~10 min |
 | `glucose_setpoint` | 90 | mg/dL | [60, 130] | Defended fasting glucose | ADA (2021): normal fasting 70–99 mg/dL; 90 mid-range |
 | `glucose_effectiveness` | 0.026 | 1/min | [0.002, 0.1] | Insulin-independent glucose disposal per unit glucose (S_G) | Bergman et al. (1979): typical value |
 | `insulin_action_rate` | 0.05 | 1/min | [0.005, 0.5] | Rate of insulin-action dynamics (p2) | Bergman et al. (1979): typical value |

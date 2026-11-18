@@ -127,6 +127,8 @@ def test_each_sensory_channel_has_its_own_random_stream():
         "soma.sleep.pressure": 0.5,
         "soma.circadian.drive": 0.0,
         "soma.nociception.pain": 0.0,
+        "soma.metabolism.glucose": 90.0,
+        "soma.metabolism.insulin": 8.0,
     }
 
     class Body(Module):

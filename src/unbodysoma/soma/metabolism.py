@@ -1,12 +1,18 @@
-"""Energy metabolism — L1 glucose-insulin core, L0 energy reserve (docs/SOMA.md §2.3).
+"""Energy metabolism — L1 glucose-insulin core with an integrated energy store (docs/SOMA.md §2.3).
 
 Structure follows the minimal model of Bergman, Ider, Bowden & Cobelli (1979)
 with a two-compartment oral input from the Dalla Man, Rizza & Cobelli (2006)
-meal-model family. Acceptance bounds for the oral-glucose response follow ADA
-(2021) normal ranges (tests/test_metabolism_l1.py). The energy reserve keeps
-its Phase 1 L0 role (hunger loop); the glucose-insulin core currently feeds
-interoception and health monitoring only — full integration of the reserve as
-net glucose balance is future work.
+meal-model family (including its incretin idea: eating itself turns insulin
+secretion on within minutes, before glucose appears). Acceptance bounds for
+the oral-glucose response follow ADA (2021) normal ranges
+(tests/test_metabolism_l1.py).
+
+Since 2026-11-18 the energy reserve is the *net glucose balance* rather than
+a directly-filled tank: eating only delivers oral glucose to the gut; the
+insulin-mediated share of glucose disposal (X · G) is stored in the reserve
+(glycogen), and the reserve pays the metabolic drain that defends fasting
+glucose. Interoception reads the result the other way round — satiety from
+insulin, acute hunger from a glucose dip (see interface/interoception.py).
 """
 
 from __future__ import annotations
@@ -17,17 +23,19 @@ _SECONDS_PER_HOUR = 3600.0
 
 
 class Metabolism(Module):
-    """A lumped energy reserve (L0) plus a minimal-model glucose-insulin core (L1).
+    """A minimal-model glucose-insulin core (L1) with an integrated store (L1-lite).
 
-    Reserve: drains at a basal rate scaled by exertion, refilled by food intake
-    (unchanged since Phase 1 — the hunger loop depends on it).
+    Store: no direct fill from food. Storage = a share of the insulin-mediated
+    glucose disposal (X · G, in mass units); drain = the Phase 1 metabolic
+    cost (basal, scaled by exertion, shivering and sleep) — the net cost of
+    defending fasting glucose. Starved of reserve, the defended fasting level
+    collapses (health rule ``glucose_abnormal``), as before.
 
-    Glucose-insulin: eating delivers oral glucose to a two-compartment gut;
-    appearance in plasma drives glucose, insulin secretion above a threshold
-    builds insulin, insulin acts on glucose disposal through the delayed
-    action variable X, and adrenaline adds hepatic output (glycogenolysis).
-    Starved of reserve, the defended fasting level collapses — as in Phase 1,
-    starvation undefends glucose (health rule ``glucose_abnormal``).
+    Glucose-insulin: eating delivers oral glucose to a two-compartment gut
+    and turns on insulin secretion (incretin phase); appearance in plasma
+    drives glucose, insulin secretion above a threshold builds insulin,
+    insulin acts on glucose disposal through the delayed action variable X,
+    and adrenaline adds hepatic output (glycogenolysis).
     """
 
     name = "soma.metabolism"
@@ -40,7 +48,7 @@ class Metabolism(Module):
         "soma.thermo.shivering",
     )
     signal_specs = (
-        SignalSpec("soma.metabolism.energy_reserve", "fraction", 0.0, 1.0, "Lumped energy store (1 = full)"),
+        SignalSpec("soma.metabolism.energy_reserve", "fraction", 0.0, 1.0, "Net glucose balance (1 = full store)"),
         SignalSpec("soma.metabolism.glucose", "mg/dL", 0.0, 600.0, "Blood glucose"),
         SignalSpec("soma.metabolism.insulin", "μU/mL", 0.0, 400.0, "Plasma insulin"),
     )
@@ -59,6 +67,24 @@ class Metabolism(Module):
         ParamSpec("exertion_cost", 4.0, "", 0.0, 20.0, "Extra drain per unit exertion, relative to basal"),
         ParamSpec("shiver_cost", 3.0, "", 0.0, 20.0, "Extra drain per unit shivering, relative to basal"),
         ParamSpec("sleep_metabolic_factor", 0.9, "", 0.5, 1.0, "Basal drain during sleep, relative to awake rest"),
+        ParamSpec(
+            "storage_share",
+            1.5,
+            "",
+            0.0,
+            3.0,
+            "Share of the positive net glucose flux stored in the reserve",
+            source="calibrated: one typical meal refills about what it did in Phase 1",
+        ),
+        ParamSpec(
+            "incretin_gain",
+            6700.0,
+            "μU/mL per fraction",
+            0.0,
+            50000.0,
+            "Insulin secreted per unit of food intake while eating (the incretin/cephalic phase)",
+            source="calibrated: insulin rises ≈ 2 μU/mL per minute of eating, satiating within ~10 min",
+        ),
         ParamSpec(
             "glucose_setpoint",
             90.0,
@@ -185,6 +211,8 @@ class Metabolism(Module):
         exertion_cost: float = 4.0,
         shiver_cost: float = 3.0,
         sleep_metabolic_factor: float = 0.9,
+        storage_share: float = 1.5,
+        incretin_gain: float = 6700.0,
         glucose_setpoint: float = 90.0,
         glucose_effectiveness: float = 0.026,
         insulin_action_rate: float = 0.05,
@@ -204,6 +232,8 @@ class Metabolism(Module):
         self.exertion_cost = exertion_cost
         self.shiver_cost = shiver_cost
         self.sleep_metabolic_factor = sleep_metabolic_factor
+        self.storage_share = storage_share
+        self.incretin_gain = incretin_gain
         self.glucose_setpoint = glucose_setpoint
         self.glucose_effectiveness = glucose_effectiveness
         self.insulin_action_rate = insulin_action_rate
@@ -239,7 +269,6 @@ class Metabolism(Module):
             + self.shiver_cost * port.read("soma.thermo.shivering")
         )
         food = port.read("world.food_intake")
-        self.reserve = clamp(self.reserve + (food - drain) * dt)
 
         # Oral input: eating deposits glucose mass in the first gut compartment;
         # two compartments in series give the meal-like appearance curve.
@@ -253,7 +282,11 @@ class Metabolism(Module):
 
         adrenaline = port.read("soma.endocrine.adrenaline")
         m = dt / 60.0  # minimal-model rates are per minute
-        secretion = self.insulin_secretion_gain * max(0.0, self.glucose - self.insulin_threshold)
+        # Incretin/cephalic phase: eating itself drives insulin within minutes,
+        # ahead of gut absorption (Dalla Man et al. 2006 family).
+        secretion = (
+            self.insulin_secretion_gain * max(0.0, self.glucose - self.insulin_threshold) + self.incretin_gain * food
+        )
         self.insulin = max(
             0.0, self.insulin + (secretion - (self.insulin - self.insulin_basal) * 60.0 / self.insulin_tau) * m
         )
@@ -268,13 +301,18 @@ class Metabolism(Module):
         )
         defended = self.glucose_setpoint * min(1.0, self.reserve / self.glucose_defense_reserve)
         disposal = self.glucose_effectiveness + self.x_action
-        d_glucose = (
-            -disposal * self.glucose
-            + self.glucose_effectiveness * defended
-            + appearance
-            + self.adrenaline_glucose_production * adrenaline
-        ) * m
+        production = self.glucose_effectiveness * defended + self.adrenaline_glucose_production * adrenaline
+        d_glucose = (-disposal * self.glucose + production + appearance) * m
         self.glucose = clamp(self.glucose + d_glucose, 0.0, 600.0)
+
+        # The reserve is the net glucose balance: whatever total disposal
+        # exceeds total production (mg/dL per min, in mass units) flows into
+        # the store; the metabolic drain and adrenaline's hepatic output
+        # (glycogenolysis) are its costs.
+        net_flux = max(0.0, disposal * self.glucose - production)
+        storage = self.storage_share * net_flux * self.glucose_volume / 60.0
+        adrenaline_cost = self.adrenaline_glucose_production * adrenaline * self.glucose_volume / 60.0
+        self.reserve = clamp(self.reserve + ((storage - adrenaline_cost) / self.gut_glucose_per_reserve - drain) * dt)
 
         port.write("soma.metabolism.energy_reserve", self.reserve)
         port.write("soma.metabolism.glucose", self.glucose)

@@ -47,7 +47,7 @@
 | `extero.water_dir_y` | normalized | [-1, 1] | `interface.exteroception` | `psyche.navigation` | Sensed direction to the nearest water (y) |
 | `intero.cardiac_arousal` | normalized | [0, 1] | `interface.interoception` | `psyche.affect`, `soma.neuro` | Felt cardiac activation |
 | `intero.circadian` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives` | Felt circadian alerting signal |
-| `intero.energy_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt shortage of energy |
+| `intero.energy_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt shortage of energy (store minus satiety plus glucose dip) |
 | `intero.pain` | normalized | [0, 1] | `interface.interoception` | `psyche.action`, `psyche.affect`, `soma.neuro` | Felt pain |
 | `intero.sleep_pressure` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt tiredness (homeostatic sleep pressure) |
 | `intero.thermal` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt body temperature (- cold, + hot) |
@@ -92,9 +92,9 @@
 | `soma.endocrine.cortisol` | normalized | [0, 1] | `soma.endocrine` | —（預留） | Circulating cortisol (HPA axis) |
 | `soma.fluid.hydration` | fraction | [0, 1] | `soma.fluid` | `interface.interoception` | Body-water reserve (1 = well hydrated) |
 | `soma.fluid.osmolality` | mOsm/kg | [250, 350] | `soma.fluid` | —（預留） | Plasma osmolality |
-| `soma.metabolism.energy_reserve` | fraction | [0, 1] | `soma.metabolism` | `interface.interoception` | Lumped energy store (1 = full) |
-| `soma.metabolism.glucose` | mg/dL | [0, 600] | `soma.metabolism` | —（預留） | Blood glucose |
-| `soma.metabolism.insulin` | μU/mL | [0, 400] | `soma.metabolism` | —（預留） | Plasma insulin |
+| `soma.metabolism.energy_reserve` | fraction | [0, 1] | `soma.metabolism` | `interface.interoception` | Net glucose balance (1 = full store) |
+| `soma.metabolism.glucose` | mg/dL | [0, 600] | `soma.metabolism` | `interface.interoception` | Blood glucose |
+| `soma.metabolism.insulin` | μU/mL | [0, 400] | `soma.metabolism` | `interface.interoception` | Plasma insulin |
 | `soma.nociception.burning` | normalized | [0, 1] | `soma.nociception` | —（預留） | Second pain: slow, tracks tissue state |
 | `soma.nociception.injury` | fraction | [0, 1] | `soma.nociception` | —（預留） | Tissue injury (1 = maximally injured) |
 | `soma.nociception.pain` | normalized | [0, 1] | `soma.nociception` | `interface.interoception` | Felt pain intensity (sensitized) |

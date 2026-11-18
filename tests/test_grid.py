@@ -66,7 +66,7 @@ def test_patches_deplete_while_eaten_and_regrow():
     assert eaten == pytest.approx(1.0 - 300 / 600 + 0.5 * 300 / 3600, abs=0.01)
     assert engine.bus.read("world.food_available") == 1.0
 
-    engine.run(3600.0)  # keeps "eating", but stops once the patch is nearly empty
+    engine.run(6000.0)  # keeps "eating", but stops once the patch is nearly empty
     assert engine.bus.read("world.food_available") < 1.0
     regrowing = world_engine(GridWorld(food=[patch], start=(15.0, 15.0)))
     regrowing.modules[0].amounts = [0.2]
@@ -126,13 +126,22 @@ def organism(
 
 def test_a_hungry_organism_walks_to_food_it_can_see_and_eats():
     engine = organism(food=[FoodPatch(14.0, 10.0)], reserve=0.4)
-    rec = Recorder(["motor.eating", "soma.metabolism.energy_reserve"], every=10.0)
+    rec = Recorder(
+        ["motor.eating", "soma.metabolism.energy_reserve", "world.position_x", "world.position_y"], every=2.0
+    )
     engine.observe(rec)
-    engine.run(1200.0)
+    engine.run(6000.0)  # the meal is stored over the ~90 min after the patch empties
     world = engine.modules[0]
-    assert distance(world, 14.0, 10.0) <= world.reach
-    assert max(rec.column("motor.eating")) == 1.0
-    assert rec.column("soma.metabolism.energy_reserve")[-1] > 0.45
+    eating = rec.column("motor.eating")
+    assert max(eating) == 1.0  # it found the patch and ate
+    first = eating.index(1.0)
+    x, y = rec.column("world.position_x")[first], rec.column("world.position_y")[first]
+    dx = (14.0 - x + world.width / 2) % world.width - world.width / 2
+    dy = (10.0 - y + world.height / 2) % world.height - world.height / 2
+    assert math.hypot(dx, dy) <= world.reach  # at the patch when the meal started
+    # With the integrated store the meal is stored over the following ~90 min, and
+    # once hunger returns the organism moves on instead of idling by an empty patch.
+    assert max(rec.column("soma.metabolism.energy_reserve")) > 0.5
 
 
 def test_an_organism_runs_away_from_danger():

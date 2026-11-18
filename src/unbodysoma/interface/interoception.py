@@ -23,6 +23,8 @@ class Interoception(Module):
     reads = (
         "soma.cardio.heart_rate",
         "soma.metabolism.energy_reserve",
+        "soma.metabolism.glucose",
+        "soma.metabolism.insulin",
         "soma.fluid.hydration",
         "soma.thermo.core_temperature",
         "soma.sleep.pressure",
@@ -31,7 +33,13 @@ class Interoception(Module):
     )
     signal_specs = (
         SignalSpec("intero.cardiac_arousal", "normalized", 0.0, 1.0, "Felt cardiac activation"),
-        SignalSpec("intero.energy_deficit", "normalized", 0.0, 1.0, "Felt shortage of energy"),
+        SignalSpec(
+            "intero.energy_deficit",
+            "normalized",
+            0.0,
+            1.0,
+            "Felt shortage of energy (store minus satiety plus glucose dip)",
+        ),
         SignalSpec("intero.water_deficit", "normalized", 0.0, 1.0, "Felt shortage of water"),
         SignalSpec("intero.thermal", "normalized", -1.0, 1.0, "Felt body temperature (- cold, + hot)"),
         SignalSpec("intero.sleep_pressure", "normalized", 0.0, 1.0, "Felt tiredness (homeostatic sleep pressure)"),
@@ -45,6 +53,50 @@ class Interoception(Module):
         ParamSpec("comfortable_core", 37.0, "°C", 35.0, 39.0, "Core temperature felt as neither cold nor hot"),
         ParamSpec("thermal_span", 2.0, "°C", 0.1, 10.0, "Core deviation felt as extreme cold or heat"),
         ParamSpec(
+            "satiety_basal",
+            8.0,
+            "μU/mL",
+            0.0,
+            60.0,
+            "Insulin felt as no satiety (fasting level)",
+            source="matches the metabolism module's fasting insulin",
+        ),
+        ParamSpec(
+            "satiety_span",
+            20.0,
+            "μU/mL",
+            1.0,
+            200.0,
+            "Insulin rise above fasting felt as fully fed",
+            source="calibrated: a meal's incretin phase satiates within ~10–15 min",
+        ),
+        ParamSpec(
+            "w_satiety",
+            0.4,
+            "",
+            0.0,
+            1.0,
+            "Share of the store deficit suppressed while fully fed",
+        ),
+        ParamSpec(
+            "dip_level",
+            85.0,
+            "mg/dL",
+            40.0,
+            120.0,
+            "Glucose below this starts to feel acutely hungry",
+            source="below the defended fasting level (90): a real dip, not just fasting",
+        ),
+        ParamSpec("dip_span", 20.0, "mg/dL", 5.0, 80.0, "Glucose drop below the dip level felt as maximal"),
+        ParamSpec(
+            "w_dip",
+            0.5,
+            "",
+            0.0,
+            2.0,
+            "Extra deficit per unit glucose dip (acute hunger beyond the store deficit)",
+        ),
+        ParamSpec(
             "noise", 0.01, "normalized", 0.0, 1.0, "SD of interoceptive noise (inverse of interoceptive accuracy)"
         ),
         ParamSpec("seed", 1, "", 0, math.inf, "Random seed of the noise", source="run setting"),
@@ -56,6 +108,12 @@ class Interoception(Module):
         bpm_span: float = 100.0,
         comfortable_core: float = 37.0,
         thermal_span: float = 2.0,
+        satiety_basal: float = 8.0,
+        satiety_span: float = 20.0,
+        w_satiety: float = 0.4,
+        dip_level: float = 85.0,
+        dip_span: float = 20.0,
+        w_dip: float = 0.5,
         noise: float = 0.01,
         seed: int = 1,
     ) -> None:
@@ -63,6 +121,12 @@ class Interoception(Module):
         self.bpm_span = bpm_span
         self.comfortable_core = comfortable_core
         self.thermal_span = thermal_span
+        self.satiety_basal = satiety_basal
+        self.satiety_span = satiety_span
+        self.w_satiety = w_satiety
+        self.dip_level = dip_level
+        self.dip_span = dip_span
+        self.w_dip = w_dip
         self.noise = noise
         self.seed = seed
         # One random stream per channel, so adding a channel never changes the noise of the others.
@@ -82,8 +146,11 @@ class Interoception(Module):
     def step(self, dt: float, port: BusPort) -> None:
         heart_rate = port.read("soma.cardio.heart_rate")
         reserve = port.read("soma.metabolism.energy_reserve")
+        fed = clamp((port.read("soma.metabolism.insulin") - self.satiety_basal) / self.satiety_span)
+        dip = clamp((self.dip_level - port.read("soma.metabolism.glucose")) / self.dip_span)
+        energy = clamp(1.0 - reserve - self.w_satiety * fed + self.w_dip * dip)
         self._sense(port, "cardiac_arousal", (heart_rate - self.resting_bpm) / self.bpm_span)
-        self._sense(port, "energy_deficit", 1.0 - reserve)
+        self._sense(port, "energy_deficit", energy)
         self._sense(port, "water_deficit", 1.0 - port.read("soma.fluid.hydration"))
         felt = (port.read("soma.thermo.core_temperature") - self.comfortable_core) / self.thermal_span
         self._sense(port, "thermal", felt, -1.0, 1.0)

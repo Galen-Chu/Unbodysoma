@@ -34,10 +34,14 @@ def window(rec: Recorder, key: str, start: float, end: float) -> list[float]:
 
 
 def test_hungry_organism_eats_until_sated():
-    rec = record(hungry([FOOD_ALWAYS]), 2000.0)
+    """Since the energy integration (2026-11-18) the meal ends by insulin satiety
+    and the store refills over the following hour of gut absorption and storage,
+    not during the meal itself."""
+    rec = record(hungry([FOOD_ALWAYS]), 4500.0)
     reserve = rec.column("soma.metabolism.energy_reserve")
     assert max(window(rec, "motor.eating", 0, 200)) == 1.0  # starts eating once hunger builds
-    assert reserve[-1] > 0.7 > reserve[0]  # the meal refilled the reserve
+    assert max(reserve) > reserve[0] + 0.1  # the meal was stored within the hour
+    assert reserve[-1] > reserve[0]  # net positive balance
     eating = rec.column("motor.eating")
     first, last = eating.index(1.0), max(i for i, e in enumerate(eating) if e == 1.0)
     assert all(eating[first : last + 1])  # one continuous meal...
