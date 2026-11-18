@@ -25,6 +25,7 @@ flowchart LR
         soma_respiration["soma.respiration"]
         soma_fluid["soma.fluid"]
         soma_thermo["soma.thermo"]
+        soma_nociception["soma.nociception"]
     end
     subgraph psyche["Psyche 心智層"]
         psyche_appraisal["psyche.appraisal"]
@@ -34,7 +35,8 @@ flowchart LR
     end
     interface_exteroception -->|"food, in_shelter +2"| psyche_action
     interface_exteroception -->|"threat"| psyche_appraisal
-    interface_interoception -->|"cardiac_arousal"| psyche_affect
+    interface_interoception -->|"pain"| psyche_action
+    interface_interoception -->|"cardiac_arousal, pain"| psyche_affect
     interface_interoception -->|"circadian, energy_deficit +3"| psyche_drives
     psyche_action -->|"sleeping"| psyche_drives
     psyche_action -->|"exertion, sleeping"| soma_cardio
@@ -60,12 +62,14 @@ flowchart LR
     soma_endocrine -->|"endocrine.adrenaline"| soma_respiration
     soma_fluid -->|"fluid.hydration"| interface_interoception
     soma_metabolism -->|"metabolism.energy_reserve"| interface_interoception
+    soma_nociception -->|"nociception.pain"| interface_interoception
     soma_sleep -->|"sleep.pressure"| interface_interoception
     soma_thermo -->|"thermo.core_temperature"| interface_interoception
     soma_thermo -->|"thermo.sweating"| soma_fluid
     soma_thermo -->|"thermo.shivering"| soma_metabolism
     world_food -->|"food_intake"| soma_metabolism
     world_scripted -->|"food_available, in_shelter +3"| interface_exteroception
+    world_scripted -->|"damage"| soma_nociception
     world_scripted -->|"ambient_temperature"| soma_thermo
     world_scripted -->|"food_available"| world_food
     world_scripted -->|"water_available"| world_water
@@ -94,6 +98,7 @@ flowchart LR
         soma_respiration["soma.respiration"]
         soma_fluid["soma.fluid"]
         soma_thermo["soma.thermo"]
+        soma_nociception["soma.nociception"]
     end
     subgraph psyche["Psyche 心智層"]
         psyche_appraisal["psyche.appraisal"]
@@ -105,7 +110,8 @@ flowchart LR
     interface_exteroception -->|"food, in_shelter +2"| psyche_action
     interface_exteroception -->|"threat"| psyche_appraisal
     interface_exteroception -->|"food_dir_x, food_dir_y +6"| psyche_navigation
-    interface_interoception -->|"cardiac_arousal"| psyche_affect
+    interface_interoception -->|"pain"| psyche_action
+    interface_interoception -->|"cardiac_arousal, pain"| psyche_affect
     interface_interoception -->|"circadian, energy_deficit +3"| psyche_drives
     psyche_action -->|"sleeping"| psyche_drives
     psyche_action -->|"action.selected_explore, action.selected_flee +2"| psyche_navigation
@@ -134,12 +140,14 @@ flowchart LR
     soma_endocrine -->|"endocrine.adrenaline"| soma_respiration
     soma_fluid -->|"fluid.hydration"| interface_interoception
     soma_metabolism -->|"metabolism.energy_reserve"| interface_interoception
+    soma_nociception -->|"nociception.pain"| interface_interoception
     soma_sleep -->|"sleep.pressure"| interface_interoception
     soma_thermo -->|"thermo.core_temperature"| interface_interoception
     soma_thermo -->|"thermo.sweating"| soma_fluid
     soma_thermo -->|"thermo.shivering"| soma_metabolism
     world_food -->|"food_intake"| soma_metabolism
     world_grid -->|"food_available, food_dir_x +11"| interface_exteroception
+    world_grid -->|"damage"| soma_nociception
     world_grid -->|"ambient_temperature"| soma_thermo
     world_grid -->|"food_available"| world_food
     world_grid -->|"water_available"| world_water

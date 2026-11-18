@@ -22,6 +22,7 @@ class Affect(Module):
     rate_hz = 10.0
     reads = (
         "intero.cardiac_arousal",
+        "intero.pain",
         "psyche.appraisal.threat",
         "psyche.drive.hunger",
         "psyche.drive.thirst",
@@ -40,6 +41,8 @@ class Affect(Module):
         ParamSpec("w_hunger_valence", 0.5, "", 0.0, 2.0, "Valence lost per unit hunger"),
         ParamSpec("w_thirst_valence", 0.5, "", 0.0, 2.0, "Valence lost per unit thirst"),
         ParamSpec("w_thermal_valence", 0.4, "", 0.0, 2.0, "Valence lost per unit thermal discomfort"),
+        ParamSpec("w_pain_valence", 1.2, "", 0.0, 2.0, "Valence lost per unit felt pain"),
+        ParamSpec("w_pain_arousal", 0.3, "", 0.0, 1.0, "Arousal gained per unit felt pain"),
         ParamSpec(
             "need_saturation",
             1.0,
@@ -66,6 +69,8 @@ class Affect(Module):
         w_hunger_valence: float = 0.5,
         w_thirst_valence: float = 0.5,
         w_thermal_valence: float = 0.4,
+        w_pain_valence: float = 1.2,
+        w_pain_arousal: float = 0.3,
         need_saturation: float = 1.0,
         tau: float = 2.0,
         valence_sigma: float = 0.03,
@@ -80,6 +85,8 @@ class Affect(Module):
         self.w_hunger_valence = w_hunger_valence
         self.w_thirst_valence = w_thirst_valence
         self.w_thermal_valence = w_thermal_valence
+        self.w_pain_valence = w_pain_valence
+        self.w_pain_arousal = w_pain_arousal
         self.need_saturation = need_saturation
         self.tau = tau
         self.valence_sigma = valence_sigma
@@ -99,11 +106,13 @@ class Affect(Module):
     def step(self, dt: float, port: BusPort) -> None:
         threat = port.read("psyche.appraisal.threat")
         hunger = port.read("psyche.drive.hunger")
+        pain = port.read("intero.pain")
         self.valence_drift = ou_step(self.valence_drift, dt, self.fluctuation_tau, self.valence_sigma, self._rng)
         self.arousal_drift = ou_step(self.arousal_drift, dt, self.fluctuation_tau, self.arousal_sigma, self._rng)
         arousal_target = clamp(
             self.w_cardiac_arousal * port.read("intero.cardiac_arousal")
             + self.w_threat_arousal * threat
+            + self.w_pain_arousal * pain
             + self.arousal_drift
         )
         # How unmet demands combine into negative valence: a linear sum lets
@@ -114,6 +123,7 @@ class Affect(Module):
             self.w_hunger_valence * hunger,
             self.w_thirst_valence * port.read("psyche.drive.thirst"),
             self.w_thermal_valence * port.read("psyche.drive.thermal_discomfort"),
+            self.w_pain_valence * pain,
         )
         linear = sum(pulls)
         union = 1.0

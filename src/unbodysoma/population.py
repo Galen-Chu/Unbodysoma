@@ -14,6 +14,8 @@ VARIABILITY.md §4 demands — they are a starting grid, not a claim.
 
 from __future__ import annotations
 
+import concurrent.futures
+import pickle
 import random
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -89,41 +91,57 @@ class IndividualResult:
     rmssd_ms: float = 0.0
 
 
+def _run_individual(args: tuple[int, int, float, Callable[..., Engine], dict[str, Any]]) -> IndividualResult:
+    """Run one sampled individual; module-level so process pools can dispatch it."""
+    i, base_seed, seconds, builder, builder_kwargs = args
+    engine = builder(seed=base_seed + i, overrides=sample_individual(base_seed, i), **builder_kwargs)
+    recorder = Recorder(_STATS_KEYS + _SELECTED_KEYS, every=1.0)
+    engine.observe(recorder)
+    engine.run(seconds)
+    stats = {}
+    for key in _STATS_KEYS:
+        column = recorder.column(key)
+        stats[key] = (min(column), mean(column), max(column))
+    shares = {action: mean(recorder.column(key)) for action, key in zip(ACTIONS, _SELECTED_KEYS, strict=True)}
+    rr = rr_intervals(recorder.times(), recorder.column("soma.cardio.heart_rate"))
+    return IndividualResult(
+        index=i,
+        seed=base_seed + i,
+        overrides=sample_individual(base_seed, i),
+        stats=stats,
+        action_shares=shares,
+        rmssd_ms=rmssd_ms(rr) if len(rr) > 3 else 0.0,
+    )
+
+
 def run_population(
     n: int,
     base_seed: int = 0,
     seconds: float = 300.0,
     builder: Callable[..., Engine] = build_minimal_human,
+    parallel: bool = True,
     **builder_kwargs: object,
 ) -> list[IndividualResult]:
     """Run ``n`` sampled individuals through the same protocol.
 
     Individual ``i`` uses engine seed ``base_seed + i`` and the parameter
     draws of ``sample_individual(base_seed, i)`` — same inputs, same outputs.
+    With ``parallel`` (default) the individuals run in a process pool;
+    results are bit-identical to the serial path (each engine is
+    self-contained and seeded), so ``parallel=False`` is only a knob for
+    debugging. Sandboxed environments and unpicklable builders fall back to
+    the serial loop automatically.
     """
-    results = []
-    for i in range(n):
-        engine = builder(seed=base_seed + i, overrides=sample_individual(base_seed, i), **builder_kwargs)
-        recorder = Recorder(_STATS_KEYS + _SELECTED_KEYS, every=1.0)
-        engine.observe(recorder)
-        engine.run(seconds)
-        stats = {}
-        for key in _STATS_KEYS:
-            column = recorder.column(key)
-            stats[key] = (min(column), mean(column), max(column))
-        shares = {action: mean(recorder.column(key)) for action, key in zip(ACTIONS, _SELECTED_KEYS, strict=True)}
-        rr = rr_intervals(recorder.times(), recorder.column("soma.cardio.heart_rate"))
-        results.append(
-            IndividualResult(
-                index=i,
-                seed=base_seed + i,
-                overrides=sample_individual(base_seed, i),
-                stats=stats,
-                action_shares=shares,
-                rmssd_ms=rmssd_ms(rr) if len(rr) > 3 else 0.0,
-            )
-        )
-    return results
+    tasks = [(i, base_seed, seconds, builder, dict(builder_kwargs)) for i in range(n)]
+    if parallel and n > 1:
+        try:
+            for task in tasks:
+                pickle.dumps(task)  # fail fast here rather than half-way through a pool
+            with concurrent.futures.ProcessPoolExecutor() as pool:
+                return list(pool.map(_run_individual, tasks))
+        except (OSError, pickle.PicklingError, AttributeError, TypeError):
+            pass  # no process pools (or no pickling) here: same results, just slower
+    return [_run_individual(task) for task in tasks]
 
 
 def population_action_metrics(results: list[IndividualResult]) -> dict[str, Any]:

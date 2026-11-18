@@ -15,6 +15,7 @@ DEFAULT_WORLD_SIGNALS = (
     "world.in_shelter",
     "world.shelter_known",
     "world.ambient_temperature",
+    "world.damage",
 )
 DEFAULT_BASELINES = {"world.ambient_temperature": 22.0}
 
@@ -25,6 +26,9 @@ WORLD_SIGNAL_SPECS = (
     SignalSpec("world.in_shelter", "indicator", 0.0, 1.0, "1 inside a shelter"),
     SignalSpec("world.shelter_known", "indicator", 0.0, 1.0, "1 if the world has a shelter"),
     SignalSpec("world.ambient_temperature", "°C", -60.0, 60.0, "Temperature where the organism is"),
+    SignalSpec(
+        "world.damage", "normalized", 0.0, 1.0, "Nociceptive intensity at the organism (tissue-damaging contact)"
+    ),
 )
 
 

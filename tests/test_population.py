@@ -41,6 +41,13 @@ def test_population_runs_are_deterministic():
     assert a == b
 
 
+def test_parallel_population_is_bit_identical_to_serial():
+    """The process pool is an accelerator only: every number matches the serial path."""
+    serial = run_population(4, base_seed=7, seconds=90.0, parallel=False, events=THREAT)
+    parallel = run_population(4, base_seed=7, seconds=90.0, parallel=True, events=THREAT)
+    assert parallel == serial
+
+
 def test_population_shows_individual_differences():
     results = run_population(10, base_seed=0, seconds=150.0, builder=build_minimal_human, events=THREAT)
     peak_hr = [r.stats["soma.cardio.heart_rate"][2] for r in results]

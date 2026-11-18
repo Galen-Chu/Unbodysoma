@@ -8,7 +8,7 @@ from typing import Any
 
 from ..core import BusPort, Module, ParamSpec, SignalSpec, clamp
 
-_CHANNELS = ("cardiac_arousal", "energy_deficit", "water_deficit", "thermal", "sleep_pressure", "circadian")
+_CHANNELS = ("cardiac_arousal", "energy_deficit", "water_deficit", "thermal", "sleep_pressure", "circadian", "pain")
 
 
 class Interoception(Module):
@@ -27,6 +27,7 @@ class Interoception(Module):
         "soma.thermo.core_temperature",
         "soma.sleep.pressure",
         "soma.circadian.drive",
+        "soma.nociception.pain",
     )
     signal_specs = (
         SignalSpec("intero.cardiac_arousal", "normalized", 0.0, 1.0, "Felt cardiac activation"),
@@ -35,6 +36,7 @@ class Interoception(Module):
         SignalSpec("intero.thermal", "normalized", -1.0, 1.0, "Felt body temperature (- cold, + hot)"),
         SignalSpec("intero.sleep_pressure", "normalized", 0.0, 1.0, "Felt tiredness (homeostatic sleep pressure)"),
         SignalSpec("intero.circadian", "normalized", -1.0, 1.0, "Felt circadian alerting signal"),
+        SignalSpec("intero.pain", "normalized", 0.0, 1.0, "Felt pain"),
     )
     writes = tuple(s.key for s in signal_specs)
     params = (
@@ -87,3 +89,4 @@ class Interoception(Module):
         self._sense(port, "thermal", felt, -1.0, 1.0)
         self._sense(port, "sleep_pressure", port.read("soma.sleep.pressure"))
         self._sense(port, "circadian", port.read("soma.circadian.drive"), -1.0, 1.0)
+        self._sense(port, "pain", port.read("soma.nociception.pain"))

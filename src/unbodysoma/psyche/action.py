@@ -23,14 +23,15 @@ class ActionSelection(Module):
     Utilities (an action is only available when its precondition holds):
 
     - ``idle``: 0 (the reference)
-    - ``flee``: ``k_flee · (threat − flee_threshold)``
+    - ``flee``: ``k_flee · (threat − flee_threshold) + k_flee_pain · pain`` — pain adds escape urgency
+      even before the threat is appraised
     - ``eat`` (food within reach): ``k_eat · (hunger − eat_threshold)``
     - ``explore`` (no food within reach): ``k_explore · (hunger − explore_threshold)`` — searching for food
     - ``drink`` (water within reach): ``k_drink · (thirst − drink_threshold)``
     - ``seek_water`` (no water within reach): ``k_seek_water · (thirst − seek_water_threshold)``
-    - ``seek_shelter`` (a shelter is known and the organism is not in it): the larger of
-      ``k_shelter · (thermal discomfort − shelter_threshold)`` and ``k_home · (sleepiness − home_onset)``
-      — going home when cold, hot or getting sleepy
+    - ``seek_shelter`` (a shelter is known and the organism is not in it): the largest of
+      ``k_shelter · (thermal discomfort − shelter_threshold)``, ``k_home · (sleepiness − home_onset)``
+      and ``k_shelter_pain · pain`` — going home when cold, hot, getting sleepy or hurt
     - ``sleep``: awake ``k_sleep · (sleepiness − sleep_onset)``, minus ``outside_penalty`` when a
       shelter is known but the organism is not in it; asleep ``min(sleep_cap, sleep_depth ·
       sleepiness)``, so sleep lasts until sleepiness turns negative (pressure below the wake
@@ -57,6 +58,7 @@ class ActionSelection(Module):
         "psyche.drive.thirst",
         "psyche.drive.thermal_discomfort",
         "psyche.drive.sleepiness",
+        "intero.pain",
         "extero.food",
         "extero.water",
         "extero.in_shelter",
@@ -81,6 +83,9 @@ class ActionSelection(Module):
         ),
         ParamSpec("k_flee", 2.5, "", 0.0, 20.0, "Utility gain of fleeing per unit threat above threshold"),
         ParamSpec("flee_threshold", 0.4, "normalized", 0.0, 1.0, "Appraised threat at which fleeing breaks even"),
+        ParamSpec(
+            "k_flee_pain", 1.0, "", 0.0, 20.0, "Utility gain of fleeing per unit felt pain (escape from what hurts)"
+        ),
         ParamSpec("k_eat", 2.0, "", 0.0, 20.0, "Utility gain of eating per unit hunger above threshold"),
         ParamSpec("eat_threshold", 0.35, "normalized", 0.0, 1.0, "Hunger at which starting to eat breaks even"),
         ParamSpec("eat_commitment", 0.4, "", 0.0, 2.0, "Extra bonus for continuing a meal (sets how sated it ends)"),
@@ -100,6 +105,14 @@ class ActionSelection(Module):
             "shelter_threshold", 0.3, "normalized", 0.0, 1.0, "Thermal discomfort at which sheltering breaks even"
         ),
         ParamSpec("k_home", 4.0, "", 0.0, 50.0, "Utility gain of going home to sleep per unit sleepiness"),
+        ParamSpec(
+            "k_shelter_pain",
+            1.0,
+            "",
+            0.0,
+            20.0,
+            "Utility gain of going to shelter per unit felt pain (retreat when hurt)",
+        ),
         ParamSpec("home_onset", 0.8, "normalized", 0.0, 1.0, "Sleepiness at which going home to sleep breaks even"),
         ParamSpec("outside_penalty", 0.5, "", 0.0, 5.0, "Utility lost by falling asleep outside a known shelter"),
         ParamSpec("k_sleep", 8.0, "", 0.0, 50.0, "How sharply sleep wins once sleepiness passes sleep_onset"),
@@ -127,6 +140,7 @@ class ActionSelection(Module):
         reconsideration_rate: float = 1 / 60,
         k_flee: float = 2.5,
         flee_threshold: float = 0.4,
+        k_flee_pain: float = 1.0,
         k_eat: float = 2.0,
         eat_threshold: float = 0.35,
         eat_commitment: float = 0.4,
@@ -140,6 +154,7 @@ class ActionSelection(Module):
         k_shelter: float = 1.5,
         shelter_threshold: float = 0.3,
         k_home: float = 4.0,
+        k_shelter_pain: float = 1.0,
         home_onset: float = 0.8,
         outside_penalty: float = 0.5,
         k_sleep: float = 8.0,
@@ -161,6 +176,7 @@ class ActionSelection(Module):
         self.reconsideration_rate = reconsideration_rate
         self.k_flee = k_flee
         self.flee_threshold = flee_threshold
+        self.k_flee_pain = k_flee_pain
         self.k_eat = k_eat
         self.eat_threshold = eat_threshold
         self.eat_commitment = eat_commitment
@@ -174,6 +190,7 @@ class ActionSelection(Module):
         self.k_shelter = k_shelter
         self.shelter_threshold = shelter_threshold
         self.k_home = k_home
+        self.k_shelter_pain = k_shelter_pain
         self.home_onset = home_onset
         self.outside_penalty = outside_penalty
         self.k_sleep = k_sleep
@@ -206,9 +223,10 @@ class ActionSelection(Module):
         water_near: bool = False,
         in_shelter: bool = False,
         shelter_known: bool = False,
+        pain: float = 0.0,
     ) -> dict[str, float]:
         """Utility of every currently available action, including the bonus for the current one."""
-        u = {IDLE: 0.0, FLEE: self.k_flee * (threat - self.flee_threshold)}
+        u = {IDLE: 0.0, FLEE: self.k_flee * (threat - self.flee_threshold) + self.k_flee_pain * pain}
         if food_near:
             u[EAT] = self.k_eat * (hunger - self.eat_threshold)
         else:
@@ -222,6 +240,7 @@ class ActionSelection(Module):
             u[SEEK_SHELTER] = max(
                 self.k_shelter * (discomfort - self.shelter_threshold),
                 self.k_home * (sleepiness - self.home_onset),
+                self.k_shelter_pain * pain,
             )
         resuming = self.interrupted and self.awake_for < self.resume_window and sleepiness > 0.0
         if self.action == SLEEP or resuming:
@@ -247,6 +266,7 @@ class ActionSelection(Module):
             water_near=port.read("extero.water") > self.water_seen,
             in_shelter=port.read("extero.in_shelter") > self.shelter_seen,
             shelter_known=port.read("extero.shelter_known") > self.shelter_seen,
+            pain=port.read("intero.pain"),
         )
         probabilities = softmax(utilities, self.temperature)
         previous = self.action

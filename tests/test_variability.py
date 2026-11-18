@@ -126,6 +126,7 @@ def test_each_sensory_channel_has_its_own_random_stream():
         "soma.thermo.core_temperature": 37.0,
         "soma.sleep.pressure": 0.5,
         "soma.circadian.drive": 0.0,
+        "soma.nociception.pain": 0.0,
     }
 
     class Body(Module):

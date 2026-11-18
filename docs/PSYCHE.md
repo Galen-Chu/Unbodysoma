@@ -63,12 +63,12 @@ threat  ← relax(threat, threat*, dt, τ = 0.5 s)
 ### 4.2 情感 Affect `psyche/affect.py`
 
 ```
-arousal* = clamp(0.6·intero.cardiac_arousal + 0.4·threat)
-valence* = clamp(0.1 − 0.9·threat − 0.5·hunger, −1, 1)
+arousal* = clamp(0.6·intero.cardiac_arousal + 0.4·threat + 0.3·pain)
+valence* = clamp(0.1 − 0.9·threat − 0.5·hunger − 1.2·pain, −1, 1)   （多需求以飽和聯集合成，見 §5）
 τ = 2 s
 ```
 
-四個權重都是可調參數（`w_cardiac_arousal`、`w_threat_arousal`、`w_threat_valence`、`w_hunger_valence`，見 [PARAMETERS.md](PARAMETERS.md)）。
+權重都是可調參數（`w_cardiac_arousal`、`w_threat_arousal`、`w_pain_arousal`、`w_threat_valence`、`w_hunger_valence`、`w_pain_valence`，見 [PARAMETERS.md](PARAMETERS.md)）。
 兩個目標值各自加上一個緩慢的自發波動 `OU(60 s, σ = 0.03 / 0.02)`，所以即使什麼事都沒發生，心情也不會是一條直線。
 
 ### 4.3 驅力 Drives `psyche/drives.py`
@@ -98,16 +98,16 @@ sleepiness  ← relax(sleepiness, sleepiness*, dt, τ = 300 s)
 | 行動 | 前提 | 效用 | 輸出 |
 |---|---|---|---|
 | `idle` | — | 0（基準） | — |
-| `flee` | — | `2.5 · (threat − 0.4)` | `motor.exertion → 0.8` |
+| `flee` | — | `2.5 · (threat − 0.4) + 1.0 · pain` | `motor.exertion → 0.8` |
 | `eat` | 感覺到食物在手邊 | `2.0 · (hunger − 0.35)` | `motor.eating = 1` |
 | `explore` | 手邊沒有食物 | `1.5 · (hunger − 0.4)`（覓食） | `motor.exertion → 0.3` |
 | `drink` | 感覺到水在手邊 | `2.0 · (thirst − 0.3)` | `motor.drinking = 1` |
 | `seek_water` | 手邊沒有水 | `1.5 · (thirst − 0.35)`（找水） | `motor.exertion → 0.3` |
-| `seek_shelter` | 知道有庇護所，且不在裡面 | `max(1.5 · (discomfort − 0.3), 4 · (sleepiness − 0.8))` | `motor.exertion → 0.3` |
+| `seek_shelter` | 知道有庇護所，且不在裡面 | `max(1.5 · (discomfort − 0.3), 4 · (sleepiness − 0.8), 1.0 · pain)` | `motor.exertion → 0.3` |
 | `sleep` | — | 清醒時 `8 · (sleepiness − 0.95)`，在已知庇護所之外再減 0.5；睡著時 `min(1, 5 · sleepiness)` | `motor.sleeping = 1` |
 
 - 目前的行動有 `stickiness = 0.1` 的加成，進食與飲水再各加 `0.4` 的承諾加成，形成「吃（喝）到飽才停」的遲滯。
-- 回庇護所有兩個理由：冷熱不適，或「快想睡了」。後者讓生物體在睡意接近入睡門檻前先回家，所以在網格世界中 100% 的睡眠都發生在庇護所內。
+- 回庇護所有三個理由：冷熱不適、「快想睡了」、或受傷了（痛覺驅動的退避）。睡意那條讓生物體在入睡門檻前先回家，所以在網格世界中 100% 的睡眠都發生在庇護所內；痛覺那條讓被掠食者擦撞到的個體回家休息（`tests/test_nociception.py`）。
 - **切換是連續時間的過程**：從 a 轉到 b 的速率為 `r₀ · exp((u_b − u_a) / 2T)`，`T = 0.015`、`r₀ = 1/60 s⁻¹`。行為因此不受決策頻率影響，長期的時間分配等於 `softmax(u, T)`（即發布的 `psyche.action.p_*`），`T = 0` 則重現眾數塌縮。
 - 睡眠的效用上限（1.0）低於完全威脅下的逃跑效用（1.5），所以危險永遠叫得醒。
 - 被提早叫醒時（睡意仍 > 0.05），30 分鐘內可以再度入睡；自然醒（睡意 ≤ 0）則不會。

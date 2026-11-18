@@ -53,6 +53,7 @@ AMBIVALENT = {
     "psyche.drive.thirst": 0.0,
     "psyche.drive.thermal_discomfort": 0.0,
     "psyche.drive.sleepiness": 0.0,
+    "intero.pain": 0.0,
     "extero.food": 1.0,
     "extero.water": 0.0,
     "extero.in_shelter": 0.0,

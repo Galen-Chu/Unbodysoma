@@ -3,7 +3,9 @@
 Runs scenarios/grid_72h.toml end to end (about 2-3 minutes) and checks the
 completion criteria: consolidated nightly sleep at home, regular meals from more
 than one patch, regular drinking, a defended body temperature in a day-night
-climate, flight from predators, little time in danger, and a healthy body.
+climate, the flight reflex (in a dedicated deterministic test — the 72-hour
+trajectory is chaotic and no longer crosses a predator window closely), little
+time in danger, and a healthy body.
 """
 
 import math
@@ -108,10 +110,51 @@ def test_it_defends_its_temperature_through_cold_nights(life):
     assert 36.0 < min(core) and max(core) < 38.0
 
 
-def test_it_flees_from_predators_and_stays_out_of_danger(life):
-    flights = episodes(life["t"], life["psyche.action.selected_flee"])
-    assert len(flights) >= 1
-    for f in flights:
-        window = life["world.threat"][int(f.start) - 5 : int(f.start) + 1]
-        assert max(window) > 0.3  # every flight was a response to real danger
+def test_it_stays_out_of_serious_danger(life):
+    """Share of time with appraised threat above 0.6 stays under 0.5 %.
+
+    (Whether a particular 72-hour trajectory records a *flight* is a coincidence
+    of foraging schedule and predator windows — the trajectory is chaotic, so any
+    new interoceptive channel reshuffles it. The reflex itself is tested
+    deterministically just below.)
+    """
     assert time_fraction(life["world.threat"], 0.6) < 0.005
+
+
+def test_it_flees_when_a_predator_arrives_while_it_eats():
+    """The flight reflex, directly: a predator appears at the patch mid-meal."""
+    from unbodysoma import build_grid_human
+    from unbodysoma.world import FoodPatch, Hazard, Shelter, WaterSource
+
+    engine = build_grid_human(
+        food=(FoodPatch(5.0, 5.0),),
+        hazards=(Hazard(5.0, 5.0, radius=3.0, strength=0.9, start=600.0),),
+        water=(WaterSource(15.0, 15.0),),
+        shelters=(Shelter(15.0, 15.0),),
+        start=(5.0, 5.0),
+        seed=0,
+        overrides={"soma.metabolism": {"initial_reserve": 0.5}},  # hungry enough to stay at the patch
+    )
+    keys = (
+        "motor.eating",
+        "psyche.action.selected_flee",
+        "world.threat",
+        "world.position_x",
+        "world.position_y",
+    )
+    recorder = Recorder(keys, every=1.0)
+    engine.observe(recorder)
+    engine.run(800.0)
+    t = recorder.times()
+    eating = recorder.column("motor.eating")
+    flee = recorder.column("psyche.action.selected_flee")
+    threat = recorder.column("world.threat")
+    assert mean(eating[i] for i in range(len(t)) if 560.0 <= t[i] < 600.0) > 0.5  # mid-meal before the arrival
+    arrival = [i for i in range(len(t)) if t[i] >= 600.0 and flee[i] > 0.5]
+    assert arrival, "the predator's arrival never triggered fleeing"
+    first = arrival[0]
+    assert max(threat[first - 5 : first + 1]) > 0.3  # the flight was a response to real danger
+    assert time_fraction(threat, 0.6) < 0.05  # and it does not linger in the danger zone
+    world = engine.modules[0]
+    far = [math.hypot(world.offset(5.0, 5.0)[0], world.offset(5.0, 5.0)[1]) for i in range(len(t)) if t[i] >= 700.0]
+    assert min(far) > 3.5  # well clear of the hazard by 100 s after the arrival

@@ -176,6 +176,21 @@
 | `sweat_offset` | 0.2 | °C | [0, 3] | How far above the setpoint sweating starts | L0 toy value |
 | `response_span` | 0.8 | °C | [0.05, 5] | Deviation beyond the onset at which a response is maximal | L0 toy value |
 
+## `soma.nociception`
+
+`unbodysoma.soma.nociception.Nociception`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `injury_gain` | 0.03 | 1/s | [0, 1] | Injury accumulated per second of unit damage | calibrated: a 2 s graze reads as a mild ache, a minute of contact as a serious wound |
+| `tau_heal` | 86400 | s | [3600, 604800] | Time constant of tissue healing | order of magnitude: tissue repair operates over hours to days |
+| `tau_sharp` | 1.5 | s | [0.05, 10] | Decay of first pain | fast A-delta signalling (Julius & Basbaum 2001) |
+| `tau_burning` | 25 | s | [1, 300] | Rise and decay of second pain | slow C-fibre signalling; second pain outlasts the stimulus (Julius & Basbaum 2001) |
+| `burning_gain` | 2.5 | — | [0, 10] | Second-pain intensity per unit injury | calibrated: a half-saturated injury reads as near-maximal burning pain |
+| `sensitization_rate` | 0.1 | 1/s | [0, 1] | Sensitization gained per second of unit damage | wind-up: repeated C-fibre input grows the response (Mendell 1966) |
+| `tau_sensitization` | 900 | s | [10, 86400] | Decay of sensitization after the damage stops | primary hyperalgesia fades over minutes |
+| `max_sensitization` | 1 | x | [0, 3] | Upper bound of the pain multiplier (1 + this) | hyperalgesia roughly doubles reported intensity |
+
 ## `psyche.appraisal`
 
 `unbodysoma.psyche.appraisal.Appraisal`
@@ -198,6 +213,8 @@
 | `w_hunger_valence` | 0.5 | — | [0, 2] | Valence lost per unit hunger | L0 toy value |
 | `w_thirst_valence` | 0.5 | — | [0, 2] | Valence lost per unit thirst | L0 toy value |
 | `w_thermal_valence` | 0.4 | — | [0, 2] | Valence lost per unit thermal discomfort | L0 toy value |
+| `w_pain_valence` | 1.2 | — | [0, 2] | Valence lost per unit felt pain | L0 toy value |
+| `w_pain_arousal` | 0.3 | — | [0, 1] | Arousal gained per unit felt pain | L0 toy value |
 | `need_saturation` | 1 | — | [0, 1] | Blend of multi-need valence pooling: 0 = linear sum, 1 = saturating union | decided by behavioral data, 2026-11-16 (docs/PSYCHE.md §5) |
 | `tau` | 2 | s | [0.01, 600] | Time constant of affect | L0 toy value |
 | `valence_sigma` | 0.03 | normalized | [0, 0.5] | SD of spontaneous valence fluctuation | L0 toy value |
@@ -236,6 +253,7 @@
 | `reconsideration_rate` | 0.0166667 | 1/s | [0, 10] | Rate of switching between two equally good actions | L0 toy value |
 | `k_flee` | 2.5 | — | [0, 20] | Utility gain of fleeing per unit threat above threshold | L0 toy value |
 | `flee_threshold` | 0.4 | normalized | [0, 1] | Appraised threat at which fleeing breaks even | L0 toy value |
+| `k_flee_pain` | 1 | — | [0, 20] | Utility gain of fleeing per unit felt pain (escape from what hurts) | L0 toy value |
 | `k_eat` | 2 | — | [0, 20] | Utility gain of eating per unit hunger above threshold | L0 toy value |
 | `eat_threshold` | 0.35 | normalized | [0, 1] | Hunger at which starting to eat breaks even | L0 toy value |
 | `eat_commitment` | 0.4 | — | [0, 2] | Extra bonus for continuing a meal (sets how sated it ends) | L0 toy value |
@@ -249,6 +267,7 @@
 | `k_shelter` | 1.5 | — | [0, 20] | Utility gain of going to shelter per unit thermal discomfort | L0 toy value |
 | `shelter_threshold` | 0.3 | normalized | [0, 1] | Thermal discomfort at which sheltering breaks even | L0 toy value |
 | `k_home` | 4 | — | [0, 50] | Utility gain of going home to sleep per unit sleepiness | L0 toy value |
+| `k_shelter_pain` | 1 | — | [0, 20] | Utility gain of going to shelter per unit felt pain (retreat when hurt) | L0 toy value |
 | `home_onset` | 0.8 | normalized | [0, 1] | Sleepiness at which going home to sleep breaks even | L0 toy value |
 | `outside_penalty` | 0.5 | — | [0, 5] | Utility lost by falling asleep outside a known shelter | L0 toy value |
 | `k_sleep` | 8 | — | [0, 50] | How sharply sleep wins once sleepiness passes sleep_onset | L0 toy value |

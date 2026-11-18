@@ -48,6 +48,7 @@
 | `intero.cardiac_arousal` | normalized | [0, 1] | `interface.interoception` | `psyche.affect` | Felt cardiac activation |
 | `intero.circadian` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives` | Felt circadian alerting signal |
 | `intero.energy_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives` | Felt shortage of energy |
+| `intero.pain` | normalized | [0, 1] | `interface.interoception` | `psyche.action`, `psyche.affect` | Felt pain |
 | `intero.sleep_pressure` | normalized | [0, 1] | `interface.interoception` | `psyche.drives` | Felt tiredness (homeostatic sleep pressure) |
 | `intero.thermal` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives` | Felt body temperature (- cold, + hot) |
 | `intero.water_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives` | Felt shortage of water |
@@ -90,6 +91,10 @@
 | `soma.metabolism.energy_reserve` | fraction | [0, 1] | `soma.metabolism` | `interface.interoception` | Lumped energy store (1 = full) |
 | `soma.metabolism.glucose` | mg/dL | [0, 600] | `soma.metabolism` | —（預留） | Blood glucose |
 | `soma.metabolism.insulin` | μU/mL | [0, 400] | `soma.metabolism` | —（預留） | Plasma insulin |
+| `soma.nociception.burning` | normalized | [0, 1] | `soma.nociception` | —（預留） | Second pain: slow, tracks tissue state |
+| `soma.nociception.injury` | fraction | [0, 1] | `soma.nociception` | —（預留） | Tissue injury (1 = maximally injured) |
+| `soma.nociception.pain` | normalized | [0, 1] | `soma.nociception` | `interface.interoception` | Felt pain intensity (sensitized) |
+| `soma.nociception.sharp` | normalized | [0, 1] | `soma.nociception` | —（預留） | First pain: fast, tracks the stimulus |
 | `soma.respiration.minute_ventilation` | L/min | [2, 120] | `soma.respiration` | —（預留） | Minute ventilation |
 | `soma.respiration.rate` | breaths/min | [4, 60] | `soma.respiration` | —（預留） | Breathing rate |
 | `soma.respiration.spo2` | % | [70, 100] | `soma.respiration` | —（預留） | Arterial oxygen saturation |
@@ -98,6 +103,7 @@
 | `soma.thermo.shivering` | normalized | [0, 1] | `soma.thermo` | `soma.metabolism` | Shivering intensity (heat production, energy cost) |
 | `soma.thermo.sweating` | normalized | [0, 1] | `soma.thermo` | `soma.fluid` | Sweating intensity (heat loss, water cost) |
 | `world.ambient_temperature` | °C | [-60, 60] | `world.grid`, `world.scripted` | `soma.thermo` | Temperature where the organism is |
+| `world.damage` | normalized | [0, 1] | `world.grid`, `world.scripted` | `soma.nociception` | Nociceptive intensity at the organism (0 inside a shelter) |
 | `world.food_available` | normalized | [0, 1] | `world.grid`, `world.scripted` | `interface.exteroception`, `world.food` | Food within reach (1 = plenty) |
 | `world.food_dir_x` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the nearest perceived food (x); 0 if none |
 | `world.food_dir_y` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the nearest perceived food (y); 0 if none |

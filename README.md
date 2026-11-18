@@ -78,20 +78,20 @@
 day 1 (08:00 to 08:00)
   sleeps    1  22:43-06:30 (7.8 h)
   meals     3  18:22 (10 min), 06:31 (10 min), 06:41 (7 min)
-  drinks    1  18:52 (2 min)
-  flights   1  17:57
+  drinks    2  18:52 (2 min), 07:21 (2 min)
+  flights   0
 day 3 (08:00 to 08:00)
-  sleeps    1  22:08-05:42 (7.6 h)
-  meals     5  12:15 (6 min), 15:55 (4 min), 18:34 (3 min), 05:42 (10 min), 05:52 (10 min)
-  drinks    3  09:08 (2 min), 18:41 (2 min), 06:37 (2 min)
-  flights   1  11:59
+  sleeps    1  22:13-05:42 (7.5 h)
+  meals     4  11:59 (6 min), 16:36 (10 min), 05:43 (10 min), 06:01 (10 min)
+  drinks    2  18:34 (2 min), 07:32 (2 min)
+  flights   0
 
-time at home: 66 %   in serious danger (threat > 0.6): 0.00 %
-core temperature 36.39-37.12 C   lowest hydration 0.67
-health alerts: ['prolonged_negative_valence']
+time at home: 97 %   in serious danger (threat > 0.6): 0.00 %
+core temperature 36.40-37.00 C   lowest hydration 0.66
+health alerts: none
 ```
 
-每一晚都回到庇護所睡覺；掠食者到達食物點的時刻，牠就逃開。這是 Phase 1 的完成情境，由 `tests/test_phase1.py` 驗收（[ROADMAP.md](docs/ROADMAP.md)）。唯一的警報 `prolonged_negative_valence` 來自清晨又餓、又渴、又冷地出門吃早餐的幾分鐘：這是情感模型把多個需求線性加總的結果，依倫理準則保持可見，並已列為待討論問題（[PSYCHE.md](docs/PSYCHE.md) §5）。
+每一晚都回到庇護所睡覺；三天都在掠食者的空檔時段短程外出覓食與飲水，唯一一次擦過活躍危險區的邊緣（day 1 傍晚）只帶來幾分鐘的輕微疼痛（`soma.nociception.pain`），沒有需要全力逃跑的近距離遭遇。這是 Phase 1 的完成情境，由 `tests/test_phase1.py` 驗收（[ROADMAP.md](docs/ROADMAP.md)）；「掠食者出現時逃跑」的反射本身以專屬的確定性測試把關（獵物在進食、掠食者抵達 → 逃跑並離開危險區），不依賴 72 小時軌跡與掠食者時窗的偶然相遇——軌跡是混亂的，加入痛覺的內感受通道後這顆種子的作息略有移動（更戀家），屬分布內的行為漂移。
 
 > ⚠️ 現階段所有生理參數都是**示意用的玩具模型**，未經驗證，**不可用於任何醫療用途**。
 
@@ -144,6 +144,8 @@ flowchart LR
         CV["Cardio 心血管"]
         ME["Metabolism 代謝"]
         SL["Circadian · Sleep 晝夜 · 睡眠"]
+        RE["Respiration 呼吸"]
+        NO["Nociception 痛覺"]
     end
     W --> EXT --> AP
     AP --> AF
@@ -157,6 +159,8 @@ flowchart LR
     EN --> ME
     CV --> INT
     ME --> INT
+    NO --> INT
+    W -->|damage| NO
     INT --> AF
     INT --> DR
     DR --> AF

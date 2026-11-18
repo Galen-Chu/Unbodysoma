@@ -21,6 +21,11 @@
 - Ardiel, E. L., & Rankin, C. H. (2010). An elegant mind: Learning and memory in *Caenorhabditis elegans*. *Learning & Memory*, 17(4), 191–201. https://doi.org/10.1101/lm.960510 （線蟲的非聯結與聯結學習範式總評——微生物級能力的行為數據入口）
 - Berg, H. C., & Brown, D. A. (1972). Chemotaxis in *Escherichia coli* analysed by three-dimensional tracking. *Nature*, 239(5374), 500–504. https://doi.org/10.1038/239500a0 （趨化的偏置隨機漫步（run-and-tumble）——導航 wander 行為的文獻對照）
 
+## 痛覺（Nociception）
+
+- Julius, D., & Basbaum, A. I. (2001). Molecular mechanisms of nociception. *Nature*, 413(6852), 203–210. https://doi.org/10.1038/35093019 （傷害感受器的纖維類別（Aδ 快／C 慢）與痛覺過敏——雙相痛模型的錨點）
+- Mendell, L. M. (1966). Physiological properties of unmyelinated fiber projection to the spinal cord. *Experimental Neurology*, 16(3), 316–332. https://doi.org/10.1016/0014-4886(66)90068-9 （C 纖維重複刺激的 wind-up——敏感化動力學的錨點）
+
 ## 預測處理與主動推論
 
 - Friston, K. (2010). The free-energy principle: A unified brain theory? *Nature Reviews Neuroscience*, 11(2), 127–138. https://doi.org/10.1038/nrn2787
@@ -80,5 +85,5 @@
 
 - **abyssal-garden** — Noniv. 單檔 WebGPU 程序化海底世界（MIT）：密度場地形、Surface Nets、生態規則撒點、決定論種子。管線分析與採用評估見 [WORLDGEN.md](WORLDGEN.md)。<https://github.com/Noniv/abyssal-garden>
 
-> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。2026-11-16 新增的 Dalla Man、ADA、Dickerson & Kemeny、Clow、Whipp & Wasserman、Cole、Cretikos、O'Driscoll 等八筆已對照 Crossref（DOI、卷頁、作者、年份一致）。2026-11-18 新增的 Rescorla（1988）、Schultz、Kandel（2001）、Ardiel & Rankin、Berg & Brown 五筆已對照 doi.org／Crossref 核對（DOI、卷期頁、作者、年份一致）；Rescorla & Wagner（1972）與 Kamin（1969）為書籍章節，無 DOI，對照原著書目。
+> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。2026-11-16 新增的 Dalla Man、ADA、Dickerson & Kemeny、Clow、Whipp & Wasserman、Cole、Cretikos、O'Driscoll 等八筆已對照 Crossref（DOI、卷頁、作者、年份一致）。2026-11-18 新增的 Rescorla（1988）、Schultz、Kandel（2001）、Ardiel & Rankin、Berg & Brown 五筆已對照 doi.org／Crossref 核對（DOI、卷期頁、作者、年份一致）；Rescorla & Wagner（1972）與 Kamin（1969）為書籍章節，無 DOI，對照原著書目。同日新增的 Julius & Basbaum（2001）與 Mendell（1966）已對照 Crossref 核對（DOI、卷期頁、作者、年份一致）。
 > 新增引用時請附上 DOI 或原始出處連結；如發現錯誤歡迎發 PR 修正。

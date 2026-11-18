@@ -146,6 +146,9 @@ class GridWorld(Module):
         self.feeding_at = -1  # index of the patch being eaten, or -1
         self.signal_specs = (
             SignalSpec("world.threat", "normalized", 0.0, 1.0, "Objective threat at the organism's position"),
+            SignalSpec(
+                "world.damage", "normalized", 0.0, 1.0, "Nociceptive intensity at the organism (0 inside a shelter)"
+            ),
             SignalSpec("world.food_available", "normalized", 0.0, 1.0, "Food within reach (1 = plenty)"),
             SignalSpec("world.food_stock", "patches", 0.0, float(len(self.food)), "Total food left in the world"),
             SignalSpec("world.position_x", "cells", 0.0, width, "Organism position (x)"),
@@ -259,6 +262,7 @@ class GridWorld(Module):
         threat, tdx, tdy = self._threat(t)
         available, fdx, fdy = self._food()
         port.write("world.threat", threat)
+        port.write("world.damage", threat)  # contact with the hazard itself hurts; 0 inside a shelter
         port.write("world.food_available", available)
         port.write("world.food_stock", sum(a / p.capacity for a, p in zip(self.amounts, self.food, strict=True)))
         port.write("world.position_x", self.x)
