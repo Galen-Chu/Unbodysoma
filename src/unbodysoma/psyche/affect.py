@@ -23,6 +23,9 @@ class Affect(Module):
     reads = (
         "intero.cardiac_arousal",
         "intero.pain",
+        "neuro.dopamine",
+        "neuro.serotonin",
+        "psyche.habituation.novelty",
         "psyche.appraisal.threat",
         "psyche.drive.hunger",
         "psyche.drive.thirst",
@@ -43,6 +46,16 @@ class Affect(Module):
         ParamSpec("w_thermal_valence", 0.4, "", 0.0, 2.0, "Valence lost per unit thermal discomfort"),
         ParamSpec("w_pain_valence", 1.2, "", 0.0, 2.0, "Valence lost per unit felt pain"),
         ParamSpec("w_pain_arousal", 0.3, "", 0.0, 1.0, "Arousal gained per unit felt pain"),
+        ParamSpec("w_dopamine_valence", 0.1, "", 0.0, 1.0, "Valence gained per unit dopamine (relief feels good)"),
+        ParamSpec(
+            "w_serotonin_valence",
+            0.4,
+            "",
+            0.0,
+            2.0,
+            "Valence shift per unit serotonin tone above/below 0.5 (slow mood)",
+        ),
+        ParamSpec("w_novelty_arousal", 0.15, "", 0.0, 1.0, "Arousal gained per unit felt novelty (orienting response)"),
         ParamSpec(
             "need_saturation",
             1.0,
@@ -71,6 +84,9 @@ class Affect(Module):
         w_thermal_valence: float = 0.4,
         w_pain_valence: float = 1.2,
         w_pain_arousal: float = 0.3,
+        w_dopamine_valence: float = 0.1,
+        w_serotonin_valence: float = 0.4,
+        w_novelty_arousal: float = 0.15,
         need_saturation: float = 1.0,
         tau: float = 2.0,
         valence_sigma: float = 0.03,
@@ -87,6 +103,9 @@ class Affect(Module):
         self.w_thermal_valence = w_thermal_valence
         self.w_pain_valence = w_pain_valence
         self.w_pain_arousal = w_pain_arousal
+        self.w_dopamine_valence = w_dopamine_valence
+        self.w_serotonin_valence = w_serotonin_valence
+        self.w_novelty_arousal = w_novelty_arousal
         self.need_saturation = need_saturation
         self.tau = tau
         self.valence_sigma = valence_sigma
@@ -113,6 +132,7 @@ class Affect(Module):
             self.w_cardiac_arousal * port.read("intero.cardiac_arousal")
             + self.w_threat_arousal * threat
             + self.w_pain_arousal * pain
+            + self.w_novelty_arousal * port.read("psyche.habituation.novelty")
             + self.arousal_drift
         )
         # How unmet demands combine into negative valence: a linear sum lets
@@ -130,7 +150,10 @@ class Affect(Module):
         for pull in pulls:
             union *= 1.0 - clamp(pull, 0.0, 1.0)
         negative_pull = (1.0 - self.need_saturation) * linear + self.need_saturation * (1.0 - union)
-        valence_target = clamp(self.baseline_valence - negative_pull + self.valence_drift, -1.0, 1.0)
+        positive_pull = self.w_dopamine_valence * port.read("neuro.dopamine") + self.w_serotonin_valence * (
+            port.read("neuro.serotonin") - 0.5
+        )
+        valence_target = clamp(self.baseline_valence + positive_pull - negative_pull + self.valence_drift, -1.0, 1.0)
         self.arousal = relax(self.arousal, arousal_target, dt, self.tau)
         self.valence = relax(self.valence, valence_target, dt, self.tau)
         port.write("psyche.affect.valence", self.valence)

@@ -5,6 +5,7 @@ from .circadian import Circadian
 from .endocrine import Endocrine
 from .fluid import FluidBalance
 from .metabolism import Metabolism
+from .neuro import Neuromodulation
 from .nociception import Nociception
 from .pulmonary import Respiration
 from .sleep import SleepHomeostat
@@ -17,6 +18,7 @@ __all__ = [
     "FluidBalance",
     "Metabolism",
     "Nociception",
+    "Neuromodulation",
     "Respiration",
     "SleepHomeostat",
     "Thermoregulation",

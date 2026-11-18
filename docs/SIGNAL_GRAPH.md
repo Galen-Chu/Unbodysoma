@@ -26,11 +26,13 @@ flowchart LR
         soma_fluid["soma.fluid"]
         soma_thermo["soma.thermo"]
         soma_nociception["soma.nociception"]
+        soma_neuro["soma.neuro"]
     end
     subgraph psyche["Psyche 心智層"]
         psyche_appraisal["psyche.appraisal"]
         psyche_affect["psyche.affect"]
         psyche_drives["psyche.drives"]
+        psyche_habituation["psyche.habituation"]
         psyche_action["psyche.action"]
     end
     interface_exteroception -->|"food, in_shelter +2"| psyche_action
@@ -38,6 +40,7 @@ flowchart LR
     interface_interoception -->|"pain"| psyche_action
     interface_interoception -->|"cardiac_arousal, pain"| psyche_affect
     interface_interoception -->|"circadian, energy_deficit +3"| psyche_drives
+    interface_interoception -->|"cardiac_arousal, energy_deficit +4"| soma_neuro
     psyche_action -->|"sleeping"| psyche_drives
     psyche_action -->|"exertion, sleeping"| soma_cardio
     psyche_action -->|"sleeping"| soma_endocrine
@@ -48,12 +51,13 @@ flowchart LR
     psyche_action -->|"exertion"| soma_thermo
     psyche_action -->|"eating"| world_food
     psyche_action -->|"drinking"| world_water
-    psyche_affect -->|"affect.arousal"| psyche_appraisal
     psyche_appraisal -->|"appraisal.threat"| psyche_action
     psyche_appraisal -->|"appraisal.threat"| psyche_affect
     psyche_appraisal -->|"appraisal.threat"| soma_endocrine
+    psyche_appraisal -->|"appraisal.threat"| soma_neuro
     psyche_drives -->|"drive.hunger, drive.sleepiness +2"| psyche_action
     psyche_drives -->|"drive.hunger, drive.thermal_discomfort +1"| psyche_affect
+    psyche_habituation -->|"habituation.novelty"| psyche_affect
     soma_cardio -->|"cardio.heart_rate"| interface_interoception
     soma_circadian -->|"circadian.drive"| interface_interoception
     soma_circadian -->|"circadian.clock_hour"| soma_endocrine
@@ -62,6 +66,8 @@ flowchart LR
     soma_endocrine -->|"endocrine.adrenaline"| soma_respiration
     soma_fluid -->|"fluid.hydration"| interface_interoception
     soma_metabolism -->|"metabolism.energy_reserve"| interface_interoception
+    soma_neuro -->|"dopamine, serotonin"| psyche_affect
+    soma_neuro -->|"norepinephrine"| psyche_appraisal
     soma_nociception -->|"nociception.pain"| interface_interoception
     soma_sleep -->|"sleep.pressure"| interface_interoception
     soma_thermo -->|"thermo.core_temperature"| interface_interoception
@@ -69,6 +75,7 @@ flowchart LR
     soma_thermo -->|"thermo.shivering"| soma_metabolism
     world_food -->|"food_intake"| soma_metabolism
     world_scripted -->|"food_available, in_shelter +3"| interface_exteroception
+    world_scripted -->|"stimulus"| psyche_habituation
     world_scripted -->|"damage"| soma_nociception
     world_scripted -->|"ambient_temperature"| soma_thermo
     world_scripted -->|"food_available"| world_food
@@ -99,11 +106,13 @@ flowchart LR
         soma_fluid["soma.fluid"]
         soma_thermo["soma.thermo"]
         soma_nociception["soma.nociception"]
+        soma_neuro["soma.neuro"]
     end
     subgraph psyche["Psyche 心智層"]
         psyche_appraisal["psyche.appraisal"]
         psyche_affect["psyche.affect"]
         psyche_drives["psyche.drives"]
+        psyche_habituation["psyche.habituation"]
         psyche_action["psyche.action"]
         psyche_navigation["psyche.navigation"]
     end
@@ -113,6 +122,7 @@ flowchart LR
     interface_interoception -->|"pain"| psyche_action
     interface_interoception -->|"cardiac_arousal, pain"| psyche_affect
     interface_interoception -->|"circadian, energy_deficit +3"| psyche_drives
+    interface_interoception -->|"cardiac_arousal, energy_deficit +4"| soma_neuro
     psyche_action -->|"sleeping"| psyche_drives
     psyche_action -->|"action.selected_explore, action.selected_flee +2"| psyche_navigation
     psyche_action -->|"exertion, sleeping"| soma_cardio
@@ -125,12 +135,13 @@ flowchart LR
     psyche_action -->|"eating"| world_food
     psyche_action -->|"eating"| world_grid
     psyche_action -->|"drinking"| world_water
-    psyche_affect -->|"affect.arousal"| psyche_appraisal
     psyche_appraisal -->|"appraisal.threat"| psyche_action
     psyche_appraisal -->|"appraisal.threat"| psyche_affect
     psyche_appraisal -->|"appraisal.threat"| soma_endocrine
+    psyche_appraisal -->|"appraisal.threat"| soma_neuro
     psyche_drives -->|"drive.hunger, drive.sleepiness +2"| psyche_action
     psyche_drives -->|"drive.hunger, drive.thermal_discomfort +1"| psyche_affect
+    psyche_habituation -->|"habituation.novelty"| psyche_affect
     psyche_navigation -->|"move_x, move_y"| world_grid
     soma_cardio -->|"cardio.heart_rate"| interface_interoception
     soma_circadian -->|"circadian.drive"| interface_interoception
@@ -140,6 +151,8 @@ flowchart LR
     soma_endocrine -->|"endocrine.adrenaline"| soma_respiration
     soma_fluid -->|"fluid.hydration"| interface_interoception
     soma_metabolism -->|"metabolism.energy_reserve"| interface_interoception
+    soma_neuro -->|"dopamine, serotonin"| psyche_affect
+    soma_neuro -->|"norepinephrine"| psyche_appraisal
     soma_nociception -->|"nociception.pain"| interface_interoception
     soma_sleep -->|"sleep.pressure"| interface_interoception
     soma_thermo -->|"thermo.core_temperature"| interface_interoception
@@ -147,6 +160,7 @@ flowchart LR
     soma_thermo -->|"thermo.shivering"| soma_metabolism
     world_food -->|"food_intake"| soma_metabolism
     world_grid -->|"food_available, food_dir_x +11"| interface_exteroception
+    world_grid -->|"stimulus"| psyche_habituation
     world_grid -->|"damage"| soma_nociception
     world_grid -->|"ambient_temperature"| soma_thermo
     world_grid -->|"food_available"| world_food

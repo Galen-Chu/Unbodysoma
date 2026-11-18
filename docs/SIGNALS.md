@@ -45,19 +45,22 @@
 | `extero.water` | normalized | [0, 1] | `interface.exteroception` | `psyche.action` | Sensed water within reach |
 | `extero.water_dir_x` | normalized | [-1, 1] | `interface.exteroception` | `psyche.navigation` | Sensed direction to the nearest water (x) |
 | `extero.water_dir_y` | normalized | [-1, 1] | `interface.exteroception` | `psyche.navigation` | Sensed direction to the nearest water (y) |
-| `intero.cardiac_arousal` | normalized | [0, 1] | `interface.interoception` | `psyche.affect` | Felt cardiac activation |
+| `intero.cardiac_arousal` | normalized | [0, 1] | `interface.interoception` | `psyche.affect`, `soma.neuro` | Felt cardiac activation |
 | `intero.circadian` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives` | Felt circadian alerting signal |
-| `intero.energy_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives` | Felt shortage of energy |
-| `intero.pain` | normalized | [0, 1] | `interface.interoception` | `psyche.action`, `psyche.affect` | Felt pain |
-| `intero.sleep_pressure` | normalized | [0, 1] | `interface.interoception` | `psyche.drives` | Felt tiredness (homeostatic sleep pressure) |
-| `intero.thermal` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives` | Felt body temperature (- cold, + hot) |
-| `intero.water_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives` | Felt shortage of water |
+| `intero.energy_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt shortage of energy |
+| `intero.pain` | normalized | [0, 1] | `interface.interoception` | `psyche.action`, `psyche.affect`, `soma.neuro` | Felt pain |
+| `intero.sleep_pressure` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt tiredness (homeostatic sleep pressure) |
+| `intero.thermal` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt body temperature (- cold, + hot) |
+| `intero.water_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt shortage of water |
 | `motor.drinking` | normalized | [0, 1] | `psyche.action` | `world.water` | Drinking behaviour (1 = drinking) |
 | `motor.eating` | normalized | [0, 1] | `psyche.action` | `world.food`, `world.grid` | Eating behaviour (1 = eating) |
 | `motor.exertion` | normalized | [0, 1] | `psyche.action` | `soma.cardio`, `soma.fluid`, `soma.metabolism`, `soma.respiration`, `soma.thermo` | Physical effort being exerted |
 | `motor.move_x` | normalized | [-1, 1] | `psyche.navigation` | `world.grid` | Movement command (x); length 1 = full speed |
 | `motor.move_y` | normalized | [-1, 1] | `psyche.navigation` | `world.grid` | Movement command (y); length 1 = full speed |
 | `motor.sleeping` | indicator | [0, 1] | `psyche.action` | `psyche.drives`, `soma.cardio`, `soma.endocrine`, `soma.fluid`, `soma.metabolism`, `soma.respiration`, `soma.sleep` | 1 while asleep |
+| `neuro.dopamine` | normalized | [0, 1] | `soma.neuro` | `psyche.affect` | Dopamine: phasic reward from homeostatic relief |
+| `neuro.norepinephrine` | normalized | [0, 1] | `soma.neuro` | `psyche.appraisal` | Norepinephrine: vigilance |
+| `neuro.serotonin` | normalized | [0, 1] | `soma.neuro` | `psyche.affect` | Serotonin: slow mood tone |
 | `psyche.action.p_drink` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing drink |
 | `psyche.action.p_eat` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing eat |
 | `psyche.action.p_explore` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing explore |
@@ -74,13 +77,14 @@
 | `psyche.action.selected_seek_shelter` | indicator | [0, 1] | `psyche.action` | `psyche.navigation` | 1 while seek_shelter is chosen |
 | `psyche.action.selected_seek_water` | indicator | [0, 1] | `psyche.action` | `psyche.navigation` | 1 while seek_water is chosen |
 | `psyche.action.selected_sleep` | indicator | [0, 1] | `psyche.action` | —（預留） | 1 while sleep is chosen |
-| `psyche.affect.arousal` | normalized | [0, 1] | `psyche.affect` | `psyche.appraisal` | Core affect: activation |
+| `psyche.affect.arousal` | normalized | [0, 1] | `psyche.affect` | —（預留） | Core affect: activation |
 | `psyche.affect.valence` | normalized | [-1, 1] | `psyche.affect` | —（預留） | Core affect: pleasant (+) vs unpleasant (-) |
-| `psyche.appraisal.threat` | normalized | [0, 1] | `psyche.appraisal` | `psyche.action`, `psyche.affect`, `soma.endocrine` | Appraised threat |
+| `psyche.appraisal.threat` | normalized | [0, 1] | `psyche.appraisal` | `psyche.action`, `psyche.affect`, `soma.endocrine`, `soma.neuro` | Appraised threat |
 | `psyche.drive.hunger` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect` | Felt urgency of eating |
 | `psyche.drive.sleepiness` | normalized | [-1, 1] | `psyche.drives` | `psyche.action` | Felt need for sleep (1 = sleep onset, 0 = wake point) |
 | `psyche.drive.thermal_discomfort` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect` | Felt cold or heat |
 | `psyche.drive.thirst` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect` | Felt urgency of drinking |
+| `psyche.habituation.novelty` | normalized | [0, 1] | `psyche.habituation` | `psyche.affect` | Felt novelty of the current stimulus |
 | `soma.cardio.heart_rate` | bpm | [0, 300] | `soma.cardio` | `interface.interoception` | Heart rate |
 | `soma.circadian.clock_hour` | h | [0, 24] | `soma.circadian` | `soma.endocrine` | Local clock time |
 | `soma.circadian.drive` | normalized | [-1, 1] | `soma.circadian` | `interface.interoception` | Circadian alerting signal (+1 at its daily peak) |
@@ -116,6 +120,7 @@
 | `world.shelter_dir_x` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the nearest shelter (x); 0 inside or if none |
 | `world.shelter_dir_y` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the nearest shelter (y); 0 inside or if none |
 | `world.shelter_known` | indicator | [0, 1] | `world.grid`, `world.scripted` | `interface.exteroception` | 1 if the world has a shelter (its way is remembered) |
+| `world.stimulus` | normalized | [0, 1] | `world.grid`, `world.scripted` | `psyche.habituation` | Innocuous stimulus intensity (none in the grid world yet) |
 | `world.threat` | normalized | [0, 1] | `world.grid`, `world.scripted` | `interface.exteroception` | Objective threat at the organism's position |
 | `world.threat_dir_x` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the strongest perceived hazard (x) |
 | `world.threat_dir_y` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the strongest perceived hazard (y) |

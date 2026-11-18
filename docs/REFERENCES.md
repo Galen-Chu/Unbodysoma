@@ -26,6 +26,12 @@
 - Julius, D., & Basbaum, A. I. (2001). Molecular mechanisms of nociception. *Nature*, 413(6852), 203–210. https://doi.org/10.1038/35093019 （傷害感受器的纖維類別（Aδ 快／C 慢）與痛覺過敏——雙相痛模型的錨點）
 - Mendell, L. M. (1966). Physiological properties of unmyelinated fiber projection to the spinal cord. *Experimental Neurology*, 16(3), 316–332. https://doi.org/10.1016/0014-4886(66)90068-9 （C 纖維重複刺激的 wind-up——敏感化動力學的錨點）
 
+## 神經調節與非聯結學習（Neuromodulation & Habituation）
+
+- Aston-Jones, G., & Cohen, J. D. (2005). An integrative theory of locus coeruleus-norepinephrine function: Adaptive gain and optimal performance. *Annual Review of Neuroscience*, 28, 403–450. https://doi.org/10.1146/annurev.neuro.28.061604.135709 （藍斑-正腎上腺素系統的警覺／適應增益理論——NE 軸的錨點）
+- Dayan, P., & Huys, Q. J. M. (2009). Serotonin in affective control. *Annual Review of Neuroscience*, 32, 95–126. https://doi.org/10.1146/annurev.neuro.051508.135607 （血清素在情緒調控中的角色——5-HT 軸的錨點）
+- Rankin, C. H., Abrams, T., Barry, R. J., Bhatnagar, S., et al. (2009). Habituation revisited: An updated and revised description of the behavioral characteristics of habituation. *Neurobiology of Learning and Memory*, 92(2), 135–138. https://doi.org/10.1016/j.nlm.2008.09.012 （習慣化的行為判定準則——反應遞減、自發恢復、頻率依存）
+
 ## 預測處理與主動推論
 
 - Friston, K. (2010). The free-energy principle: A unified brain theory? *Nature Reviews Neuroscience*, 11(2), 127–138. https://doi.org/10.1038/nrn2787
@@ -85,5 +91,5 @@
 
 - **abyssal-garden** — Noniv. 單檔 WebGPU 程序化海底世界（MIT）：密度場地形、Surface Nets、生態規則撒點、決定論種子。管線分析與採用評估見 [WORLDGEN.md](WORLDGEN.md)。<https://github.com/Noniv/abyssal-garden>
 
-> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。2026-11-16 新增的 Dalla Man、ADA、Dickerson & Kemeny、Clow、Whipp & Wasserman、Cole、Cretikos、O'Driscoll 等八筆已對照 Crossref（DOI、卷頁、作者、年份一致）。2026-11-18 新增的 Rescorla（1988）、Schultz、Kandel（2001）、Ardiel & Rankin、Berg & Brown 五筆已對照 doi.org／Crossref 核對（DOI、卷期頁、作者、年份一致）；Rescorla & Wagner（1972）與 Kamin（1969）為書籍章節，無 DOI，對照原著書目。同日新增的 Julius & Basbaum（2001）與 Mendell（1966）已對照 Crossref 核對（DOI、卷期頁、作者、年份一致）。
+> 書目已於 2026-10-20 逐筆核對（2026-10-24 新增的 Daan、Czeisler、Charnov、Uhlenbeck & Ornstein 亦已對照 Crossref 與 doi.org 核對）：期刊論文對照 Crossref 與 PubMed，技術報告對照 DTIC / NASA NTRS 原始文件，書籍對照出版社與圖書館目錄。2026-11-16 新增的 Dalla Man、ADA、Dickerson & Kemeny、Clow、Whipp & Wasserman、Cole、Cretikos、O'Driscoll 等八筆已對照 Crossref（DOI、卷頁、作者、年份一致）。2026-11-18 新增的 Rescorla（1988）、Schultz、Kandel（2001）、Ardiel & Rankin、Berg & Brown 五筆已對照 doi.org／Crossref 核對（DOI、卷期頁、作者、年份一致）；Rescorla & Wagner（1972）與 Kamin（1969）為書籍章節，無 DOI，對照原著書目。同日新增的 Julius & Basbaum（2001）與 Mendell（1966）已對照 Crossref 核對（DOI、卷期頁、作者、年份一致）。同批新增的 Aston-Jones & Cohen（2005）、Dayan & Huys（2009）、Rankin 等（2009）三筆亦已對照 Crossref 核對（DOI、卷期頁、作者、年份一致；Rankin 等作者僅列前四位，全文共十位）。
 > 新增引用時請附上 DOI 或原始出處連結；如發現錯誤歡迎發 PR 修正。

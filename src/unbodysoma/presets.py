@@ -8,13 +8,14 @@ from typing import Any
 from .core import Engine, Module
 from .interface import Exteroception, Interoception
 from .interface.exteroception import SPATIAL_CHANNELS
-from .psyche import ActionSelection, Affect, Appraisal, Drives, Navigation
+from .psyche import ActionSelection, Affect, Appraisal, Drives, Habituation, Navigation
 from .soma import (
     Cardio,
     Circadian,
     Endocrine,
     FluidBalance,
     Metabolism,
+    Neuromodulation,
     Nociception,
     Respiration,
     SleepHomeostat,
@@ -39,9 +40,11 @@ def _body_and_mind(seed: int) -> list[Factory]:
         (FluidBalance.name, FluidBalance, {}),
         (Thermoregulation.name, Thermoregulation, {}),
         (Nociception.name, Nociception, {}),
+        (Neuromodulation.name, Neuromodulation, {}),
         (Appraisal.name, Appraisal, {}),
         (Affect.name, Affect, {"seed": seed + 3}),
         (Drives.name, Drives, {}),
+        (Habituation.name, Habituation, {}),
         (ActionSelection.name, ActionSelection, {"seed": seed + 4}),
     ]
 

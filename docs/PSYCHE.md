@@ -54,21 +54,22 @@
 ### 4.1 評估 Appraisal `psyche/appraisal.py`
 
 ```
-threat* = clamp(extero.threat · (1 + 0.5·arousal))
+threat* = clamp(extero.threat · (1 + 0.5·NE))        NE = neuro.norepinephrine（警覺）
 threat  ← relax(threat, threat*, dt, τ = 0.5 s)
 ```
 
-喚醒度放大威脅評估 —— 這是身體影響知覺最小的可運作範例，也是一個正回饋迴路，增益刻意保持有界。
+警覺（正腎上腺素，整合威脅、痛與心喚醒，見 SOMA §2.10）放大威脅評估 —— 這是身體影響知覺最小的可運作範例，也是一個正回饋迴路，增益刻意保持有界。受傷的個體因此高估輕微線索（過度警覺，`tests/test_neuro.py`）。
 
 ### 4.2 情感 Affect `psyche/affect.py`
 
 ```
-arousal* = clamp(0.6·intero.cardiac_arousal + 0.4·threat + 0.3·pain)
-valence* = clamp(0.1 − 0.9·threat − 0.5·hunger − 1.2·pain, −1, 1)   （多需求以飽和聯集合成，見 §5）
+arousal* = clamp(0.6·intero.cardiac_arousal + 0.4·threat + 0.3·pain + 0.15·novelty)
+valence* = clamp(0.1 + 0.1·dopamine + 0.4·(serotonin − 0.5) − 0.9·threat − 0.5·hunger − 1.2·pain, −1, 1)
+                                                                                      （負面項以飽和聯集合成，見 §5）
 τ = 2 s
 ```
 
-權重都是可調參數（`w_cardiac_arousal`、`w_threat_arousal`、`w_pain_arousal`、`w_threat_valence`、`w_hunger_valence`、`w_pain_valence`，見 [PARAMETERS.md](PARAMETERS.md)）。
+權重都是可調參數（`w_cardiac_arousal`、`w_threat_arousal`、`w_pain_arousal`、`w_novelty_arousal`、`w_threat_valence`、`w_hunger_valence`、`w_pain_valence`、`w_dopamine_valence`、`w_serotonin_valence`，見 [PARAMETERS.md](PARAMETERS.md)）。多巴胺讓「復原感覺良好」（獎賞＝恆定誤差移除，SOMA §2.10）；血清素提供慢速的情緒色調；新奇（習慣化後的刺激效價，§4.6）是朝向反應的來源。
 兩個目標值各自加上一個緩慢的自發波動 `OU(60 s, σ = 0.03 / 0.02)`，所以即使什麼事都沒發生，心情也不會是一條直線。
 
 ### 4.3 驅力 Drives `psyche/drives.py`
@@ -124,11 +125,20 @@ sleepiness  ← relax(sleepiness, sleepiness*, dt, τ = 300 s)
 
 在網格世界裡，這讓「飢餓 → 搜尋 → 找到食物點 → 進食」與「掠食者出現 → 逃離 → 稍後回來」成為完整的感覺運動迴路（`scenarios/grid_72h.toml`）。
 
+### 4.6 習慣化 Habituation `psyche/habituation.py`（2026-11-18）
+
+```
+habit'  = 0.12·stimulus − habit / τ_recovery        （τ_recovery = 150 s）
+novelty = clamp((1 − habit) · stimulus)
+```
+
+最簡單的學習形式，從線蟲到人都有：重複出現的無害刺激失去朝向價值。`world.stimulus` 是無害刺激的強度（劇本世界以事件驅動；網格世界暫為 0），暴露量隨呈現累積、休息時以分鐘級時間常數自發恢復；被感受到的新奇（novelty）以小權重（0.15）進入情感的 arousal——第一次的敲擊讓人一驚，第十次就無感。與痛覺模組內建的敏感化一起，構成 Phase 3 非聯結學習的完整一對。錨點：Rankin 等（2009）的行為準則與線蟲敲擊退縮文獻（Ardel & Rankin, 2010）。實測（`tests/test_habituation.py`）：第十次呈現的新奇降至首次的四成以下；二十分鐘休息後大幅恢復；呈現間隔越短習慣化越深。單一刺激通道，因此刺激特異性與去習慣化（dishabituation）留給 Phase 4 的線索身分。
+
 ## 5. 待討論的問題
 
 - 情緒類別（恐懼、憤怒、悲傷……）要預先定義，還是讓它從核心情感 + 情境中被學出來？
 - 記憶要用什麼表徵？向量嵌入、符號事件，還是兩者並存？
-- 學習的獎賞訊號是「恆定誤差的減少」就夠了，還是需要額外的好奇心 / 資訊增益項？
+- 學習的獎賞訊號是「恆定誤差的減少」就夠了，還是需要額外的好奇心 / 資訊增益項？——**最小版已實作（2026-11-18）**：`neuro.dopamine`＝被移除的總恆定誤差（能量 0.4／水分 0.3／體溫 0.15／睡壓 0.15 的加權，SOMA §2.10），以誤差低於自身慢基線（τ = 300 s）度量「正在復原」；好奇心項保持開放。
 - 語言模型若要接入，如何確保它是「被身體約束的表達」而不是「無視身體的角色扮演」？
 - 語言模型有眾數塌縮的傾向：需要符合人類分布的**選擇**應由心智層的機率模型決定，LLM 只負責表達（見 [VARIABILITY.md](VARIABILITY.md) §9）。
 - **多個需求應如何合成情感？——已決定（2026-11-16，飽和式）。** 原問題：valence 若是各需求代價的線性加總，三個「中等」需求就會變成「強烈負面」，72 小時情境中清晨又餓、又渴、又冷地出門時出現數分鐘 valence < −0.5。以行為資料裁決（`grid_72h` 對照實驗）：線性加總下，清醒時段 valence < −0.5 占 0.37 %、最低 −0.71；飽和聯集 `1 − ∏(1 − pull)` 下占 0.17 %、最低 −0.53——多需求人工產物減半，而單一威脅下的反應不變（恐懼情境 valence 仍 < −0.5）。實作為 `Affect.need_saturation`（0＝線性、1＝飽和，可連續混合），預設 1.0。

@@ -191,13 +191,35 @@
 | `tau_sensitization` | 900 | s | [10, 86400] | Decay of sensitization after the damage stops | primary hyperalgesia fades over minutes |
 | `max_sensitization` | 1 | x | [0, 3] | Upper bound of the pain multiplier (1 + this) | hyperalgesia roughly doubles reported intensity |
 
+## `soma.neuro`
+
+`unbodysoma.soma.neuro.Neuromodulation`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `w_energy` | 0.4 | — | [0, 1] | Weight of felt energy deficit in the total homeostatic error | L0 toy value |
+| `w_water` | 0.3 | — | [0, 1] | Weight of felt water deficit in the total homeostatic error | L0 toy value |
+| `w_thermal` | 0.15 | — | [0, 1] | Weight of felt thermal discomfort (cold or hot) in the error | L0 toy value |
+| `w_sleep` | 0.15 | — | [0, 1] | Weight of felt sleep pressure in the error | L0 toy value |
+| `tau_error_fast` | 10 | s | [0.5, 120] | Low-pass of the error for the relief estimate | calibrated: seconds-scale, so felt noise does not read as relief |
+| `tau_error_slow` | 300 | s | [30, 3600] | Baseline the relief is measured against (the slow trailing average) | calibrated: relief during a meal outlasts the bites but not the afternoon |
+| `dopamine_baseline` | 0.5 | normalized | [0, 1] | Tonic dopamine with no relief and no loss | L0 toy value |
+| `dopamine_gain` | 10 | — | [0, 50] | Dopamine rise per unit relief (error recently removed) | calibrated: a hungry meal peaks the axis, a sated one barely lifts it |
+| `tau_dopamine` | 1.5 | s | [0.05, 60] | Time constant of the phasic dopamine response | L0 toy value |
+| `serotonin_baseline` | 0.5 | normalized | [0, 1] | Serotonin tone with no pain and no deficit | L0 toy value |
+| `w_pain_serotonin` | 0.8 | — | [0, 2] | Serotonin lost per unit sustained felt pain | L0 toy value |
+| `w_deficit_serotonin` | 0.4 | — | [0, 2] | Serotonin lost per unit sustained homeostatic error | L0 toy value |
+| `tau_serotonin` | 600 | s | [10, 86400] | Time constant of the serotonergic tone | calibrated: minutes-to-hours mood dynamics, slower than any single need |
+| `w_cardiac_norepinephrine` | 0.6 | — | [0, 1] | Share of felt cardiac arousal that counts as vigilance | L0 toy value |
+| `tau_norepinephrine` | 3 | s | [0.1, 120] | Time constant of the vigilance response | L0 toy value |
+
 ## `psyche.appraisal`
 
 `unbodysoma.psyche.appraisal.Appraisal`
 
 | 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
 |---|---|---|---|---|---|
-| `arousal_bias` | 0.5 | — | [0, 5] | How much arousal amplifies perceived threat (trait anxiety) | L0 toy value |
+| `arousal_bias` | 0.5 | — | [0, 5] | How much vigilance amplifies perceived threat (trait anxiety) | L0 toy value |
 | `tau` | 0.5 | s | [0.01, 60] | Time constant of appraisal | L0 toy value |
 
 ## `psyche.affect`
@@ -215,6 +237,9 @@
 | `w_thermal_valence` | 0.4 | — | [0, 2] | Valence lost per unit thermal discomfort | L0 toy value |
 | `w_pain_valence` | 1.2 | — | [0, 2] | Valence lost per unit felt pain | L0 toy value |
 | `w_pain_arousal` | 0.3 | — | [0, 1] | Arousal gained per unit felt pain | L0 toy value |
+| `w_dopamine_valence` | 0.1 | — | [0, 1] | Valence gained per unit dopamine (relief feels good) | L0 toy value |
+| `w_serotonin_valence` | 0.4 | — | [0, 2] | Valence shift per unit serotonin tone above/below 0.5 (slow mood) | L0 toy value |
+| `w_novelty_arousal` | 0.15 | — | [0, 1] | Arousal gained per unit felt novelty (orienting response) | L0 toy value |
 | `need_saturation` | 1 | — | [0, 1] | Blend of multi-need valence pooling: 0 = linear sum, 1 = saturating union | decided by behavioral data, 2026-11-16 (docs/PSYCHE.md §5) |
 | `tau` | 2 | s | [0.01, 600] | Time constant of affect | L0 toy value |
 | `valence_sigma` | 0.03 | normalized | [0, 0.5] | SD of spontaneous valence fluctuation | L0 toy value |
@@ -241,6 +266,15 @@
 | `sleep_onset_pressure` | 0.573 | normalized | [0, 1] | Mean upper threshold H0 of sleep pressure | calibrated: 16 h wake / 8 h sleep, onset ≈ 23:00 |
 | `wake_pressure` | 0.193 | normalized | [0, 1] | Mean lower threshold L0 of sleep pressure | calibrated: 16 h wake / 8 h sleep, onset ≈ 23:00 |
 | `circadian_amplitude` | 0.1 | normalized | [0, 0.5] | How far the circadian signal moves both thresholds | calibrated: 16 h wake / 8 h sleep, onset ≈ 23:00 |
+
+## `psyche.habituation`
+
+`unbodysoma.psyche.habituation.Habituation`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `habituation_rate` | 0.12 | 1/s | [0, 1] | Habit gained per second of unit stimulus | calibrated: ~50% decrement within ten 2-second presentations a minute apart |
+| `tau_recovery` | 150 | s | [10, 86400] | Time constant of spontaneous recovery in the absence of the stimulus | minutes-scale recovery, as in tap-withdrawal habituation (Rankin et al. 2009) |
 
 ## `psyche.action`
 

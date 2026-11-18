@@ -6,19 +6,29 @@ from ..core import BusPort, Module, ParamSpec, SignalSpec, clamp, relax
 
 
 class Appraisal(Module):
-    """Estimates threat from exteroceptive cues, biased upward by current arousal.
+    """Estimates threat from exteroceptive cues, biased upward by vigilance.
 
-    The arousal bias is the minimal form of "the body colours perception":
-    an already-aroused organism reads the same cue as more threatening.
+    The bias is the minimal form of "the body colours perception": an
+    already-vigilant organism (threatened, hurt, or running) reads the same
+    cue as more threatening. The vigilance signal is norepinephrine
+    (``neuro.norepinephrine``), which consolidates threat, pain and cardiac
+    arousal — so a hurt organism over-perceives mild cues (hyper-vigilance).
     """
 
     name = "psyche.appraisal"
     rate_hz = 10.0
-    reads = ("extero.threat", "psyche.affect.arousal")
+    reads = ("extero.threat", "neuro.norepinephrine")
     signal_specs = (SignalSpec("psyche.appraisal.threat", "normalized", 0.0, 1.0, "Appraised threat"),)
     writes = tuple(s.key for s in signal_specs)
     params = (
-        ParamSpec("arousal_bias", 0.5, "", 0.0, 5.0, "How much arousal amplifies perceived threat (trait anxiety)"),
+        ParamSpec(
+            "arousal_bias",
+            0.5,
+            "",
+            0.0,
+            5.0,
+            "How much vigilance amplifies perceived threat (trait anxiety)",
+        ),
         ParamSpec("tau", 0.5, "s", 0.01, 60.0, "Time constant of appraisal"),
     )
     state_fields = ("threat",)
@@ -33,6 +43,6 @@ class Appraisal(Module):
 
     def step(self, dt: float, port: BusPort) -> None:
         cue = port.read("extero.threat")
-        target = clamp(cue * (1.0 + self.arousal_bias * port.read("psyche.affect.arousal")))
+        target = clamp(cue * (1.0 + self.arousal_bias * port.read("neuro.norepinephrine")))
         self.threat = relax(self.threat, target, dt, self.tau)
         port.write("psyche.appraisal.threat", self.threat)
