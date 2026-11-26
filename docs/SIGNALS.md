@@ -48,7 +48,7 @@
 | `intero.cardiac_arousal` | normalized | [0, 1] | `interface.interoception` | `psyche.affect`, `soma.neuro` | Felt cardiac activation |
 | `intero.circadian` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives` | Felt circadian alerting signal |
 | `intero.energy_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt shortage of energy (store minus satiety plus glucose dip) |
-| `intero.pain` | normalized | [0, 1] | `interface.interoception` | `psyche.action`, `psyche.affect`, `soma.neuro` | Felt pain |
+| `intero.pain` | normalized | [0, 1] | `interface.interoception` | `psyche.action`, `psyche.affect`, `psyche.instrumental`, `psyche.memory`, `psyche.place_memory`, `soma.neuro` | Felt pain |
 | `intero.sleep_pressure` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt tiredness (homeostatic sleep pressure) |
 | `intero.thermal` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt body temperature (- cold, + hot) |
 | `intero.water_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt shortage of water |
@@ -60,7 +60,7 @@
 | `motor.sleeping` | indicator | [0, 1] | `psyche.action` | `psyche.drives`, `soma.cardio`, `soma.endocrine`, `soma.fluid`, `soma.metabolism`, `soma.respiration`, `soma.sleep` | 1 while asleep |
 | `neuro.dopamine` | normalized | [0, 1] | `soma.neuro` | `psyche.affect` | Dopamine: phasic reward from homeostatic relief |
 | `neuro.norepinephrine` | normalized | [0, 1] | `soma.neuro` | `psyche.appraisal` | Norepinephrine: vigilance |
-| `neuro.relief` | normalized | [0, 1] | `soma.neuro` | `psyche.conditioning` | Relief: homeostatic error falling below its slow baseline |
+| `neuro.relief` | normalized | [0, 1] | `soma.neuro` | `psyche.conditioning`, `psyche.instrumental` | Relief: homeostatic error falling below its slow baseline |
 | `neuro.serotonin` | normalized | [0, 1] | `soma.neuro` | `psyche.affect` | Serotonin: slow mood tone |
 | `psyche.action.p_drink` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing drink |
 | `psyche.action.p_eat` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing eat |
@@ -70,16 +70,16 @@
 | `psyche.action.p_seek_shelter` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing seek_shelter |
 | `psyche.action.p_seek_water` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing seek_water |
 | `psyche.action.p_sleep` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing sleep |
-| `psyche.action.selected_drink` | indicator | [0, 1] | `psyche.action` | —（預留） | 1 while drink is chosen |
-| `psyche.action.selected_eat` | indicator | [0, 1] | `psyche.action` | —（預留） | 1 while eat is chosen |
-| `psyche.action.selected_explore` | indicator | [0, 1] | `psyche.action` | `psyche.navigation` | 1 while explore is chosen |
-| `psyche.action.selected_flee` | indicator | [0, 1] | `psyche.action` | `psyche.navigation` | 1 while flee is chosen |
-| `psyche.action.selected_idle` | indicator | [0, 1] | `psyche.action` | —（預留） | 1 while idle is chosen |
-| `psyche.action.selected_seek_shelter` | indicator | [0, 1] | `psyche.action` | `psyche.navigation` | 1 while seek_shelter is chosen |
-| `psyche.action.selected_seek_water` | indicator | [0, 1] | `psyche.action` | `psyche.navigation` | 1 while seek_water is chosen |
-| `psyche.action.selected_sleep` | indicator | [0, 1] | `psyche.action` | —（預留） | 1 while sleep is chosen |
-| `psyche.affect.arousal` | normalized | [0, 1] | `psyche.affect` | —（預留） | Core affect: activation |
-| `psyche.affect.valence` | normalized | [-1, 1] | `psyche.affect` | —（預留） | Core affect: pleasant (+) vs unpleasant (-) |
+| `psyche.action.selected_drink` | indicator | [0, 1] | `psyche.action` | `psyche.instrumental` | 1 while drink is chosen |
+| `psyche.action.selected_eat` | indicator | [0, 1] | `psyche.action` | `psyche.instrumental` | 1 while eat is chosen |
+| `psyche.action.selected_explore` | indicator | [0, 1] | `psyche.action` | `psyche.instrumental`, `psyche.navigation` | 1 while explore is chosen |
+| `psyche.action.selected_flee` | indicator | [0, 1] | `psyche.action` | `psyche.instrumental`, `psyche.navigation` | 1 while flee is chosen |
+| `psyche.action.selected_idle` | indicator | [0, 1] | `psyche.action` | `psyche.instrumental` | 1 while idle is chosen |
+| `psyche.action.selected_seek_shelter` | indicator | [0, 1] | `psyche.action` | `psyche.instrumental`, `psyche.navigation` | 1 while seek_shelter is chosen |
+| `psyche.action.selected_seek_water` | indicator | [0, 1] | `psyche.action` | `psyche.instrumental`, `psyche.navigation` | 1 while seek_water is chosen |
+| `psyche.action.selected_sleep` | indicator | [0, 1] | `psyche.action` | `psyche.instrumental` | 1 while sleep is chosen |
+| `psyche.affect.arousal` | normalized | [0, 1] | `psyche.affect` | `psyche.memory` | Core affect: activation |
+| `psyche.affect.valence` | normalized | [-1, 1] | `psyche.affect` | `psyche.memory` | Core affect: pleasant (+) vs unpleasant (-) |
 | `psyche.appraisal.threat` | normalized | [0, 1] | `psyche.appraisal` | `psyche.action`, `psyche.affect`, `soma.endocrine`, `soma.neuro` | Appraised threat |
 | `psyche.conditioning.defense_a` | normalized | [0, 1] | `psyche.conditioning` | —（預留） | Defensive association of cue A |
 | `psyche.conditioning.defense_b` | normalized | [0, 1] | `psyche.conditioning` | —（預留） | Defensive association of cue B |
@@ -90,6 +90,19 @@
 | `psyche.drive.thermal_discomfort` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect` | Felt cold or heat |
 | `psyche.drive.thirst` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect` | Felt urgency of drinking |
 | `psyche.habituation.novelty` | normalized | [0, 1] | `psyche.habituation` | `psyche.affect` | Felt novelty of the current stimulus |
+| `psyche.instrumental.value_drink` | utility | [-1, 1] | `psyche.instrumental` | `psyche.action` | Learned value of drink |
+| `psyche.instrumental.value_eat` | utility | [-1, 1] | `psyche.instrumental` | `psyche.action` | Learned value of eat |
+| `psyche.instrumental.value_explore` | utility | [-1, 1] | `psyche.instrumental` | `psyche.action` | Learned value of explore |
+| `psyche.instrumental.value_flee` | utility | [-1, 1] | `psyche.instrumental` | `psyche.action` | Learned value of flee |
+| `psyche.instrumental.value_idle` | utility | [-1, 1] | `psyche.instrumental` | `psyche.action` | Learned value of idle |
+| `psyche.instrumental.value_seek_shelter` | utility | [-1, 1] | `psyche.instrumental` | `psyche.action` | Learned value of seek_shelter |
+| `psyche.instrumental.value_seek_water` | utility | [-1, 1] | `psyche.instrumental` | `psyche.action` | Learned value of seek_water |
+| `psyche.instrumental.value_sleep` | utility | [-1, 1] | `psyche.instrumental` | `psyche.action` | Learned value of sleep |
+| `psyche.memory.episodes` | count | [0, 64] | `psyche.memory` | —（預留） | Episodes currently held |
+| `psyche.memory.mood_congruence` | normalized | [-1, 1] | `psyche.memory` | `psyche.affect` | Signed reactivation of stored episodes by the current context (negative memories pull down) |
+| `psyche.place_memory.avoid_x` | unit | [-1, 1] | `psyche.place_memory` | `psyche.navigation` | Repulsion from nearby danger (x) |
+| `psyche.place_memory.avoid_y` | unit | [-1, 1] | `psyche.place_memory` | `psyche.navigation` | Repulsion from nearby danger (y) |
+| `psyche.place_memory.danger` | normalized | [0, 1] | `psyche.place_memory` | —（預留） | Learned danger at the current position |
 | `soma.cardio.heart_rate` | bpm | [0, 300] | `soma.cardio` | `interface.interoception` | Heart rate |
 | `soma.circadian.clock_hour` | h | [0, 24] | `soma.circadian` | `soma.endocrine` | Local clock time |
 | `soma.circadian.drive` | normalized | [-1, 1] | `soma.circadian` | `interface.interoception` | Circadian alerting signal (+1 at its daily peak) |
@@ -120,8 +133,8 @@
 | `world.food_stock` | patches | [0, 4] | `world.grid` | —（預留） | Total food left in the world |
 | `world.in_shelter` | indicator | [0, 1] | `world.grid`, `world.scripted` | `interface.exteroception` | 1 inside a shelter |
 | `world.outside_temperature` | °C | [-60, 60] | `world.grid` | —（預留） | Outside air temperature |
-| `world.position_x` | cells | [0, 20] | `world.grid` | —（預留） | Organism position (x) |
-| `world.position_y` | cells | [0, 20] | `world.grid` | —（預留） | Organism position (y) |
+| `world.position_x` | cells | [0, 20] | `world.grid` | `psyche.place_memory` | Organism position (x) |
+| `world.position_y` | cells | [0, 20] | `world.grid` | `psyche.place_memory` | Organism position (y) |
 | `world.shelter_dir_x` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the nearest shelter (x); 0 inside or if none |
 | `world.shelter_dir_y` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the nearest shelter (y); 0 inside or if none |
 | `world.shelter_known` | indicator | [0, 1] | `world.grid`, `world.scripted` | `interface.exteroception` | 1 if the world has a shelter (its way is remembered) |

@@ -59,6 +59,7 @@ class ActionSelection(Module):
         "psyche.drive.thermal_discomfort",
         "psyche.drive.sleepiness",
         "intero.pain",
+        *(f"psyche.instrumental.value_{a}" for a in ACTIONS),
         "extero.food",
         "extero.water",
         "extero.in_shelter",
@@ -85,6 +86,14 @@ class ActionSelection(Module):
         ParamSpec("flee_threshold", 0.4, "normalized", 0.0, 1.0, "Appraised threat at which fleeing breaks even"),
         ParamSpec(
             "k_flee_pain", 1.0, "", 0.0, 20.0, "Utility gain of fleeing per unit felt pain (escape from what hurts)"
+        ),
+        ParamSpec(
+            "w_instrumental",
+            0.5,
+            "",
+            0.0,
+            5.0,
+            "Utility gained per unit of learned action value (instrumental learning)",
         ),
         ParamSpec("k_eat", 2.0, "", 0.0, 20.0, "Utility gain of eating per unit hunger above threshold"),
         ParamSpec("eat_threshold", 0.35, "normalized", 0.0, 1.0, "Hunger at which starting to eat breaks even"),
@@ -141,6 +150,7 @@ class ActionSelection(Module):
         k_flee: float = 2.5,
         flee_threshold: float = 0.4,
         k_flee_pain: float = 1.0,
+        w_instrumental: float = 0.5,
         k_eat: float = 2.0,
         eat_threshold: float = 0.35,
         eat_commitment: float = 0.4,
@@ -177,6 +187,7 @@ class ActionSelection(Module):
         self.k_flee = k_flee
         self.flee_threshold = flee_threshold
         self.k_flee_pain = k_flee_pain
+        self.w_instrumental = w_instrumental
         self.k_eat = k_eat
         self.eat_threshold = eat_threshold
         self.eat_commitment = eat_commitment
@@ -224,24 +235,30 @@ class ActionSelection(Module):
         in_shelter: bool = False,
         shelter_known: bool = False,
         pain: float = 0.0,
+        instrumental: dict[str, float] | None = None,
     ) -> dict[str, float]:
         """Utility of every currently available action, including the bonus for the current one."""
-        u = {IDLE: 0.0, FLEE: self.k_flee * (threat - self.flee_threshold) + self.k_flee_pain * pain}
+        learned = instrumental or {}
+        u = {
+            IDLE: learned.get(IDLE, 0.0),
+            FLEE: self.k_flee * (threat - self.flee_threshold) + self.k_flee_pain * pain + learned.get(FLEE, 0.0),
+        }
+        w = self.w_instrumental
         if food_near:
-            u[EAT] = self.k_eat * (hunger - self.eat_threshold)
+            u[EAT] = self.k_eat * (hunger - self.eat_threshold) + w * learned.get(EAT, 0.0)
         else:
-            u[EXPLORE] = self.k_explore * (hunger - self.explore_threshold)
+            u[EXPLORE] = self.k_explore * (hunger - self.explore_threshold) + w * learned.get(EXPLORE, 0.0)
         if water_near:
-            u[DRINK] = self.k_drink * (thirst - self.drink_threshold)
+            u[DRINK] = self.k_drink * (thirst - self.drink_threshold) + w * learned.get(DRINK, 0.0)
         else:
-            u[SEEK_WATER] = self.k_seek_water * (thirst - self.seek_water_threshold)
+            u[SEEK_WATER] = self.k_seek_water * (thirst - self.seek_water_threshold) + w * learned.get(SEEK_WATER, 0.0)
         homeless = shelter_known and not in_shelter
         if homeless:
             u[SEEK_SHELTER] = max(
                 self.k_shelter * (discomfort - self.shelter_threshold),
                 self.k_home * (sleepiness - self.home_onset),
                 self.k_shelter_pain * pain,
-            )
+            ) + w * learned.get(SEEK_SHELTER, 0.0)
         resuming = self.interrupted and self.awake_for < self.resume_window and sleepiness > 0.0
         if self.action == SLEEP or resuming:
             u[SLEEP] = min(self.sleep_cap, self.sleep_depth * sleepiness)  # staying asleep; no extra stickiness
@@ -267,6 +284,7 @@ class ActionSelection(Module):
             in_shelter=port.read("extero.in_shelter") > self.shelter_seen,
             shelter_known=port.read("extero.shelter_known") > self.shelter_seen,
             pain=port.read("intero.pain"),
+            instrumental={a: port.read(f"psyche.instrumental.value_{a}") for a in ACTIONS},
         )
         probabilities = softmax(utilities, self.temperature)
         previous = self.action

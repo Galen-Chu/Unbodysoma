@@ -8,7 +8,18 @@ from typing import Any
 from .core import Engine, Module
 from .interface import Exteroception, Interoception
 from .interface.exteroception import SPATIAL_CHANNELS
-from .psyche import ActionSelection, Affect, Appraisal, Conditioning, Drives, Habituation, Navigation
+from .psyche import (
+    ActionSelection,
+    Affect,
+    Appraisal,
+    Conditioning,
+    Drives,
+    EpisodicMemory,
+    Habituation,
+    Instrumental,
+    Navigation,
+    PlaceMemory,
+)
 from .soma import (
     Cardio,
     Circadian,
@@ -46,6 +57,8 @@ def _body_and_mind(seed: int) -> list[Factory]:
         (Drives.name, Drives, {}),
         (Habituation.name, Habituation, {}),
         (Conditioning.name, Conditioning, {}),
+        (Instrumental.name, Instrumental, {}),
+        (EpisodicMemory.name, EpisodicMemory, {}),
         (ActionSelection.name, ActionSelection, {"seed": seed + 4}),
     ]
 
@@ -122,6 +135,7 @@ def build_grid_human(
         (WaterIntake.name, WaterIntake, {}),
         (Exteroception.name, Exteroception, {"seed": seed, "channels": SPATIAL_CHANNELS}),
         *_body_and_mind(seed),
+        (PlaceMemory.name, PlaceMemory, {"width": width, "height": height}),
         (Navigation.name, Navigation, {"seed": seed + 5}),
     ]
     return _assemble(factories, base_dt, overrides)

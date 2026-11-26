@@ -21,6 +21,8 @@ class Navigation(Module):
     name = "psyche.navigation"
     rate_hz = 5.0
     reads = (
+        "psyche.place_memory.avoid_x",
+        "psyche.place_memory.avoid_y",
         "psyche.action.selected_flee",
         "psyche.action.selected_explore",
         "psyche.action.selected_seek_water",
@@ -40,6 +42,14 @@ class Navigation(Module):
     )
     writes = tuple(s.key for s in signal_specs)
     params = (
+        ParamSpec(
+            "avoid_gain",
+            1.5,
+            "",
+            0.0,
+            10.0,
+            "Steering strength away from places learned to be dangerous (place memory)",
+        ),
         ParamSpec("walk_fraction", 0.5, "normalized", 0.0, 1.0, "Speed while exploring, as a share of full speed"),
         ParamSpec("flee_fraction", 1.0, "normalized", 0.0, 1.0, "Speed while fleeing, as a share of full speed"),
         ParamSpec("wander_sigma", 0.3, "rad/√s", 0.0, 10.0, "How fast the wandering heading diffuses"),
@@ -50,12 +60,14 @@ class Navigation(Module):
 
     def __init__(
         self,
+        avoid_gain: float = 1.5,
         walk_fraction: float = 0.5,
         flee_fraction: float = 1.0,
         wander_sigma: float = 0.3,
         direction_seen: float = 0.5,
         seed: int = 5,
     ) -> None:
+        self.avoid_gain = avoid_gain
         self.walk_fraction = walk_fraction
         self.flee_fraction = flee_fraction
         self.wander_sigma = wander_sigma
@@ -83,7 +95,23 @@ class Navigation(Module):
                     direction = self._direction(port, goal)
                     if direction is not None:
                         self.heading = math.atan2(direction[1], direction[0])
-                    move = (self.walk_fraction * math.cos(self.heading), self.walk_fraction * math.sin(self.heading))
+                    move = self._steer(port, self.walk_fraction)
                     break
         port.write("motor.move_x", move[0])
         port.write("motor.move_y", move[1])
+
+    def _steer(self, port: BusPort, speed: float) -> tuple[float, float]:
+        """Goal-directed movement, bent away from places learned to be dangerous.
+
+        The avoidance term is capped below the goal's magnitude: caution slows
+        and curves the approach, but a hungry organism can always reach food
+        through a known-dangerous feeding ground (risk-sensitive foraging)."""
+        cap = 0.6
+        ax = min(max(self.avoid_gain * port.read("psyche.place_memory.avoid_x"), -cap), cap)
+        ay = min(max(self.avoid_gain * port.read("psyche.place_memory.avoid_y"), -cap), cap)
+        vx, vy = math.cos(self.heading), math.sin(self.heading)
+        bx, by = vx + ax, vy + ay
+        norm = math.hypot(bx, by)
+        if norm < 0.05:  # repulsion exactly cancels the goal: keep the heading
+            bx, by, norm = vx, vy, 1.0
+        return speed * bx / norm, speed * by / norm

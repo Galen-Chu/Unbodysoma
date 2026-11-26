@@ -26,6 +26,7 @@ class Affect(Module):
         "neuro.dopamine",
         "neuro.serotonin",
         "psyche.habituation.novelty",
+        "psyche.memory.mood_congruence",
         "psyche.appraisal.threat",
         "psyche.drive.hunger",
         "psyche.drive.thirst",
@@ -57,6 +58,14 @@ class Affect(Module):
         ),
         ParamSpec("w_novelty_arousal", 0.15, "", 0.0, 1.0, "Arousal gained per unit felt novelty (orienting response)"),
         ParamSpec(
+            "w_memory_valence",
+            0.1,
+            "",
+            0.0,
+            1.0,
+            "Valence pull from reactivated memories (mood-congruent recall)",
+        ),
+        ParamSpec(
             "need_saturation",
             1.0,
             "",
@@ -87,6 +96,7 @@ class Affect(Module):
         w_dopamine_valence: float = 0.1,
         w_serotonin_valence: float = 0.4,
         w_novelty_arousal: float = 0.15,
+        w_memory_valence: float = 0.1,
         need_saturation: float = 1.0,
         tau: float = 2.0,
         valence_sigma: float = 0.03,
@@ -106,6 +116,7 @@ class Affect(Module):
         self.w_dopamine_valence = w_dopamine_valence
         self.w_serotonin_valence = w_serotonin_valence
         self.w_novelty_arousal = w_novelty_arousal
+        self.w_memory_valence = w_memory_valence
         self.need_saturation = need_saturation
         self.tau = tau
         self.valence_sigma = valence_sigma
@@ -150,8 +161,10 @@ class Affect(Module):
         for pull in pulls:
             union *= 1.0 - clamp(pull, 0.0, 1.0)
         negative_pull = (1.0 - self.need_saturation) * linear + self.need_saturation * (1.0 - union)
-        positive_pull = self.w_dopamine_valence * port.read("neuro.dopamine") + self.w_serotonin_valence * (
-            port.read("neuro.serotonin") - 0.5
+        positive_pull = (
+            self.w_dopamine_valence * port.read("neuro.dopamine")
+            + self.w_serotonin_valence * (port.read("neuro.serotonin") - 0.5)
+            + self.w_memory_valence * port.read("psyche.memory.mood_congruence")
         )
         valence_target = clamp(self.baseline_valence + positive_pull - negative_pull + self.valence_drift, -1.0, 1.0)
         self.arousal = relax(self.arousal, arousal_target, dt, self.tau)

@@ -6,7 +6,10 @@ from .appraisal import Appraisal
 from .conditioning import Conditioning
 from .drives import Drives
 from .habituation import Habituation
+from .instrumental import Instrumental
+from .memory import EpisodicMemory
 from .navigation import Navigation
+from .place_memory import PlaceMemory
 
 __all__ = [
     "ActionSelection",
@@ -14,6 +17,9 @@ __all__ = [
     "Appraisal",
     "Conditioning",
     "Drives",
+    "EpisodicMemory",
     "Habituation",
+    "Instrumental",
     "Navigation",
+    "PlaceMemory",
 ]

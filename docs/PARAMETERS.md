@@ -249,6 +249,7 @@
 | `w_dopamine_valence` | 0.1 | — | [0, 1] | Valence gained per unit dopamine (relief feels good) | L0 toy value |
 | `w_serotonin_valence` | 0.4 | — | [0, 2] | Valence shift per unit serotonin tone above/below 0.5 (slow mood) | L0 toy value |
 | `w_novelty_arousal` | 0.15 | — | [0, 1] | Arousal gained per unit felt novelty (orienting response) | L0 toy value |
+| `w_memory_valence` | 0.1 | — | [0, 1] | Valence pull from reactivated memories (mood-congruent recall) | L0 toy value |
 | `need_saturation` | 1 | — | [0, 1] | Blend of multi-need valence pooling: 0 = linear sum, 1 = saturating union | decided by behavioral data, 2026-11-16 (docs/PSYCHE.md §5) |
 | `tau` | 2 | s | [0.01, 600] | Time constant of affect | L0 toy value |
 | `valence_sigma` | 0.03 | normalized | [0, 0.5] | SD of spontaneous valence fluctuation | L0 toy value |
@@ -300,6 +301,29 @@
 | `rest_refractory` | 120 | s | [5, 3600] | Cue absence required before spontaneous recovery starts (recovery follows rest, not trial gaps) | L0 toy value |
 | `tau_recovery` | 600 | s | [30, 86400] | Time constant of spontaneous recovery during rest | L0 toy value |
 
+## `psyche.instrumental`
+
+`unbodysoma.psyche.instrumental.Instrumental`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `learn_rate` | 0.01 | 1/s | [0, 1] | Value change per second of unit eligibility and unit outcome | calibrated: a meal lifts the value of eating, a day without reinforcement forgets it |
+| `tau_eligibility` | 20 | s | [1, 600] | Time constant of the eligibility trace after the action ends | seconds-scale credit assignment (the trace bridges action to delayed outcome) |
+| `tau_forgetting` | 1800 | s | [60, 86400] | Time constant of value decay without reinforcement (extinction) | L0 toy value |
+| `w_pain` | 1 | — | [0, 5] | Punishing strength of rising pain, relative to the rewarding strength of relief | L0 toy value |
+| `tau_pain_trace` | 5 | s | [0.5, 120] | Trailing average of pain; only pain above it punishes (the rising edge) | calibrated: a fresh injury punishes for seconds, a lingering ache not at all |
+
+## `psyche.memory`
+
+`unbodysoma.psyche.memory.EpisodicMemory`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `capture_threshold` | 0.55 | normalized | [0, 1] | Emotional intensity above which a moment is captured as an episode | calibrated: a real threat or meal is kept, an unremarkable minute is not |
+| `min_gap` | 300 | s | [1, 3600] | Minimum spacing between captured episodes | calibrated: one episode per emotional event, not per tick |
+| `tau_memory` | 172800 | s | [600, 2.6e+06] | Time constant of episode decay | days-scale forgetting; emotionally intense episodes outlast the incident |
+| `max_episodes` | 64 | episodes | [4, 1024] | Store capacity; the weakest is forgotten when full | L0 toy value |
+
 ## `psyche.action`
 
 `unbodysoma.psyche.action.ActionSelection`
@@ -312,6 +336,7 @@
 | `k_flee` | 2.5 | — | [0, 20] | Utility gain of fleeing per unit threat above threshold | L0 toy value |
 | `flee_threshold` | 0.4 | normalized | [0, 1] | Appraised threat at which fleeing breaks even | L0 toy value |
 | `k_flee_pain` | 1 | — | [0, 20] | Utility gain of fleeing per unit felt pain (escape from what hurts) | L0 toy value |
+| `w_instrumental` | 0.5 | — | [0, 5] | Utility gained per unit of learned action value (instrumental learning) | L0 toy value |
 | `k_eat` | 2 | — | [0, 20] | Utility gain of eating per unit hunger above threshold | L0 toy value |
 | `eat_threshold` | 0.35 | normalized | [0, 1] | Hunger at which starting to eat breaks even | L0 toy value |
 | `eat_commitment` | 0.4 | — | [0, 2] | Extra bonus for continuing a meal (sets how sated it ends) | L0 toy value |
@@ -360,12 +385,24 @@
 | `comfortable_temperature` | 20 | °C | [0, 40] | Temperature a shelter buffers toward | L0 toy value |
 | `start_hour` | 8 | h | [0, 24] | Clock time at t = 0 | run setting |
 
+## `psyche.place_memory`
+
+`unbodysoma.psyche.place_memory.PlaceMemory`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `deposit_rate` | 0.02 | 1/s | [0, 1] | Danger gained per second of unit pain at the current cell | calibrated: about a minute of strong pain marks a place for days |
+| `tau_danger` | 259200 | s | [3600, 2.6e+06] | Time constant of danger decay | days-scale persistence, as in learned place avoidance |
+| `avoid_radius` | 4 | cells | [0.5, 20] | Distance over which danger repels movement | L0 toy value |
+| `tau_pain_trace` | 10 | s | [0.5, 120] | Trailing average of pain; only pain above it deposits (the rising edge) | calibrated: the place that hurt is marked, not everywhere the ache was carried |
+
 ## `psyche.navigation`
 
 `unbodysoma.psyche.navigation.Navigation`
 
 | 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
 |---|---|---|---|---|---|
+| `avoid_gain` | 1.5 | — | [0, 10] | Steering strength away from places learned to be dangerous (place memory) | L0 toy value |
 | `walk_fraction` | 0.5 | normalized | [0, 1] | Speed while exploring, as a share of full speed | L0 toy value |
 | `flee_fraction` | 1 | normalized | [0, 1] | Speed while fleeing, as a share of full speed | L0 toy value |
 | `wander_sigma` | 0.3 | rad/√s | [0, 10] | How fast the wandering heading diffuses | L0 toy value |

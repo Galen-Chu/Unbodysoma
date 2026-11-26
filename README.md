@@ -3,7 +3,7 @@
 > 一個「心智從身體長出來」的模擬人體引擎。
 > *An embodied human simulation engine in which the mind emerges from — and feeds back into — the regulation of a simulated body.*
 
-![status](https://img.shields.io/badge/status-Phase%203%20complete%20%C2%B7%20pre--alpha-orange)
+![status](https://img.shields.io/badge/status-Phase%204%20complete%20%C2%B7%20pre--alpha-orange)
 ![python](https://img.shields.io/badge/python-3.11%2B-blue)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -21,13 +21,15 @@
 > 核心假設：**心智能力不是外掛在身體上的軟體，而是一個為了讓身體活下去而演化出的調節系統。**
 > 詳見 [docs/VISION.md](docs/VISION.md)。
 
-## 目前狀態：Phase 3 — 身心深化 I：微生物級（完成），下一步：無脊椎動物級
+## 目前狀態：Phase 4 — 身心深化 II：無脊椎動物級（完成），下一步：脊椎動物級
 
 **Phase 2（2026-11-16 完成）**把四個子系統（心血管／內分泌／代謝／呼吸）升級到文獻模型（L1）並以自動化測試對照文獻反應曲線驗收；加上頻譜 HRV、族群執行器（個體差異抽樣與分布級驗收指標）與自足式 HTML 儀表板。
 
 **Phase 3（2026-11-18 完成，[ADR-0013](docs/adr/0013-subsystem-focus-track.md)）**：微生物級的身心閉環——痛覺（雙相痛＋敏感化）、`neuro.*` 神經調節三軸（多巴胺＝恆定誤差移除的獎賞、血清素＝慢速情緒色調、正腎上腺素＝警覺）、中性刺激習慣化、能量池整合為淨葡萄糖平衡（腸促胰素相飽足、葡萄糖下潛的急性飢餓）、族群平行執行。
 
-**下一步**：Phase 4 無脊椎動物級——Rescorla–Wagner 古典制約、操作制約、情節式記憶、場所趨避；`world.stimulus`（CS）、`world.damage`（US）與 `neuro.dopamine`（教學訊號）已就位。
+**Phase 4（2026-11-26 完成）**：無脊椎動物級的學習全景——古典制約（Rescorla–Wagner 雙軌道＋多巴胺預測誤差）、操作制約（效果律：資格痕跡×relief/痛）、情節記憶（情緒強度固化＋情境一致提取）、場所趨避（痛沉積的危險場＋導航排斥）。
+
+**下一步**：Phase 5 脊椎動物級——注意力分配、預測性調節（allostasis：需求出現前行動）、主動推論版本對照；TD 時序信用與這些一同設計。
 
 底下的迴路與行為是 Phase 1 打下的基礎，目前依然成立——目前是一個刻意簡化（生理 L1／情感 L0）但有**多條完整閉環**的生物體，能在腳本化世界或 2D 網格世界中生活：
 
@@ -241,7 +243,8 @@ docs/            設計文件與架構決策紀錄（ADR）
 | Phase 1 ✅ | 最小可行生物體：進食、飲水、體溫調節、睡眠與晝夜節律、機率式多行動競爭、HRV、網格世界（水源 / 庇護所 / 晝夜溫差）、TOML 情境檔、快照存檔與重播驗證、Rerun 即時檢視；72 小時完成情境 |
 | Phase 2 ✅ | 生理保真度：文獻模型（L1）＋對照文獻曲線的自動驗收（心血管／內分泌／代謝／呼吸）、頻譜 HRV、族群執行器、專屬儀表板 |
 | Phase 3 ✅ | 身心深化 I：微生物級——痛覺（雙相＋敏感化）、`neuro.*` 三軸、習慣化、恆定誤差獎賞、能量池整合、族群平行 |
-| **Phase 4**（下一步） | 身心深化 II：無脊椎動物級——古典／操作制約、消弱與阻斷、情節式記憶、場所趨避 |
+| Phase 4 ✅ | 身心深化 II：無脊椎動物級——古典制約（RW＋DA RPE）、操作制約、情節記憶、場所趨避 |
+| **Phase 5**（下一步） | 身心深化 III：脊椎動物級——注意力、預測性調節（allostasis）、主動推論對照 |
 | Phase 4 | 身心深化 II：無脊椎動物級——古典／操作制約、消弱與阻斷、情節式記憶、場所趨避 |
 | Phase 5 | 身心深化 III：脊椎動物級——注意力、預測性調節（allostasis）、主動推論對照 |
 | Phase 6 | 人類級：自我模型、語言與社會互動 |

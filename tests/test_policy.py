@@ -54,6 +54,7 @@ AMBIVALENT = {
     "psyche.drive.thermal_discomfort": 0.0,
     "psyche.drive.sleepiness": 0.0,
     "intero.pain": 0.0,
+    **{f"psyche.instrumental.value_{a}": 0.0 for a in ACTIONS},
     "extero.food": 1.0,
     "extero.water": 0.0,
     "extero.in_shelter": 0.0,

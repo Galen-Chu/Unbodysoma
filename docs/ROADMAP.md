@@ -88,12 +88,14 @@
 ## Phase 4 — 身心深化 II：無脊椎動物級——聯結學習與記憶
 
 - [x] 古典制約：Rescorla–Wagner 動力學——獲得、消弱、自發恢復、阻斷（Kamin）— 2026-11-26，`psyche/conditioning.py`（雙線索雙軌道：防禦 US＝damage 進入評估、獎賞 US＝relief 餵多巴胺 RPE；Rescorla & Wagner 1972、Rescorla 1988、Kamin 1969、Rankin 2009 驗收，`tests/test_conditioning.py`）
-- [ ] 操作制約：行為 → 結果的聯結
-- [ ] 情節式記憶表徵：情緒強度調節記憶強度（向量嵌入 vs 符號事件 vs 混合，見 BACKLOG §5）
+- [x] 操作制約：行為 → 結果的聯結 — 2026-11-26，`psyche/instrumental.py`（資格痕跊×relief/痛 的效果律；Thorndike 1911 譜系，`tests/test_instrumental.py`）
+- [x] 情節式記憶表徵：情緒強度調節記憶強度 — 2026-11-26，`psyche/memory.py`（最小符號—混合：情感快照＋強度固化＋情境一致提取；McGaugh 2004 錨點，`tests/test_memory.py`）；向量嵌入待有消費者再引入
 - [x] 制約情境檔格式 — 2026-11-26，`[[stimuli]]` 事件類型（cue＝a/b、start、duration、value；SCENARIOS.md）
-- [ ] 場所趨避：學會避開曾造成疼痛的地點（grid／sanctuary 世界作為實驗場）
+- [x] 場所趨避：學會避開曾造成疼痛的地點 — 2026-11-26，`psyche/place_memory.py`（痛沉積的危險場＋導航排斥；O'Keefe & Nadel 1978 譜系，兩食物點選擇實驗驗收，`tests/test_place_memory.py`）
 
 **完成情境：** 中性刺激與威脅配對後引發防禦反應（獲得），單獨呈現時反應隨次數衰減（消弱），隔段時間後部分恢復（自發恢復）；已建立的線索會阻斷新線索的學習（阻斷）。獲得／消弱曲線落在 Rescorla（1988）等文獻容許範圍，有自動化測試把關。
+
+**達成（2026-11-26）：** 全部清單項目完成——古典制約（RW 雙軌道＋多巴胺 RPE）、操作制約（效果律）、情節記憶（情緒調制的符號—混合表徵）、`[[stimuli]]` 情境格式、場所趨避（危險場＋導航排斥）。無脊椎動物級的學習全景就位：線索→預期（Pavlov）、行動→結果（Thorndike）、地點→危險（認知地圖）、情緒→記憶強度（McGaugh），且有情境一致的情感回憫閉環。Phase 5 的注意力、allostasis 與主動推論可直接以這些學習地基組裝。
 
 ## Phase 5 — 身心深化 III：脊椎動物級——注意、預測與規劃
 
