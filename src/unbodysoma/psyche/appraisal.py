@@ -22,7 +22,12 @@ class Appraisal(Module):
 
     name = "psyche.appraisal"
     rate_hz = 10.0
-    reads = ("extero.threat", "neuro.norepinephrine", "psyche.conditioning.threat_expectation")
+    reads = (
+        "extero.threat",
+        "neuro.norepinephrine",
+        "psyche.conditioning.threat_expectation",
+        "psyche.attention.share_threat",
+    )
     signal_specs = (SignalSpec("psyche.appraisal.threat", "normalized", 0.0, 1.0, "Appraised threat"),)
     writes = tuple(s.key for s in signal_specs)
     params = (
@@ -33,6 +38,14 @@ class Appraisal(Module):
             0.0,
             5.0,
             "How much vigilance amplifies perceived threat (trait anxiety)",
+        ),
+        ParamSpec(
+            "w_attention_gain",
+            0.5,
+            "",
+            0.0,
+            2.0,
+            "Threat gain from attention: attended threats read larger, ignored ones smaller",
         ),
         ParamSpec(
             "w_learned_threat",
@@ -46,8 +59,15 @@ class Appraisal(Module):
     )
     state_fields = ("threat",)
 
-    def __init__(self, arousal_bias: float = 0.5, w_learned_threat: float = 1.0, tau: float = 0.5) -> None:
+    def __init__(
+        self,
+        arousal_bias: float = 0.5,
+        w_attention_gain: float = 0.5,
+        w_learned_threat: float = 1.0,
+        tau: float = 0.5,
+    ) -> None:
         self.arousal_bias = arousal_bias
+        self.w_attention_gain = w_attention_gain
         self.w_learned_threat = w_learned_threat
         self.tau = tau
         self.threat = 0.0
@@ -57,7 +77,8 @@ class Appraisal(Module):
 
     def step(self, dt: float, port: BusPort) -> None:
         cue = port.read("extero.threat")
+        attended = 1.0 + self.w_attention_gain * (port.read("psyche.attention.share_threat") - 1.0 / 6.0)
         learned = self.w_learned_threat * port.read("psyche.conditioning.threat_expectation")
-        target = clamp(cue * (1.0 + self.arousal_bias * port.read("neuro.norepinephrine")) + learned)
+        target = clamp(cue * attended * (1.0 + self.arousal_bias * port.read("neuro.norepinephrine")) + learned)
         self.threat = relax(self.threat, target, dt, self.tau)
         port.write("psyche.appraisal.threat", self.threat)

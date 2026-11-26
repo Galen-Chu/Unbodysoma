@@ -90,7 +90,7 @@ def test_punished_fleeing_shy_away_from_later_threats():
     for i in range(6):
         t = 300.0 + 120.0 * i
         trials.extend([Event(t, t + 30.0, "world.threat", 0.9), Event(t + 5.0, t + 30.0, "world.damage", 0.8)])
-    probe = Event(1200.0, 1230.0, "world.threat", 0.35)  # below the flee threshold
+    probe = Event(1200.0, 1230.0, "world.threat", 0.2)  # below the flee threshold, even attention-amplified
     punished = run_events([*trials, probe], 1250.0)
     control_events = [Event(300.0 + 120.0 * i, 300.0 + 120.0 * i + 30.0, "world.threat", 0.9) for i in range(6)]
     control = run_events([*control_events, probe], 1250.0)

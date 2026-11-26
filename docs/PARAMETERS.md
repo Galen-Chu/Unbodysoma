@@ -228,6 +228,7 @@
 | 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
 |---|---|---|---|---|---|
 | `arousal_bias` | 0.5 | — | [0, 5] | How much vigilance amplifies perceived threat (trait anxiety) | L0 toy value |
+| `w_attention_gain` | 0.5 | — | [0, 2] | Threat gain from attention: attended threats read larger, ignored ones smaller | L0 toy value |
 | `w_learned_threat` | 1 | — | [0, 5] | Appraised threat gained per unit of conditioned association | L0 toy value |
 | `tau` | 0.5 | s | [0.01, 60] | Time constant of appraisal | L0 toy value |
 
@@ -267,6 +268,7 @@
 | `span` | 0.6 | normalized | [0.01, 1] | Deficit above threshold that is felt as maximal hunger | L0 toy value |
 | `tau` | 30 | s | [0.1, 3600] | Time constant of hunger and thirst | L0 toy value |
 | `sleep_hunger_suppression` | 0.5 | — | [0, 1] | Share of felt hunger and thirst suppressed in sleep | L0 toy value |
+| `w_anticipation` | 0.35 | — | [0, 2] | Felt hunger gained per unit of circadian-anticipated hunger (pre-meal foraging) | calibrated: shifts meals earlier without collapsing them into double breakfasts |
 | `thirst_threshold` | 0.15 | normalized | [0, 1] | Water deficit below which no thirst is felt | L0 toy value |
 | `thirst_span` | 0.5 | normalized | [0.01, 1] | Deficit above threshold felt as maximal thirst | L0 toy value |
 | `thermal_deadband` | 0.1 | normalized | [0, 1] | Felt temperature deviation that is still comfortable | L0 toy value |
@@ -324,6 +326,25 @@
 | `tau_memory` | 172800 | s | [600, 2.6e+06] | Time constant of episode decay | days-scale forgetting; emotionally intense episodes outlast the incident |
 | `max_episodes` | 64 | episodes | [4, 1024] | Store capacity; the weakest is forgotten when full | L0 toy value |
 
+## `psyche.anticipation`
+
+`unbodysoma.psyche.anticipation.Anticipation`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `tau_exposure` | 5400 | s | [600, 2.6e+06] | Exposure time over which one hour's bin converges to the lived value | calibrated: about two daily visits to an hour teach its profile |
+| `lead_hours` | 1 | h | [0, 6] | How far ahead the prediction looks (the hour bin it reads) | L0 toy value |
+
+## `psyche.attention`
+
+`unbodysoma.psyche.attention.Attention`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `temperature` | 0.1 | — | [0.01, 1] | Competition softness: small = winner-takes-most, large = evenly divided | L0 toy value |
+| `persistence` | 0.5 | — | [0, 5] | Salience bonus for the current focus, holding it against brief challengers | L0 toy value |
+| `tau` | 1 | s | [0.05, 60] | Time constant of share changes | L0 toy value |
+
 ## `psyche.action`
 
 `unbodysoma.psyche.action.ActionSelection`
@@ -336,6 +357,8 @@
 | `k_flee` | 2.5 | — | [0, 20] | Utility gain of fleeing per unit threat above threshold | L0 toy value |
 | `flee_threshold` | 0.4 | normalized | [0, 1] | Appraised threat at which fleeing breaks even | L0 toy value |
 | `k_flee_pain` | 1 | — | [0, 20] | Utility gain of fleeing per unit felt pain (escape from what hurts) | L0 toy value |
+| `w_shelter_anticipation` | 1 | — | [0, 5] | Utility of going to shelter per unit of anticipated pain (before the usual danger hour) | L0 toy value |
+| `attention_sharpen` | 0.3 | — | [0, 1] | Share of choice randomness removed at full focus (a broadcast domain sharpens choices) | L0 toy value |
 | `w_instrumental` | 0.5 | — | [0, 5] | Utility gained per unit of learned action value (instrumental learning) | L0 toy value |
 | `k_eat` | 2 | — | [0, 20] | Utility gain of eating per unit hunger above threshold | L0 toy value |
 | `eat_threshold` | 0.35 | normalized | [0, 1] | Hunger at which starting to eat breaks even | L0 toy value |

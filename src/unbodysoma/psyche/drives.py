@@ -33,10 +33,11 @@ class Drives(Module):
         "intero.thermal",
         "intero.sleep_pressure",
         "intero.circadian",
+        "psyche.anticipation.hunger",
         "motor.sleeping",
     )
     signal_specs = (
-        SignalSpec("psyche.drive.hunger", "normalized", 0.0, 1.0, "Felt urgency of eating"),
+        SignalSpec("psyche.drive.hunger", "normalized", 0.0, 1.0, "Felt urgency of eating (incl. anticipated)"),
         SignalSpec("psyche.drive.thirst", "normalized", 0.0, 1.0, "Felt urgency of drinking"),
         SignalSpec("psyche.drive.thermal_discomfort", "normalized", 0.0, 1.0, "Felt cold or heat"),
         SignalSpec(
@@ -49,6 +50,15 @@ class Drives(Module):
         ParamSpec("span", 0.6, "normalized", 0.01, 1.0, "Deficit above threshold that is felt as maximal hunger"),
         ParamSpec("tau", 30.0, "s", 0.1, 3600.0, "Time constant of hunger and thirst"),
         ParamSpec("sleep_hunger_suppression", 0.5, "", 0.0, 1.0, "Share of felt hunger and thirst suppressed in sleep"),
+        ParamSpec(
+            "w_anticipation",
+            0.35,
+            "",
+            0.0,
+            2.0,
+            "Felt hunger gained per unit of circadian-anticipated hunger (pre-meal foraging)",
+            source="calibrated: shifts meals earlier without collapsing them into double breakfasts",
+        ),
         ParamSpec("thirst_threshold", 0.15, "normalized", 0.0, 1.0, "Water deficit below which no thirst is felt"),
         ParamSpec("thirst_span", 0.5, "normalized", 0.01, 1.0, "Deficit above threshold felt as maximal thirst"),
         ParamSpec(
@@ -95,6 +105,7 @@ class Drives(Module):
         span: float = 0.6,
         tau: float = 30.0,
         sleep_hunger_suppression: float = 0.5,
+        w_anticipation: float = 0.35,
         thirst_threshold: float = 0.15,
         thirst_span: float = 0.5,
         thermal_deadband: float = 0.1,
@@ -109,6 +120,7 @@ class Drives(Module):
         self.span = span
         self.tau = tau
         self.sleep_hunger_suppression = sleep_hunger_suppression
+        self.w_anticipation = w_anticipation
         self.thirst_threshold = thirst_threshold
         self.thirst_span = thirst_span
         self.thermal_deadband = thermal_deadband
@@ -139,7 +151,8 @@ class Drives(Module):
 
     def step(self, dt: float, port: BusPort) -> None:
         awake = 1.0 - self.sleep_hunger_suppression * port.read("motor.sleeping")
-        hunger = clamp((port.read("intero.energy_deficit") - self.threshold) / self.span) * awake
+        anticipated = self.w_anticipation * port.read("psyche.anticipation.hunger")
+        hunger = clamp((port.read("intero.energy_deficit") - self.threshold) / self.span + anticipated) * awake
         thirst = clamp((port.read("intero.water_deficit") - self.thirst_threshold) / self.thirst_span) * awake
         discomfort = clamp((abs(port.read("intero.thermal")) - self.thermal_deadband) / self.thermal_span)
         sleepiness = self.sleepiness(port.read("intero.sleep_pressure"), port.read("intero.circadian"))

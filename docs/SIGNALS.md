@@ -48,7 +48,7 @@
 | `intero.cardiac_arousal` | normalized | [0, 1] | `interface.interoception` | `psyche.affect`, `soma.neuro` | Felt cardiac activation |
 | `intero.circadian` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives` | Felt circadian alerting signal |
 | `intero.energy_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt shortage of energy (store minus satiety plus glucose dip) |
-| `intero.pain` | normalized | [0, 1] | `interface.interoception` | `psyche.action`, `psyche.affect`, `psyche.instrumental`, `psyche.memory`, `psyche.place_memory`, `soma.neuro` | Felt pain |
+| `intero.pain` | normalized | [0, 1] | `interface.interoception` | `psyche.action`, `psyche.affect`, `psyche.anticipation`, `psyche.attention`, `psyche.instrumental`, `psyche.memory`, `psyche.place_memory`, `soma.neuro` | Felt pain |
 | `intero.sleep_pressure` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt tiredness (homeostatic sleep pressure) |
 | `intero.thermal` | normalized | [-1, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt body temperature (- cold, + hot) |
 | `intero.water_deficit` | normalized | [0, 1] | `interface.interoception` | `psyche.drives`, `soma.neuro` | Felt shortage of water |
@@ -80,15 +80,24 @@
 | `psyche.action.selected_sleep` | indicator | [0, 1] | `psyche.action` | `psyche.instrumental` | 1 while sleep is chosen |
 | `psyche.affect.arousal` | normalized | [0, 1] | `psyche.affect` | `psyche.memory` | Core affect: activation |
 | `psyche.affect.valence` | normalized | [-1, 1] | `psyche.affect` | `psyche.memory` | Core affect: pleasant (+) vs unpleasant (-) |
-| `psyche.appraisal.threat` | normalized | [0, 1] | `psyche.appraisal` | `psyche.action`, `psyche.affect`, `soma.endocrine`, `soma.neuro` | Appraised threat |
+| `psyche.anticipation.hunger` | normalized | [0, 1] | `psyche.anticipation` | `psyche.drives` | Circadian-anticipated hunger for the coming hour |
+| `psyche.anticipation.threat` | normalized | [0, 1] | `psyche.anticipation` | `psyche.action` | Circadian-anticipated pain for the coming hour |
+| `psyche.appraisal.threat` | normalized | [0, 1] | `psyche.appraisal` | `psyche.action`, `psyche.affect`, `psyche.attention`, `soma.endocrine`, `soma.neuro` | Appraised threat |
+| `psyche.attention.focus_share` | share | [0, 1] | `psyche.attention` | `psyche.action` | Attention held by the current focus |
+| `psyche.attention.share_hunger` | share | [0, 1] | `psyche.attention` | —（預留） | Attention held by hunger |
+| `psyche.attention.share_pain` | share | [0, 1] | `psyche.attention` | —（預留） | Attention held by pain |
+| `psyche.attention.share_sleepiness` | share | [0, 1] | `psyche.attention` | —（預留） | Attention held by sleepiness |
+| `psyche.attention.share_thermal` | share | [0, 1] | `psyche.attention` | —（預留） | Attention held by thermal |
+| `psyche.attention.share_thirst` | share | [0, 1] | `psyche.attention` | —（預留） | Attention held by thirst |
+| `psyche.attention.share_threat` | share | [0, 1] | `psyche.attention` | `psyche.appraisal` | Attention held by threat |
 | `psyche.conditioning.defense_a` | normalized | [0, 1] | `psyche.conditioning` | —（預留） | Defensive association of cue A |
 | `psyche.conditioning.defense_b` | normalized | [0, 1] | `psyche.conditioning` | —（預留） | Defensive association of cue B |
 | `psyche.conditioning.reward_prediction` | normalized | [0, 1] | `psyche.conditioning` | `soma.neuro` | Relief predicted by present cues |
 | `psyche.conditioning.threat_expectation` | normalized | [0, 1] | `psyche.conditioning` | `psyche.appraisal` | Learned threat predicted by present cues |
-| `psyche.drive.hunger` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect` | Felt urgency of eating |
-| `psyche.drive.sleepiness` | normalized | [-1, 1] | `psyche.drives` | `psyche.action` | Felt need for sleep (1 = sleep onset, 0 = wake point) |
-| `psyche.drive.thermal_discomfort` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect` | Felt cold or heat |
-| `psyche.drive.thirst` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect` | Felt urgency of drinking |
+| `psyche.drive.hunger` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect`, `psyche.anticipation`, `psyche.attention` | Felt urgency of eating (incl. anticipated) |
+| `psyche.drive.sleepiness` | normalized | [-1, 1] | `psyche.drives` | `psyche.action`, `psyche.attention` | Felt need for sleep (1 = sleep onset, 0 = wake point) |
+| `psyche.drive.thermal_discomfort` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect`, `psyche.attention` | Felt cold or heat |
+| `psyche.drive.thirst` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect`, `psyche.attention` | Felt urgency of drinking |
 | `psyche.habituation.novelty` | normalized | [0, 1] | `psyche.habituation` | `psyche.affect` | Felt novelty of the current stimulus |
 | `psyche.instrumental.value_drink` | utility | [-1, 1] | `psyche.instrumental` | `psyche.action` | Learned value of drink |
 | `psyche.instrumental.value_eat` | utility | [-1, 1] | `psyche.instrumental` | `psyche.action` | Learned value of eat |
@@ -104,7 +113,7 @@
 | `psyche.place_memory.avoid_y` | unit | [-1, 1] | `psyche.place_memory` | `psyche.navigation` | Repulsion from nearby danger (y) |
 | `psyche.place_memory.danger` | normalized | [0, 1] | `psyche.place_memory` | —（預留） | Learned danger at the current position |
 | `soma.cardio.heart_rate` | bpm | [0, 300] | `soma.cardio` | `interface.interoception` | Heart rate |
-| `soma.circadian.clock_hour` | h | [0, 24] | `soma.circadian` | `soma.endocrine` | Local clock time |
+| `soma.circadian.clock_hour` | h | [0, 24] | `soma.circadian` | `psyche.anticipation`, `soma.endocrine` | Local clock time |
 | `soma.circadian.drive` | normalized | [-1, 1] | `soma.circadian` | `interface.interoception` | Circadian alerting signal (+1 at its daily peak) |
 | `soma.endocrine.adrenaline` | normalized | [0, 1] | `soma.endocrine` | `soma.cardio`, `soma.metabolism`, `soma.respiration` | Circulating adrenaline (sympathetic arousal) |
 | `soma.endocrine.cortisol` | normalized | [0, 1] | `soma.endocrine` | —（預留） | Circulating cortisol (HPA axis) |

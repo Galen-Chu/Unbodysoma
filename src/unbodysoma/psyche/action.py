@@ -59,6 +59,8 @@ class ActionSelection(Module):
         "psyche.drive.thermal_discomfort",
         "psyche.drive.sleepiness",
         "intero.pain",
+        "psyche.anticipation.threat",
+        "psyche.attention.focus_share",
         *(f"psyche.instrumental.value_{a}" for a in ACTIONS),
         "extero.food",
         "extero.water",
@@ -86,6 +88,22 @@ class ActionSelection(Module):
         ParamSpec("flee_threshold", 0.4, "normalized", 0.0, 1.0, "Appraised threat at which fleeing breaks even"),
         ParamSpec(
             "k_flee_pain", 1.0, "", 0.0, 20.0, "Utility gain of fleeing per unit felt pain (escape from what hurts)"
+        ),
+        ParamSpec(
+            "w_shelter_anticipation",
+            1.0,
+            "",
+            0.0,
+            5.0,
+            "Utility of going to shelter per unit of anticipated pain (before the usual danger hour)",
+        ),
+        ParamSpec(
+            "attention_sharpen",
+            0.3,
+            "",
+            0.0,
+            1.0,
+            "Share of choice randomness removed at full focus (a broadcast domain sharpens choices)",
         ),
         ParamSpec(
             "w_instrumental",
@@ -150,6 +168,8 @@ class ActionSelection(Module):
         k_flee: float = 2.5,
         flee_threshold: float = 0.4,
         k_flee_pain: float = 1.0,
+        w_shelter_anticipation: float = 1.0,
+        attention_sharpen: float = 0.3,
         w_instrumental: float = 0.5,
         k_eat: float = 2.0,
         eat_threshold: float = 0.35,
@@ -187,6 +207,8 @@ class ActionSelection(Module):
         self.k_flee = k_flee
         self.flee_threshold = flee_threshold
         self.k_flee_pain = k_flee_pain
+        self.w_shelter_anticipation = w_shelter_anticipation
+        self.attention_sharpen = attention_sharpen
         self.w_instrumental = w_instrumental
         self.k_eat = k_eat
         self.eat_threshold = eat_threshold
@@ -235,6 +257,7 @@ class ActionSelection(Module):
         in_shelter: bool = False,
         shelter_known: bool = False,
         pain: float = 0.0,
+        anticipated_threat: float = 0.0,
         instrumental: dict[str, float] | None = None,
     ) -> dict[str, float]:
         """Utility of every currently available action, including the bonus for the current one."""
@@ -254,11 +277,15 @@ class ActionSelection(Module):
             u[SEEK_WATER] = self.k_seek_water * (thirst - self.seek_water_threshold) + w * learned.get(SEEK_WATER, 0.0)
         homeless = shelter_known and not in_shelter
         if homeless:
-            u[SEEK_SHELTER] = max(
-                self.k_shelter * (discomfort - self.shelter_threshold),
-                self.k_home * (sleepiness - self.home_onset),
-                self.k_shelter_pain * pain,
-            ) + w * learned.get(SEEK_SHELTER, 0.0)
+            u[SEEK_SHELTER] = (
+                max(
+                    self.k_shelter * (discomfort - self.shelter_threshold),
+                    self.k_home * (sleepiness - self.home_onset),
+                    self.k_shelter_pain * pain,
+                )
+                + self.w_shelter_anticipation * anticipated_threat
+                + w * learned.get(SEEK_SHELTER, 0.0)
+            )
         resuming = self.interrupted and self.awake_for < self.resume_window and sleepiness > 0.0
         if self.action == SLEEP or resuming:
             u[SLEEP] = min(self.sleep_cap, self.sleep_depth * sleepiness)  # staying asleep; no extra stickiness
@@ -284,9 +311,11 @@ class ActionSelection(Module):
             in_shelter=port.read("extero.in_shelter") > self.shelter_seen,
             shelter_known=port.read("extero.shelter_known") > self.shelter_seen,
             pain=port.read("intero.pain"),
+            anticipated_threat=port.read("psyche.anticipation.threat"),
             instrumental={a: port.read(f"psyche.instrumental.value_{a}") for a in ACTIONS},
         )
-        probabilities = softmax(utilities, self.temperature)
+        sharpened = self.temperature * (1.0 - self.attention_sharpen * port.read("psyche.attention.focus_share"))
+        probabilities = softmax(utilities, sharpened)
         previous = self.action
         self.action = switch(self.action, utilities, self.temperature, self.reconsideration_rate, dt, self._rng)
         if previous == SLEEP and self.action != SLEEP:

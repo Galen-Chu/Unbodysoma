@@ -17,6 +17,7 @@
 | [0011](0011-external-physiology-engines-deferred.md) | 外部生理引擎：評估完成，暫不整合（保留 oracle 路線） | 已採用 |
 | [0012](0012-native-core-not-needed-yet.md) | 原生核心：量測後決定暫不需要（1741× 實時） | 已採用 |
 | [0013](0013-subsystem-focus-track.md) | 軌道調整：身心子系統深化為主軸，沿生物組織尺度逐步扎根 | 已採用 |
+| [0014](0014-modular-primary-through-phase5.md) | 模組化維持主架構至 Phase 5；預測編碼由內感受介面滲透 | 已採用 |
 
 ## 格式
 

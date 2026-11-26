@@ -26,8 +26,12 @@ THREAT = "psyche.appraisal.threat"
 KEYS = (DA, HT, NE, VALENCE, THREAT, "motor.eating")
 
 
-def run_events(events: list[Event], seconds: float, overrides: dict | None = None) -> Recorder:
+def run_events(
+    events: list[Event], seconds: float, overrides: dict | None = None, lesion_attention: bool = False
+) -> Recorder:
     engine: Engine = build_minimal_human(events, seed=0, overrides=overrides)
+    if lesion_attention:
+        engine.lesion("psyche.attention")
     recorder = Recorder(KEYS, every=2.0)
     engine.observe(recorder)
     engine.run(seconds)
@@ -101,8 +105,16 @@ def test_sustained_pain_lowers_serotonin_and_mood():
 
 
 def test_pain_makes_mild_threats_look_worse():
-    calm = run_events([Event(600.0, 800.0, "world.threat", 0.2)], 1000.0)
-    hurt = run_events([Event(300.0, 700.0, "world.damage", 0.8), Event(600.0, 800.0, "world.threat", 0.2)], 1000.0)
+    """The norepinephrine axis in isolation: attention is silenced in both
+    runs — with it live, strong pain also *distracts* (the pain domain takes
+    the broadcast and the threat gain is lost), and the net effect of hurt on
+    threat appraisal becomes a parameter balance rather than this axis."""
+    calm = run_events([Event(600.0, 800.0, "world.threat", 0.2)], 1000.0, lesion_attention=True)
+    hurt = run_events(
+        [Event(300.0, 700.0, "world.damage", 0.8), Event(600.0, 800.0, "world.threat", 0.2)],
+        1000.0,
+        lesion_attention=True,
+    )
     assert mean(window(hurt, NE, 550.0, 600.0)) > 0.4  # pain alone raises vigilance
     calm_threat = mean(window(calm, THREAT, 620.0, 780.0))
     hurt_threat = mean(window(hurt, THREAT, 620.0, 780.0))

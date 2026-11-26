@@ -11,7 +11,9 @@ from .interface.exteroception import SPATIAL_CHANNELS
 from .psyche import (
     ActionSelection,
     Affect,
+    Anticipation,
     Appraisal,
+    Attention,
     Conditioning,
     Drives,
     EpisodicMemory,
@@ -59,6 +61,8 @@ def _body_and_mind(seed: int) -> list[Factory]:
         (Conditioning.name, Conditioning, {}),
         (Instrumental.name, Instrumental, {}),
         (EpisodicMemory.name, EpisodicMemory, {}),
+        (Anticipation.name, Anticipation, {}),
+        (Attention.name, Attention, {}),
         (ActionSelection.name, ActionSelection, {"seed": seed + 4}),
     ]
 
