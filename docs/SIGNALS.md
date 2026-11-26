@@ -60,6 +60,7 @@
 | `motor.sleeping` | indicator | [0, 1] | `psyche.action` | `psyche.drives`, `soma.cardio`, `soma.endocrine`, `soma.fluid`, `soma.metabolism`, `soma.respiration`, `soma.sleep` | 1 while asleep |
 | `neuro.dopamine` | normalized | [0, 1] | `soma.neuro` | `psyche.affect` | Dopamine: phasic reward from homeostatic relief |
 | `neuro.norepinephrine` | normalized | [0, 1] | `soma.neuro` | `psyche.appraisal` | Norepinephrine: vigilance |
+| `neuro.relief` | normalized | [0, 1] | `soma.neuro` | `psyche.conditioning` | Relief: homeostatic error falling below its slow baseline |
 | `neuro.serotonin` | normalized | [0, 1] | `soma.neuro` | `psyche.affect` | Serotonin: slow mood tone |
 | `psyche.action.p_drink` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing drink |
 | `psyche.action.p_eat` | probability | [0, 1] | `psyche.action` | —（預留） | Probability of choosing eat |
@@ -80,6 +81,10 @@
 | `psyche.affect.arousal` | normalized | [0, 1] | `psyche.affect` | —（預留） | Core affect: activation |
 | `psyche.affect.valence` | normalized | [-1, 1] | `psyche.affect` | —（預留） | Core affect: pleasant (+) vs unpleasant (-) |
 | `psyche.appraisal.threat` | normalized | [0, 1] | `psyche.appraisal` | `psyche.action`, `psyche.affect`, `soma.endocrine`, `soma.neuro` | Appraised threat |
+| `psyche.conditioning.defense_a` | normalized | [0, 1] | `psyche.conditioning` | —（預留） | Defensive association of cue A |
+| `psyche.conditioning.defense_b` | normalized | [0, 1] | `psyche.conditioning` | —（預留） | Defensive association of cue B |
+| `psyche.conditioning.reward_prediction` | normalized | [0, 1] | `psyche.conditioning` | `soma.neuro` | Relief predicted by present cues |
+| `psyche.conditioning.threat_expectation` | normalized | [0, 1] | `psyche.conditioning` | `psyche.appraisal` | Learned threat predicted by present cues |
 | `psyche.drive.hunger` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect` | Felt urgency of eating |
 | `psyche.drive.sleepiness` | normalized | [-1, 1] | `psyche.drives` | `psyche.action` | Felt need for sleep (1 = sleep onset, 0 = wake point) |
 | `psyche.drive.thermal_discomfort` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect` | Felt cold or heat |
@@ -100,14 +105,14 @@
 | `soma.nociception.pain` | normalized | [0, 1] | `soma.nociception` | `interface.interoception` | Felt pain intensity (sensitized) |
 | `soma.nociception.sharp` | normalized | [0, 1] | `soma.nociception` | —（預留） | First pain: fast, tracks the stimulus |
 | `soma.respiration.minute_ventilation` | L/min | [2, 120] | `soma.respiration` | —（預留） | Minute ventilation |
-| `soma.respiration.rate` | breaths/min | [4, 60] | `soma.respiration` | —（預留） | Breathing rate |
+| `soma.respiration.rate` | breaths/min | [4, 60] | `soma.respiration` | `soma.cardio` | Breathing rate |
 | `soma.respiration.spo2` | % | [70, 100] | `soma.respiration` | —（預留） | Arterial oxygen saturation |
 | `soma.sleep.pressure` | normalized | [0, 1] | `soma.sleep` | `interface.interoception` | Homeostatic sleep pressure (process S) |
 | `soma.thermo.core_temperature` | °C | [30, 45] | `soma.thermo` | `interface.interoception` | Core body temperature |
 | `soma.thermo.shivering` | normalized | [0, 1] | `soma.thermo` | `soma.metabolism` | Shivering intensity (heat production, energy cost) |
 | `soma.thermo.sweating` | normalized | [0, 1] | `soma.thermo` | `soma.fluid` | Sweating intensity (heat loss, water cost) |
 | `world.ambient_temperature` | °C | [-60, 60] | `world.grid`, `world.scripted` | `soma.thermo` | Temperature where the organism is |
-| `world.damage` | normalized | [0, 1] | `world.grid`, `world.scripted` | `soma.nociception` | Nociceptive intensity at the organism (0 inside a shelter) |
+| `world.damage` | normalized | [0, 1] | `world.grid`, `world.scripted` | `psyche.conditioning`, `soma.nociception` | Nociceptive intensity at the organism (0 inside a shelter) |
 | `world.food_available` | normalized | [0, 1] | `world.grid`, `world.scripted` | `interface.exteroception`, `world.food` | Food within reach (1 = plenty) |
 | `world.food_dir_x` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the nearest perceived food (x); 0 if none |
 | `world.food_dir_y` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the nearest perceived food (y); 0 if none |
@@ -120,7 +125,8 @@
 | `world.shelter_dir_x` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the nearest shelter (x); 0 inside or if none |
 | `world.shelter_dir_y` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the nearest shelter (y); 0 inside or if none |
 | `world.shelter_known` | indicator | [0, 1] | `world.grid`, `world.scripted` | `interface.exteroception` | 1 if the world has a shelter (its way is remembered) |
-| `world.stimulus` | normalized | [0, 1] | `world.grid`, `world.scripted` | `psyche.habituation` | Innocuous stimulus intensity (none in the grid world yet) |
+| `world.stimulus` | normalized | [0, 1] | `world.grid`, `world.scripted` | `psyche.conditioning`, `psyche.habituation` | Cue A: innocuous stimulus intensity (none in the grid world yet) |
+| `world.stimulus_b` | normalized | [0, 1] | `world.grid`, `world.scripted` | `psyche.conditioning` | Cue B: a second innocuous stimulus channel |
 | `world.threat` | normalized | [0, 1] | `world.grid`, `world.scripted` | `interface.exteroception` | Objective threat at the organism's position |
 | `world.threat_dir_x` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the strongest perceived hazard (x) |
 | `world.threat_dir_y` | unit | [-1, 1] | `world.grid` | `interface.exteroception` | Direction to the strongest perceived hazard (y) |

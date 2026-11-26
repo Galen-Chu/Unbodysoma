@@ -83,7 +83,7 @@
 | `exertion_tau_fall` | 60 | s | [5, 600] | Time constant of heart-rate recovery after exercise | calibrated: the 1-min recovery meets Cole et al. (1999) |
 | `sleep_bpm_drop` | 8 | bpm | [0, 30] | Fall of the resting heart rate during sleep | L0 toy value |
 | `rsa_amplitude` | 3 | bpm | [0, 20] | Respiratory sinus arrhythmia amplitude at rest | L0 toy value |
-| `respiration_hz` | 0.25 | Hz | [0.05, 1] | Breathing rate that paces the RSA | L0 toy value |
+| `rsa_rest_rate` | 14 | breaths/min | [8, 25] | Breathing rate the RSA amplitude is quoted at (faster breathing shrinks it) | RSA amplitude falls as breathing rate rises, as observed in exercise |
 | `lf_sigma` | 2 | bpm | [0, 20] | SD of slow heart-rate fluctuation at rest | L0 toy value |
 | `lf_tau` | 10 | s | [0.5, 300] | Correlation time of slow heart-rate fluctuation | L0 toy value |
 | `hrv_suppression` | 0.8 | — | [0, 1] | Share of HRV removed at full adrenaline | L0 toy value |
@@ -228,6 +228,7 @@
 | 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
 |---|---|---|---|---|---|
 | `arousal_bias` | 0.5 | — | [0, 5] | How much vigilance amplifies perceived threat (trait anxiety) | L0 toy value |
+| `w_learned_threat` | 1 | — | [0, 5] | Appraised threat gained per unit of conditioned association | L0 toy value |
 | `tau` | 0.5 | s | [0.01, 60] | Time constant of appraisal | L0 toy value |
 
 ## `psyche.affect`
@@ -283,6 +284,21 @@
 |---|---|---|---|---|---|
 | `habituation_rate` | 0.12 | 1/s | [0, 1] | Habit gained per second of unit stimulus | calibrated: ~50% decrement within ten 2-second presentations a minute apart |
 | `tau_recovery` | 150 | s | [10, 86400] | Time constant of spontaneous recovery in the absence of the stimulus | minutes-scale recovery, as in tap-withdrawal habituation (Rankin et al. 2009) |
+
+## `psyche.conditioning`
+
+`unbodysoma.psyche.conditioning.Conditioning`
+
+| 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
+|---|---|---|---|---|---|
+| `learn_rate` | 0.05 | 1/s | [0, 1] | Association change per second of unit cue and unit prediction error (RW's αβ) | calibrated: ~10 two-second pairings reach two-thirds of asymptote |
+| `defense_asymptote` | 1 | — | [0, 2] | Associative asymptote supported by unit damage (RW's λ) | L0 toy value |
+| `reward_asymptote` | 1 | — | [0, 5] | Associative asymptote per unit relief (predictions stay in relief units, matching the RPE) | the prediction must match the relief scale for the dopamine error to be signed correctly |
+| `tau_deep_rise` | 900 | s | [60, 86400] | Time constant of the consolidated trace while the association is strong | L0 toy value |
+| `tau_deep_decay` | 86400 | s | [600, 604800] | Time constant of the consolidated trace while the association is gone | L0 toy value |
+| `recovery_share` | 0.7 | — | [0, 1] | Share of the consolidated trace that rest can bring back | spontaneous recovery is partial (Rankin et al. 2009) |
+| `rest_refractory` | 120 | s | [5, 3600] | Cue absence required before spontaneous recovery starts (recovery follows rest, not trial gaps) | L0 toy value |
+| `tau_recovery` | 600 | s | [30, 86400] | Time constant of spontaneous recovery during rest | L0 toy value |
 
 ## `psyche.action`
 

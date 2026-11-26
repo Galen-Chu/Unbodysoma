@@ -13,11 +13,16 @@ class Appraisal(Module):
     cue as more threatening. The vigilance signal is norepinephrine
     (``neuro.norepinephrine``), which consolidates threat, pain and cardiac
     arousal — so a hurt organism over-perceives mild cues (hyper-vigilance).
+
+    Learned expectation enters the same way as a perceptual cue: a cue that
+    experience has paired with damage contributes its conditioned association
+    (``psyche.conditioning.threat_expectation``) to appraised threat —
+    conditioned fear, and its extinction, live here.
     """
 
     name = "psyche.appraisal"
     rate_hz = 10.0
-    reads = ("extero.threat", "neuro.norepinephrine")
+    reads = ("extero.threat", "neuro.norepinephrine", "psyche.conditioning.threat_expectation")
     signal_specs = (SignalSpec("psyche.appraisal.threat", "normalized", 0.0, 1.0, "Appraised threat"),)
     writes = tuple(s.key for s in signal_specs)
     params = (
@@ -29,12 +34,21 @@ class Appraisal(Module):
             5.0,
             "How much vigilance amplifies perceived threat (trait anxiety)",
         ),
+        ParamSpec(
+            "w_learned_threat",
+            1.0,
+            "",
+            0.0,
+            5.0,
+            "Appraised threat gained per unit of conditioned association",
+        ),
         ParamSpec("tau", 0.5, "s", 0.01, 60.0, "Time constant of appraisal"),
     )
     state_fields = ("threat",)
 
-    def __init__(self, arousal_bias: float = 0.5, tau: float = 0.5) -> None:
+    def __init__(self, arousal_bias: float = 0.5, w_learned_threat: float = 1.0, tau: float = 0.5) -> None:
         self.arousal_bias = arousal_bias
+        self.w_learned_threat = w_learned_threat
         self.tau = tau
         self.threat = 0.0
 
@@ -43,6 +57,7 @@ class Appraisal(Module):
 
     def step(self, dt: float, port: BusPort) -> None:
         cue = port.read("extero.threat")
-        target = clamp(cue * (1.0 + self.arousal_bias * port.read("neuro.norepinephrine")))
+        learned = self.w_learned_threat * port.read("psyche.conditioning.threat_expectation")
+        target = clamp(cue * (1.0 + self.arousal_bias * port.read("neuro.norepinephrine")) + learned)
         self.threat = relax(self.threat, target, dt, self.tau)
         port.write("psyche.appraisal.threat", self.threat)

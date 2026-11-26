@@ -37,7 +37,7 @@ HR̄          ← relax(快路徑) + relax(慢路徑)，總和鉗於 [floor, HR_
 HR          = HR̄ + (1 − 0.8·adrenaline) · (3·sin(2π · 0.25 Hz · t) + OU(10 s, 2 bpm))
 ```
 
-最後一行是**心率變異（HRV）**：呼吸性竇性心律不整（RSA，隨呼吸起伏）加上較慢的波動。腎上腺素會抑制 HRV，如同真實的交感神經活化。靜止時的短期指標約為 SDNN ≈ RMSSD ≈ 37 ms；壓力下 RMSSD 降到約 1 ms（`observe/metrics.py`、`tests/test_variability.py`）。
+最後一行是**心率變異（HRV）**：呼吸性竇性心律不整（RSA，隨呼吸起伏）加上較慢的波動。RSA 由實際呼吸率驅動（相位積分，2026-11-26 起與 `soma.respiration.rate` 耦合）：運動時呼吸加快，RSA 頻率隨之上升而幅度縮小（幅度 ∝ 14/rate，鉗在 0.3–1.2 倍）。腎上腺素會抑制 HRV，如同真實的交感神經活化。靜止時的短期指標約為 SDNN ≈ RMSSD ≈ 37 ms；壓力下 RMSSD 降到約 1 ms（`observe/metrics.py`、`tests/test_variability.py`）。
 
 穩態增益與 L0 完全相同（運動 0.7 → +49 bpm；恐懼測試的行為因此不變）；變的是**過渡**：實測（`tests/test_cardio_l1.py` 驗收）——中等運動（exertion 0.7）第 15 秒完成最終升幅的 ~50%（快相）、63% 於 +20 秒、慢尾部到 60 秒仍有 ~20% 未完成（雙路徑簽名）；停止運動後第一分鐘下降 ~35 bpm（Cole 判準 ≥ 12）；80 歲個體的最大心率鉗於 152（Tanaka）。
 
@@ -148,7 +148,7 @@ ventilation*= 6 L/min · (1 + 同上係數) + 26·exertion + 2·adrenaline   （
 SpO₂*       = 97.5 − 2.5·exertion² + 0.5·sleeping                   （τ = 10 s）
 ```
 
-錨點：靜止呼吸率 12–20/min 的正常帶（Cretikos 等, 2008）；多數成人目標 SpO₂ 94–98 %（O'Driscoll 等, 2008）。實測（`tests/test_pulmonary_l1.py`）：靜止 14 /min、SpO₂ 97.5；中等運動（exertion 0.7）呼吸升至約 26 /min、通氣量三倍以上、SpO₂ 不低於 94。尚無 CO₂ 化學與下游讀者——與皮質醇一樣，是為窒息感、恐慌與呼吸調節情緒預留的介面（PSYCHE.md）；心血管的 RSA 目前仍以固定呼吸率驅動，兩者耦合是後續工作。
+錨點：靜止呼吸率 12–20/min 的正常帶（Cretikos 等, 2008）；多數成人目標 SpO₂ 94–98 %（O'Driscoll 等, 2008）。實測（`tests/test_pulmonary_l1.py`）：靜止 14 /min、SpO₂ 97.5；中等運動（exertion 0.7）呼吸升至約 26 /min、通氣量三倍以上、SpO₂ 不低於 94。尚無 CO₂ 化學與下游讀者——與皮質醇一樣，是為窒息感、恐慌與呼吸調節情緒預留的介面（PSYCHE.md）；心血管的 RSA 已與呼吸率耦合（2026-11-26）。
 
 ### 2.9 痛覺 `soma/nociception.py`（L1-lite，2026-11-18）
 
@@ -170,7 +170,7 @@ pain     = clamp((sharp + burning) · (1 + sens))
 E        = 0.4·能量匱乏 + 0.3·水分匱乏 + 0.15·|體溫不適| + 0.15·睡壓     （總恆定誤差，皆為「被感受到」值）
 E_fast   ← relax(E, τ = 10 s)；E_slow ← relax(E, τ = 300 s)
 relief   = clamp(E_slow − E_fast)                          正在復原的量＝誤差低於自身慢基線
-dopamine ← relax(0.5 + 10·relief, τ = 1.5 s)               獎賞＝恆定誤差的移除
+dopamine ← relax(0.5 + 10·(relief − prediction), τ = 1.5 s)  獎賞預測誤差；prediction = 制約線索的獎賞預測（PSYCHE §4.7，2026-11-26 起）
 serotonin← relax(0.5 − 0.8·痛 − 0.4·E_slow, τ = 600 s)     慢速情緒色調
 NE       ← relax(max(威脅, 痛, 0.6·心喚醒), τ = 3 s)        警覺
 ```

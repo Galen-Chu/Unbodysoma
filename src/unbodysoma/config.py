@@ -29,10 +29,11 @@ class ScenarioError(ValueError):
     """A scenario file does not follow the format."""
 
 
-_TOP = {"scenario", "organism", "events", "world", "interventions", "observe"}
+_TOP = {"scenario", "organism", "events", "stimuli", "world", "interventions", "observe"}
 _SCENARIO = {"name", "description", "duration_s", "duration_h", "seed", "base_dt"}
 _ORGANISM = {"preset", "overrides"}
 _EVENT = {"start", "end", "key", "value"}
+_STIMULUS = {"start", "duration", "value", "cue"}
 _WORLD = {"width", "height", "start", "food", "hazards", "water", "shelters"}
 _WATER = {"x", "y"}
 _SHELTER = {"x", "y", "radius", "insulation"}
@@ -280,6 +281,30 @@ def parse_scenario(text: str, name: str = "scenario") -> Scenario:
             scenario.events.append(
                 Event(
                     _number(ev, "start", where), _number(ev, "end", where), str(ev["key"]), _number(ev, "value", where)
+                )
+            )
+
+    if "stimuli" in data:
+        # Phase 4 conditioning sugar: [[stimuli]] tables name a cue ("a"/"b")
+        # and a duration, instead of a raw world.stimulus(_b) event.
+        if preset != "minimal":
+            raise ScenarioError("stimuli: cue presentations are only available with preset = 'minimal'")
+        for i, st in enumerate(_records(data["stimuli"], "stimuli")):
+            where = f"stimuli[{i}]"
+            _keys(st, _STIMULUS, where, required={"start", "duration"})
+            cue = str(st.get("cue", "a"))
+            if cue not in ("a", "b"):
+                raise ScenarioError(f"{where}.cue: expected 'a' or 'b', got {cue!r}")
+            start = _number(st, "start", where)
+            duration = _number(st, "duration", where)
+            if duration <= 0.0:
+                raise ScenarioError(f"{where}.duration: must be positive")
+            scenario.events.append(
+                Event(
+                    start,
+                    start + duration,
+                    "world.stimulus_b" if cue == "b" else "world.stimulus",
+                    _number(st, "value", where, default=1.0),
                 )
             )
 

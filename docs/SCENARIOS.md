@@ -42,12 +42,19 @@ initial_reserve = 0.4
 
 # --- 只用於 preset = "minimal" ---------------------------------------------
 # 可用的訊號：world.threat、world.food_available、world.water_available、world.in_shelter、
-# world.shelter_known、world.ambient_temperature（基準 22 °C，事件的值會加在基準上）
+# world.shelter_known、world.ambient_temperature（基準 22 °C，事件的值會加在基準上）、
+# world.damage（傷害性刺激——制約的 US）、world.stimulus 與 world.stimulus_b（線索 A/B）
 [[events]]                  # 在 [start, end) 秒之間，把 value 加到訊號 key 上
 start = 60
 end = 90
 key = "world.threat"        # 或 "world.food_available"
 value = 0.9
+
+[[stimuli]]                 # 線索呈現的糖衣（Phase 4 制約）：等同 world.stimulus(_b) 事件
+start = 100
+duration = 2                # 秒
+value = 1.0                 # 選填，預設 1.0
+cue = "a"                   # 選填："a"（world.stimulus）或 "b"（world.stimulus_b）
 
 # --- 只用於 preset = "grid" ------------------------------------------------
 [world]

@@ -17,6 +17,7 @@ DEFAULT_WORLD_SIGNALS = (
     "world.ambient_temperature",
     "world.damage",
     "world.stimulus",
+    "world.stimulus_b",
 )
 DEFAULT_BASELINES = {"world.ambient_temperature": 22.0}
 
@@ -30,7 +31,10 @@ WORLD_SIGNAL_SPECS = (
     SignalSpec(
         "world.damage", "normalized", 0.0, 1.0, "Nociceptive intensity at the organism (tissue-damaging contact)"
     ),
-    SignalSpec("world.stimulus", "normalized", 0.0, 1.0, "Innocuous stimulus intensity (a tap, a noise, a light)"),
+    SignalSpec(
+        "world.stimulus", "normalized", 0.0, 1.0, "Cue A: innocuous stimulus intensity (a tap, a noise, a light)"
+    ),
+    SignalSpec("world.stimulus_b", "normalized", 0.0, 1.0, "Cue B: a second innocuous stimulus channel"),
 )
 
 

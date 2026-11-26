@@ -150,8 +150,13 @@ class GridWorld(Module):
                 "world.damage", "normalized", 0.0, 1.0, "Nociceptive intensity at the organism (0 inside a shelter)"
             ),
             SignalSpec(
-                "world.stimulus", "normalized", 0.0, 1.0, "Innocuous stimulus intensity (none in the grid world yet)"
+                "world.stimulus",
+                "normalized",
+                0.0,
+                1.0,
+                "Cue A: innocuous stimulus intensity (none in the grid world yet)",
             ),
+            SignalSpec("world.stimulus_b", "normalized", 0.0, 1.0, "Cue B: a second innocuous stimulus channel"),
             SignalSpec("world.food_available", "normalized", 0.0, 1.0, "Food within reach (1 = plenty)"),
             SignalSpec("world.food_stock", "patches", 0.0, float(len(self.food)), "Total food left in the world"),
             SignalSpec("world.position_x", "cells", 0.0, width, "Organism position (x)"),
@@ -267,6 +272,7 @@ class GridWorld(Module):
         port.write("world.threat", threat)
         port.write("world.damage", threat)  # contact with the hazard itself hurts; 0 inside a shelter
         port.write("world.stimulus", 0.0)  # no innocuous events in the grid world yet
+        port.write("world.stimulus_b", 0.0)
         port.write("world.food_available", available)
         port.write("world.food_stock", sum(a / p.capacity for a, p in zip(self.amounts, self.food, strict=True)))
         port.write("world.position_x", self.x)

@@ -87,10 +87,10 @@
 
 ## Phase 4 — 身心深化 II：無脊椎動物級——聯結學習與記憶
 
-- [ ] 古典制約：Rescorla–Wagner 動力學——獲得、消弱、自發恢復、阻斷（Kamin）
+- [x] 古典制約：Rescorla–Wagner 動力學——獲得、消弱、自發恢復、阻斷（Kamin）— 2026-11-26，`psyche/conditioning.py`（雙線索雙軌道：防禦 US＝damage 進入評估、獎賞 US＝relief 餵多巴胺 RPE；Rescorla & Wagner 1972、Rescorla 1988、Kamin 1969、Rankin 2009 驗收，`tests/test_conditioning.py`）
 - [ ] 操作制約：行為 → 結果的聯結
 - [ ] 情節式記憶表徵：情緒強度調節記憶強度（向量嵌入 vs 符號事件 vs 混合，見 BACKLOG §5）
-- [ ] 制約情境檔格式：`[[world.stimulus]]` 事件類型（中性刺激與威脅／食物的配對時序）
+- [x] 制約情境檔格式 — 2026-11-26，`[[stimuli]]` 事件類型（cue＝a/b、start、duration、value；SCENARIOS.md）
 - [ ] 場所趨避：學會避開曾造成疼痛的地點（grid／sanctuary 世界作為實驗場）
 
 **完成情境：** 中性刺激與威脅配對後引發防禦反應（獲得），單獨呈現時反應隨次數衰減（消弱），隔段時間後部分恢復（自發恢復）；已建立的線索會阻斷新線索的學習（阻斷）。獲得／消弱曲線落在 Rescorla（1988）等文獻容許範圍，有自動化測試把關。

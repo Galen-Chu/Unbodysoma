@@ -8,7 +8,7 @@ from typing import Any
 from .core import Engine, Module
 from .interface import Exteroception, Interoception
 from .interface.exteroception import SPATIAL_CHANNELS
-from .psyche import ActionSelection, Affect, Appraisal, Drives, Habituation, Navigation
+from .psyche import ActionSelection, Affect, Appraisal, Conditioning, Drives, Habituation, Navigation
 from .soma import (
     Cardio,
     Circadian,
@@ -45,6 +45,7 @@ def _body_and_mind(seed: int) -> list[Factory]:
         (Affect.name, Affect, {"seed": seed + 3}),
         (Drives.name, Drives, {}),
         (Habituation.name, Habituation, {}),
+        (Conditioning.name, Conditioning, {}),
         (ActionSelection.name, ActionSelection, {"seed": seed + 4}),
     ]
 

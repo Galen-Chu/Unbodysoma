@@ -33,6 +33,7 @@ flowchart LR
         psyche_affect["psyche.affect"]
         psyche_drives["psyche.drives"]
         psyche_habituation["psyche.habituation"]
+        psyche_conditioning["psyche.conditioning"]
         psyche_action["psyche.action"]
     end
     interface_exteroception -->|"food, in_shelter +2"| psyche_action
@@ -55,6 +56,8 @@ flowchart LR
     psyche_appraisal -->|"appraisal.threat"| psyche_affect
     psyche_appraisal -->|"appraisal.threat"| soma_endocrine
     psyche_appraisal -->|"appraisal.threat"| soma_neuro
+    psyche_conditioning -->|"conditioning.threat_expectation"| psyche_appraisal
+    psyche_conditioning -->|"conditioning.reward_prediction"| soma_neuro
     psyche_drives -->|"drive.hunger, drive.sleepiness +2"| psyche_action
     psyche_drives -->|"drive.hunger, drive.thermal_discomfort +1"| psyche_affect
     psyche_habituation -->|"habituation.novelty"| psyche_affect
@@ -68,13 +71,16 @@ flowchart LR
     soma_metabolism -->|"metabolism.energy_reserve, metabolism.glucose +1"| interface_interoception
     soma_neuro -->|"dopamine, serotonin"| psyche_affect
     soma_neuro -->|"norepinephrine"| psyche_appraisal
+    soma_neuro -->|"relief"| psyche_conditioning
     soma_nociception -->|"nociception.pain"| interface_interoception
+    soma_respiration -->|"respiration.rate"| soma_cardio
     soma_sleep -->|"sleep.pressure"| interface_interoception
     soma_thermo -->|"thermo.core_temperature"| interface_interoception
     soma_thermo -->|"thermo.sweating"| soma_fluid
     soma_thermo -->|"thermo.shivering"| soma_metabolism
     world_food -->|"food_intake"| soma_metabolism
     world_scripted -->|"food_available, in_shelter +3"| interface_exteroception
+    world_scripted -->|"damage, stimulus +1"| psyche_conditioning
     world_scripted -->|"stimulus"| psyche_habituation
     world_scripted -->|"damage"| soma_nociception
     world_scripted -->|"ambient_temperature"| soma_thermo
@@ -113,6 +119,7 @@ flowchart LR
         psyche_affect["psyche.affect"]
         psyche_drives["psyche.drives"]
         psyche_habituation["psyche.habituation"]
+        psyche_conditioning["psyche.conditioning"]
         psyche_action["psyche.action"]
         psyche_navigation["psyche.navigation"]
     end
@@ -139,6 +146,8 @@ flowchart LR
     psyche_appraisal -->|"appraisal.threat"| psyche_affect
     psyche_appraisal -->|"appraisal.threat"| soma_endocrine
     psyche_appraisal -->|"appraisal.threat"| soma_neuro
+    psyche_conditioning -->|"conditioning.threat_expectation"| psyche_appraisal
+    psyche_conditioning -->|"conditioning.reward_prediction"| soma_neuro
     psyche_drives -->|"drive.hunger, drive.sleepiness +2"| psyche_action
     psyche_drives -->|"drive.hunger, drive.thermal_discomfort +1"| psyche_affect
     psyche_habituation -->|"habituation.novelty"| psyche_affect
@@ -153,13 +162,16 @@ flowchart LR
     soma_metabolism -->|"metabolism.energy_reserve, metabolism.glucose +1"| interface_interoception
     soma_neuro -->|"dopamine, serotonin"| psyche_affect
     soma_neuro -->|"norepinephrine"| psyche_appraisal
+    soma_neuro -->|"relief"| psyche_conditioning
     soma_nociception -->|"nociception.pain"| interface_interoception
+    soma_respiration -->|"respiration.rate"| soma_cardio
     soma_sleep -->|"sleep.pressure"| interface_interoception
     soma_thermo -->|"thermo.core_temperature"| interface_interoception
     soma_thermo -->|"thermo.sweating"| soma_fluid
     soma_thermo -->|"thermo.shivering"| soma_metabolism
     world_food -->|"food_intake"| soma_metabolism
     world_grid -->|"food_available, food_dir_x +11"| interface_exteroception
+    world_grid -->|"damage, stimulus +1"| psyche_conditioning
     world_grid -->|"stimulus"| psyche_habituation
     world_grid -->|"damage"| soma_nociception
     world_grid -->|"ambient_temperature"| soma_thermo

@@ -32,7 +32,7 @@ class Cardio(Module):
 
     name = "soma.cardio"
     rate_hz = 10.0
-    reads = ("soma.endocrine.adrenaline", "motor.exertion", "motor.sleeping")
+    reads = ("soma.endocrine.adrenaline", "motor.exertion", "motor.sleeping", "soma.respiration.rate")
     signal_specs = (SignalSpec("soma.cardio.heart_rate", "bpm", 0.0, 300.0, "Heart rate"),)
     writes = tuple(s.key for s in signal_specs)
     params = (
@@ -85,13 +85,21 @@ class Cardio(Module):
         ),
         ParamSpec("sleep_bpm_drop", 8.0, "bpm", 0.0, 30.0, "Fall of the resting heart rate during sleep"),
         ParamSpec("rsa_amplitude", 3.0, "bpm", 0.0, 20.0, "Respiratory sinus arrhythmia amplitude at rest"),
-        ParamSpec("respiration_hz", 0.25, "Hz", 0.05, 1.0, "Breathing rate that paces the RSA"),
+        ParamSpec(
+            "rsa_rest_rate",
+            14.0,
+            "breaths/min",
+            8.0,
+            25.0,
+            "Breathing rate the RSA amplitude is quoted at (faster breathing shrinks it)",
+            source="RSA amplitude falls as breathing rate rises, as observed in exercise",
+        ),
         ParamSpec("lf_sigma", 2.0, "bpm", 0.0, 20.0, "SD of slow heart-rate fluctuation at rest"),
         ParamSpec("lf_tau", 10.0, "s", 0.5, 300.0, "Correlation time of slow heart-rate fluctuation"),
         ParamSpec("hrv_suppression", 0.8, "", 0.0, 1.0, "Share of HRV removed at full adrenaline"),
         ParamSpec("seed", 2, "", 0, math.inf, "Random seed of the fluctuation", source="run setting"),
     )
-    state_fields = ("heart_rate", "slow", "lf", "_rng")
+    state_fields = ("heart_rate", "slow", "lf", "rsa_phase", "_rng")
 
     def __init__(
         self,
@@ -105,7 +113,7 @@ class Cardio(Module):
         exertion_tau_fall: float = 60.0,
         sleep_bpm_drop: float = 8.0,
         rsa_amplitude: float = 3.0,
-        respiration_hz: float = 0.25,
+        rsa_rest_rate: float = 14.0,
         lf_sigma: float = 2.0,
         lf_tau: float = 10.0,
         hrv_suppression: float = 0.8,
@@ -121,7 +129,7 @@ class Cardio(Module):
         self.exertion_tau_fall = exertion_tau_fall
         self.sleep_bpm_drop = sleep_bpm_drop
         self.rsa_amplitude = rsa_amplitude
-        self.respiration_hz = respiration_hz
+        self.rsa_rest_rate = rsa_rest_rate
         self.lf_sigma = lf_sigma
         self.lf_tau = lf_tau
         self.hrv_suppression = hrv_suppression
@@ -130,6 +138,7 @@ class Cardio(Module):
         self.heart_rate = resting_bpm  # fast level, without variability
         self.slow = 0.0
         self.lf = 0.0
+        self.rsa_phase = 0.0
 
     @property
     def hr_max(self) -> float:
@@ -154,7 +163,12 @@ class Cardio(Module):
         )
 
         self.lf = ou_step(self.lf, dt, self.lf_tau, self.lf_sigma, self._rng)
-        rsa = self.rsa_amplitude * math.sin(2.0 * math.pi * self.respiration_hz * port.time)
+        # RSA is paced by the actual breathing rate (phase integrated, so rate
+        # changes do not jump the phase) and its amplitude shrinks as breathing
+        # speeds up, as in exercise.
+        rate = max(port.read("soma.respiration.rate"), 1.0)
+        self.rsa_phase += 2.0 * math.pi * (rate / 60.0) * dt
+        rsa = self.rsa_amplitude * clamp(self.rsa_rest_rate / rate, 0.3, 1.2) * math.sin(self.rsa_phase)
         variability = (1.0 - self.hrv_suppression * adrenaline) * (rsa + self.lf)
         mean = clamp(self.heart_rate + self.slow, floor, self.hr_max)
         port.write("soma.cardio.heart_rate", clamp(mean + variability, 0.0, self.hr_max))

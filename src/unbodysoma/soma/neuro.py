@@ -38,11 +38,13 @@ class Neuromodulation(Module):
         "intero.pain",
         "intero.cardiac_arousal",
         "psyche.appraisal.threat",
+        "psyche.conditioning.reward_prediction",
     )
     signal_specs = (
         SignalSpec("neuro.dopamine", "normalized", 0.0, 1.0, "Dopamine: phasic reward from homeostatic relief"),
         SignalSpec("neuro.serotonin", "normalized", 0.0, 1.0, "Serotonin: slow mood tone"),
         SignalSpec("neuro.norepinephrine", "normalized", 0.0, 1.0, "Norepinephrine: vigilance"),
+        SignalSpec("neuro.relief", "normalized", 0.0, 1.0, "Relief: homeostatic error falling below its slow baseline"),
     )
     writes = tuple(s.key for s in signal_specs)
     params = (
@@ -108,7 +110,7 @@ class Neuromodulation(Module):
         ),
         ParamSpec("tau_norepinephrine", 3.0, "s", 0.1, 120.0, "Time constant of the vigilance response"),
     )
-    state_fields = ("error_fast", "error_slow", "dopamine", "serotonin", "norepinephrine", "warmed")
+    state_fields = ("error_fast", "error_slow", "relief", "dopamine", "serotonin", "norepinephrine", "warmed")
 
     def __init__(
         self,
@@ -146,6 +148,7 @@ class Neuromodulation(Module):
         self.error_fast = 0.0
         self.error_slow = 0.0
         self.warmed = False  # until the first step, the error filters hold the current error
+        self.relief = 0.0
         self.dopamine = dopamine_baseline
         self.serotonin = serotonin_baseline
         self.norepinephrine = 0.0
@@ -171,9 +174,17 @@ class Neuromodulation(Module):
             self.error_slow = relax(self.error_slow, error, dt, self.tau_error_slow)
         # Relief: the error is now below where it has been settling — i.e. the
         # organism is actively recovering, not just briefly un-noisy.
-        relief = clamp(self.error_slow - self.error_fast)
+        self.relief = clamp(self.error_slow - self.error_fast)
+        # Dopamine is the prediction error of relief (Schultz et al. 1997):
+        # relief that present cues already predicted does not surprise, and a
+        # cue without its reward dips below tonic. Without conditioned cues the
+        # prediction is zero and this reduces to the plain relief burst.
+        prediction = port.read("psyche.conditioning.reward_prediction")
         self.dopamine = relax(
-            self.dopamine, clamp(self.dopamine_baseline + self.dopamine_gain * relief), dt, self.tau_dopamine
+            self.dopamine,
+            clamp(self.dopamine_baseline + self.dopamine_gain * (self.relief - prediction)),
+            dt,
+            self.tau_dopamine,
         )
         tone_target = clamp(
             self.serotonin_baseline
@@ -193,3 +204,4 @@ class Neuromodulation(Module):
         port.write("neuro.dopamine", self.dopamine)
         port.write("neuro.serotonin", self.serotonin)
         port.write("neuro.norepinephrine", self.norepinephrine)
+        port.write("neuro.relief", self.relief)

@@ -38,7 +38,7 @@ def test_clamp_overrides_readers_only_inside_its_window():
     engine.clamp("soma.cardio.heart_rate", 100.0, start=10.0, end=20.0)
     rec = record(engine, 30.0)
     assert window(rec, "soma.cardio.heart_rate", 10.0, 20.0) == pytest.approx([100.0] * 20)
-    assert max(window(rec, "soma.cardio.heart_rate", 20.0, 30.0)) < 70.0
+    assert max(window(rec, "soma.cardio.heart_rate", 20.0, 30.0)) < 72.0  # back near resting after release
     # Readers downstream did see the clamped value.
     assert min(window(rec, "intero.cardiac_arousal", 11.0, 20.0)) > 0.3
 
