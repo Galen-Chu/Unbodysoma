@@ -100,7 +100,7 @@
 ## Phase 5 — 身心深化 III：脊椎動物級——注意、預測與規劃
 
 - [x] 注意力分配（M3 補完）— 2026-11-26，`psyche/attention.py`（六域顯著性競爭＋遲滯＋廣播增益：注意放大威脅知覺、專注銳化選擇；Baars 1988 錨點，`tests/test_attention.py`）
-- [x] 預測性調節（allostasis）— 2026-11-26，`psyche/anticipation.py`（晝夜小時輪廓學習＋下一小時預測：餐前飢餓、危險時段前回庇護所；Sterling 2012 錨點，`tests/test_anticipation.py`）
+- [x] 預測性調節（allostasis）— 2026-11-26，`psyche/anticipation.py`（晝夜小時輪廓學習＋下一小時預測：餐前飢餓閉環；Sterling 2012 錨點，`tests/test_anticipation.py`。網格層級的「危險時刻前回家」展示於 2026-11-27 經九探針量測後撤回——對照臂位置為結構吸引子、A/B 與同體對比皆不可隔離，見 PSYCHE §4.11）
 - [x] 主動推論的重新檢視與 ADR — 2026-11-26，[ADR-0014](adr/0014-modular-primary-through-phase5.md)：模組化維持主架構至 Phase 5 結束，預測編碼（value/precision）由內感受介面滲透；整體生成模型延至 Phase 6 前再評估
 - [x] 時譜時序狀態（線索爆發多巴胺）— 2026-11-27，獎賞制約軌道時譜化（12 條衰減痕跡級聯上的 TD 學習＋分解式多巴胺誤差：onset 承諾爆發、預期落空 dip；Grossberg & Schmajuk 1989／Ludvig 等 2008 錨點，`tests/test_conditioning.py` bench 驗收）
 

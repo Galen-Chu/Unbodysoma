@@ -11,11 +11,11 @@ from statistics import mean
 
 import pytest
 
-from unbodysoma import build_grid_human, build_minimal_human
+from unbodysoma import build_minimal_human
 from unbodysoma.core import BusPort, Engine, SignalBus
 from unbodysoma.observe import Recorder
 from unbodysoma.psyche import Anticipation
-from unbodysoma.world import Event, FoodPatch, Hazard, Shelter, WaterSource
+from unbodysoma.world import Event
 
 HUNGER = "psyche.anticipation.hunger"
 THREAT = "psyche.anticipation.threat"
@@ -84,39 +84,28 @@ def test_meal_time_is_felt_before_the_meal():
     assert mean(pre_meal) > 0.15
 
 
-@pytest.mark.slow
-def test_it_shelters_before_the_usual_danger_hour():
-    """The grid completion scenario of Phase 5: the only food is at a patch a
-    predator visits every day at the same clock hour, and a hungry organism
-    must graze there. A/B on anticipation (same world, same seed): by the
-    third day the intact organism is home before the hour arrives — without
-    any cue at the time — and its amnesic-for-the-clock twin is not."""
-    predator = Hazard(15.0, 16.0, radius=3.5, strength=0.9, start=3 * 3600.0, end=3 * 3600.0 + 2400.0, every=86400.0)
-
-    def run_world(lesioned: bool) -> Recorder:
-        engine: Engine = build_grid_human(
-            food=(FoodPatch(15.0, 16.0, regrow_per_hour=1.0),),
-            hazards=(predator,),
-            water=(WaterSource(10.0, 4.0), WaterSource(10.0, 16.0)),
-            shelters=(Shelter(10.0, 10.0),),
-            start=(10.0, 10.0),
-            seed=0,
-            overrides={"soma.metabolism": {"initial_reserve": 0.3}},  # hungry: it grazes at the patch
-        )
-        if lesioned:
-            engine.lesion("psyche.anticipation")
-        rec = Recorder(("world.in_shelter", "intero.pain", THREAT), every=30.0)
-        engine.observe(rec)
-        engine.run(3 * 86400.0)
-        return rec
-
-    intact, clock_blind = run_world(False), run_world(True)
-
-    def shelter_before_hour(rec: Recorder, day: int) -> float:
-        lo, hi = day * 86400.0 + 2.0 * 3600.0, day * 86400.0 + 3.0 * 3600.0  # 10:00-11:00, predator at 11
-        return mean(h for t, h in zip(rec.times(), rec.column("world.in_shelter"), strict=True) if lo <= t < hi)
-
-    pain_day1 = max(p for t, p in zip(intact.times(), intact.column("intero.pain"), strict=True) if t < 86400.0)
-    assert pain_day1 > 0.3  # the collision happened on day one...
-    assert max(intact.column(THREAT)) > 0.15  # ...the danger hour was learned...
-    assert shelter_before_hour(intact, 2) > shelter_before_hour(clock_blind, 2) + 0.2  # ...and it pre-shelters
+# -- the grid-level claim, honestly measured out -------------------------------
+#
+# The original slow test here asserted an A/B on a grid world (predator at
+# the food patch, same clock hour daily): the intact organism home before
+# the usual danger hour on day 3, its clock-blind twin not. Nine seed-family
+# probes (2026-11-27) showed the contrast is not measurable in this world's
+# economics:
+#
+# - The blind twin's mid-morning location is the product of place memory x
+#   instrumental learning x food economics (sated rest at home, or
+#   eat-aversion after the day-1 bite, or danger-field repulsion) - a
+#   structural attractor, so the control arm saturates at "home" (1.0) on
+#   any reshuffled trajectory; the A/B margin has nothing to express.
+# - The within-organism contrast is vacuous for the same reason: day-3
+#   pre-hour homing is the default sated-rest behavior (present with
+#   anticipation lesioned, and even when the hour was never learned).
+# - Day-1 exposure itself (pain > 0.3) is schedule luck (seeds gave 0.89,
+#   0.51, 0.23); making food abundant removes the collision entirely, and
+#   global daily storms starve the organism (the pain-avoidance cascade).
+#
+# Anticipation's acceptance therefore rests on the deterministic tests
+# above (module-level hour learning, next-hour prediction, cephalic-phase
+# hunger in a scripted world). Revisit a world-level demonstration when
+# foraging pressure is strong enough to keep both arms structurally out
+# at the critical hour.
