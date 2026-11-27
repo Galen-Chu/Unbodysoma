@@ -162,11 +162,13 @@ def test_blocking():
 
 
 def test_a_trained_cue_suppresses_the_dopamine_burst_and_omission_dips():
-    """Plain RW has no anticipatory credit: while the cue is present its
-    prediction tracks the relief, so the same recovery no longer surprises
-    dopamine — and the trained cue alone, presented later, dips below tonic
-    (Schultz's omission response). Cross-trial anticipation (bursts moving to
-    cue onset) needs temporal-difference timing, deferred with §4.7."""
+    """Plain RW has no anticipatory credit, so the testable prediction-error
+    phenomena are between-run: the same meal, preceded by a cue that has
+    learned to predict its relief, no longer surprises dopamine — and the
+    trained cue alone dips below tonic (Schultz's omission response). Cue-
+    onset bursts need timing states, not presence states: with our delayed
+    relief, presence-state TD actually learns the wrong thing (the no-cue
+    state accrues the post-cue recovery; see BACKLOG's spectral-timing note)."""
     food = Event(330.0, 2700.0, FOOD, 1.0)
     cue = Event(300.0, 2400.0, CUE_A, 1.0)  # spans approach and meal, leaves before recovery ends
     omission_at = 5400.0  # the cue alone, after relief has cleared
