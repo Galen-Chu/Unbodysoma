@@ -38,7 +38,7 @@ class Neuromodulation(Module):
         "intero.pain",
         "intero.cardiac_arousal",
         "psyche.appraisal.threat",
-        "psyche.conditioning.reward_prediction",
+        "psyche.conditioning.reward_error",
     )
     signal_specs = (
         SignalSpec("neuro.dopamine", "normalized", 0.0, 1.0, "Dopamine: phasic reward from homeostatic relief"),
@@ -176,13 +176,15 @@ class Neuromodulation(Module):
         # organism is actively recovering, not just briefly un-noisy.
         self.relief = clamp(self.error_slow - self.error_fast)
         # Dopamine is the prediction error of relief (Schultz et al. 1997):
-        # relief that present cues already predicted does not surprise, and a
-        # cue without its reward dips below tonic. Without conditioned cues the
-        # prediction is zero and this reduces to the plain relief burst.
-        prediction = port.read("psyche.conditioning.reward_prediction")
+        # the spectrally timed TD error carries the credit — value rising at a
+        # cue onset is a burst, relief that the cascade already predicted does
+        # not surprise, and an omitted reward at its expected time dips below
+        # tonic. Without conditioned cues the value is zero and this reduces
+        # to the plain relief burst.
+        error = port.read("psyche.conditioning.reward_error")
         self.dopamine = relax(
             self.dopamine,
-            clamp(self.dopamine_baseline + self.dopamine_gain * (self.relief - prediction)),
+            clamp(self.dopamine_baseline + self.dopamine_gain * error),
             dt,
             self.tau_dopamine,
         )

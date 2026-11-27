@@ -72,7 +72,7 @@ flowchart LR
     psyche_attention -->|"attention.focus_share"| psyche_action
     psyche_attention -->|"attention.share_threat"| psyche_appraisal
     psyche_conditioning -->|"conditioning.threat_expectation"| psyche_appraisal
-    psyche_conditioning -->|"conditioning.reward_prediction"| soma_neuro
+    psyche_conditioning -->|"conditioning.reward_error"| soma_neuro
     psyche_drives -->|"drive.hunger, drive.sleepiness +2"| psyche_action
     psyche_drives -->|"drive.hunger, drive.thermal_discomfort +1"| psyche_affect
     psyche_drives -->|"drive.hunger"| psyche_anticipation
@@ -185,7 +185,7 @@ flowchart LR
     psyche_attention -->|"attention.focus_share"| psyche_action
     psyche_attention -->|"attention.share_threat"| psyche_appraisal
     psyche_conditioning -->|"conditioning.threat_expectation"| psyche_appraisal
-    psyche_conditioning -->|"conditioning.reward_prediction"| soma_neuro
+    psyche_conditioning -->|"conditioning.reward_error"| soma_neuro
     psyche_drives -->|"drive.hunger, drive.sleepiness +2"| psyche_action
     psyche_drives -->|"drive.hunger, drive.thermal_discomfort +1"| psyche_affect
     psyche_drives -->|"drive.hunger"| psyche_anticipation

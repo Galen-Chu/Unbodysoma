@@ -294,9 +294,15 @@
 
 | 參數 | 預設值 | 單位 | 有效範圍 | 說明 | 來源 |
 |---|---|---|---|---|---|
-| `learn_rate` | 0.05 | 1/s | [0, 1] | Association change per second of unit cue and unit prediction error (RW's αβ) | calibrated: ~10 two-second pairings reach two-thirds of asymptote |
-| `defense_asymptote` | 1 | — | [0, 2] | Associative asymptote supported by unit damage (RW's λ) | L0 toy value |
-| `reward_asymptote` | 1 | — | [0, 5] | Associative asymptote per unit relief (predictions stay in relief units, matching the RPE) | the prediction must match the relief scale for the dopamine error to be signed correctly |
+| `learn_rate` | 0.05 | 1/s | [0, 1] | Defense association change per second of unit cue and unit prediction error (RW's alpha*beta) | calibrated: ~10 two-second pairings reach two-thirds of asymptote |
+| `defense_asymptote` | 1 | — | [0, 2] | Associative asymptote supported by unit damage (RW's lambda) | L0 toy value |
+| `reward_asymptote` | 1 | — | [0, 5] | Reward-value asymptote per unit relief rate (scales the per-step reward mass) | the predicted value must match the relief scale for the dopamine error to be signed correctly |
+| `learn_rate_reward` | 1 | 1/s | [0, 10] | Spectral-trace weight change per second of unit trace and unit TD error (LMS-normalized by trace energy) | L0 toy value |
+| `tau_gamma` | 900 | s | [60, 7200] | Discount time constant of the spectral TD error (longer = less discounting, more transfer) | L0 toy value |
+| `tau_reward_mass` | 240 | s | [30, 3600] | Relief integration time converting relief rate to value mass (unit relief this long = unit value) | L0 toy value |
+| `tau_onset_burst` | 8 | s | [0.5, 30] | Decay of the cue-onset dopamine burst (phasic response width) | L0 toy value |
+| `tau_prediction_hold` | 10 | s | [0.5, 60] | Release time of a fresh prediction into the dopamine baseline (burst first, dip after) | L0 toy value |
+| `w_onset_burst` | 1 | — | [0, 5] | Dopamine burst per unit of value committed at a cue onset (the cue-onset transfer response) | L0 toy value |
 | `tau_deep_rise` | 900 | s | [60, 86400] | Time constant of the consolidated trace while the association is strong | L0 toy value |
 | `tau_deep_decay` | 86400 | s | [600, 604800] | Time constant of the consolidated trace while the association is gone | L0 toy value |
 | `recovery_share` | 0.7 | — | [0, 1] | Share of the consolidated trace that rest can bring back | spontaneous recovery is partial (Rankin et al. 2009) |

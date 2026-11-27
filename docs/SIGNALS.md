@@ -92,7 +92,8 @@
 | `psyche.attention.share_threat` | share | [0, 1] | `psyche.attention` | `psyche.appraisal` | Attention held by threat |
 | `psyche.conditioning.defense_a` | normalized | [0, 1] | `psyche.conditioning` | —（預留） | Defensive association of cue A |
 | `psyche.conditioning.defense_b` | normalized | [0, 1] | `psyche.conditioning` | —（預留） | Defensive association of cue B |
-| `psyche.conditioning.reward_prediction` | normalized | [0, 1] | `psyche.conditioning` | `soma.neuro` | Relief predicted by present cues |
+| `psyche.conditioning.reward_error` | normalized | [-1, 1] | `psyche.conditioning` | `soma.neuro` | Dopamine RPE: arriving relief minus held expectation, plus the cue-onset burst |
+| `psyche.conditioning.reward_prediction` | normalized | [0, 1] | `psyche.conditioning` | —（預留） | Relief value predicted by the cue-time cascade |
 | `psyche.conditioning.threat_expectation` | normalized | [0, 1] | `psyche.conditioning` | `psyche.appraisal` | Learned threat predicted by present cues |
 | `psyche.drive.hunger` | normalized | [0, 1] | `psyche.drives` | `psyche.action`, `psyche.affect`, `psyche.anticipation`, `psyche.attention` | Felt urgency of eating (incl. anticipated) |
 | `psyche.drive.sleepiness` | normalized | [-1, 1] | `psyche.drives` | `psyche.action`, `psyche.attention` | Felt need for sleep (1 = sleep onset, 0 = wake point) |

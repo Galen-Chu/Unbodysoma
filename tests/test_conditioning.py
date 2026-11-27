@@ -17,8 +17,10 @@ import pytest
 
 from unbodysoma import build_minimal_human
 from unbodysoma.config import ScenarioError, load_scenario
-from unbodysoma.core import Engine
+from unbodysoma.core import BusPort, Engine, SignalBus
 from unbodysoma.observe import Recorder
+from unbodysoma.psyche import Conditioning
+from unbodysoma.soma import Neuromodulation
 from unbodysoma.world import Event
 
 CUE_A = "world.stimulus"
@@ -161,14 +163,137 @@ def test_blocking():
 # -- dopamine as a prediction error -------------------------------------------
 
 
+class _TimingBench:
+    """Conditioning and dopamine driven directly: a scripted cue and a
+    scripted water deficit (the drop the neuromodulation module reads as
+    relief), ten times a second. The mechanism-level timing phenomena live
+    here, where trials are cheap; the full-organism integration is below."""
+
+    DT = 0.1
+    CUE = 60.0
+    DELAY = 600.0  # relief arrives ~10 min after cue onset, like gut-delayed satiation
+    ITI = 1500.0
+
+    def __init__(self) -> None:
+        self.bus = SignalBus()
+        self.cond = Conditioning()
+        self.neuro = Neuromodulation(w_water=0.45)
+        self.cond_port = BusPort(self.bus, self.cond.name, self.cond.writes)
+        self.neuro_port = BusPort(self.bus, self.neuro.name, self.neuro.writes)
+        self.stim = BusPort(
+            self.bus,
+            "bench",
+            (
+                "world.stimulus",
+                "world.stimulus_b",
+                "world.damage",
+                "intero.energy_deficit",
+                "intero.water_deficit",
+                "intero.thermal",
+                "intero.sleep_pressure",
+                "intero.pain",
+                "intero.cardiac_arousal",
+                "psyche.appraisal.threat",
+            ),
+        )
+        self.bus.commit()
+        self.cond.setup(self.cond_port)
+        self.neuro.setup(self.neuro_port)
+        self.bus.commit()
+
+    def run(self, onsets: list[float], omit_after: float | None = None) -> list[tuple[float, float]]:
+        """One (time, dopamine) pair per tick; the deficit drops for a drink
+        DELAY after each onset unless that onset is the omitted probe."""
+        end = max(onsets) + self.CUE + self.ITI
+        trace: list[tuple[float, float]] = []
+        for i in range(round(end / self.DT)):
+            t = (i + 1) * self.DT
+            cue = 1.0 if any(lo <= t < lo + self.CUE for lo in onsets) else 0.0
+            deficit = 0.5
+            for lo in onsets:
+                if lo == omit_after:
+                    continue
+                s = t - (lo + self.DELAY - 180.0)
+                if s < 0 or s > 360.0:
+                    continue
+                if s < 60.0:
+                    deficit = min(deficit, 0.5 * (1.0 - s / 60.0))
+                elif s < 300.0:
+                    deficit = 0.0
+            self.stim.write("world.stimulus", cue)
+            self.stim.write("world.stimulus_b", 0.0)
+            self.stim.write("world.damage", 0.0)
+            for key in (
+                "intero.energy_deficit",
+                "intero.thermal",
+                "intero.sleep_pressure",
+                "intero.pain",
+                "intero.cardiac_arousal",
+                "psyche.appraisal.threat",
+            ):
+                self.stim.write(key, 0.0)
+            self.stim.write("intero.water_deficit", deficit)
+            self.neuro_port.time = t
+            self.neuro.step(self.DT, self.neuro_port)
+            self.cond_port.time = t
+            self.cond.step(self.DT, self.cond_port)
+            self.bus.commit()
+            trace.append((t, self.bus.read(DA)))
+        return trace
+
+
+def _da(trace: list[tuple[float, float]], lo: float, hi: float) -> list[float]:
+    return [v for t, v in trace if lo <= t < hi]
+
+
+@pytest.mark.slow
+def test_the_cue_onset_burst_is_learned_and_the_reward_stops_surprising():
+    """Spectral timing over the cue cascade (PSYCHE.md 4.7): twenty pairings
+    of a cue with delayed relief. With training, dopamine acquires a burst at
+    cue ONSET — before any relief exists, the anticipatory response that
+    presence-state models cannot produce — and the arriving relief surprises
+    it less (Schultz et al. 1997: the response transfers from reward to cue;
+    at a 10-minute delay the transfer is partial, as trace conditioning is)."""
+    bench = _TimingBench()
+    onsets = [300.0 + i * (bench.CUE + bench.ITI) for i in range(20)]
+    trace = bench.run(onsets)
+
+    naive_onset = max(_da(trace, onsets[0], onsets[0] + 4.0))
+    trained_onset = max(_da(trace, onsets[-1], onsets[-1] + 4.0))
+    assert naive_onset < 0.6  # the first cue is nothing
+    assert trained_onset > 0.8  # the trained cue bursts on onset alone
+
+    naive_us = mean(_da(trace, onsets[0] + 420.0, onsets[0] + 820.0))
+    trained_us = mean(_da(trace, onsets[-1] + 420.0, onsets[-1] + 820.0))
+    assert naive_us > 0.75  # naive relief dominates dopamine
+    assert trained_us < naive_us - 0.05  # the timed prediction absorbed part of it
+
+
+@pytest.mark.slow
+def test_the_omitted_reward_dips_and_recovers():
+    """The omission trial (cue without its drink): dopamine is suppressed
+    through the expected-reward window and recovers once the cue's traces
+    have died — the dip is carried by learned value, not by the cue's
+    presence (Schultz's omission response)."""
+    bench = _TimingBench()
+    onsets = [300.0 + i * (bench.CUE + bench.ITI) for i in range(20)]
+    omitted = 300.0 + 20 * (bench.CUE + bench.ITI)
+    trace = bench.run([*onsets, omitted], omit_after=omitted)
+
+    assert max(_da(trace, omitted, omitted + 4.0)) > 0.8  # the cue still bursts
+    expected = mean(_da(trace, omitted + 380.0, omitted + 820.0))
+    after = mean(_da(trace, omitted + 900.0, omitted + 1400.0))
+    assert expected < 0.2  # deeply below tonic when the drink fails to come
+    assert after > expected + 0.1  # and back up once the traces are gone
+
+
 def test_a_trained_cue_suppresses_the_dopamine_burst_and_omission_dips():
-    """Plain RW has no anticipatory credit, so the testable prediction-error
-    phenomena are between-run: the same meal, preceded by a cue that has
-    learned to predict its relief, no longer surprises dopamine — and the
-    trained cue alone dips below tonic (Schultz's omission response). Cue-
-    onset bursts need timing states, not presence states: with our delayed
-    relief, presence-state TD actually learns the wrong thing (the no-cue
-    state accrues the post-cue recovery; see BACKLOG's spectral-timing note)."""
+    """The full-organism integration of the same loop: a hungry meal with a
+    cue spanning it, then the cue alone. The naive meal surprises dopamine;
+    after the cued meal the trained cue alone dips below tonic. (One pairing
+    learns little — the magnitudes of timing learning are in the bench tests
+    above; this one pins the wiring: body relief -> neuro.relief -> cascade
+    -> dopamine.)"""
     food = Event(330.0, 2700.0, FOOD, 1.0)
     cue = Event(300.0, 2400.0, CUE_A, 1.0)  # spans approach and meal, leaves before recovery ends
     omission_at = 5400.0  # the cue alone, after relief has cleared
@@ -177,14 +302,7 @@ def test_a_trained_cue_suppresses_the_dopamine_burst_and_omission_dips():
     control = run([food, probe], omission_at + 1900.0, hungry)
     trained = run([food, cue, probe], omission_at + 1900.0, hungry)
 
-    def peak_in_trial(rec: Recorder) -> float:
-        return max(window(rec, DA, 360.0, 2400.0))
-
-    control_peak, trained_peak = peak_in_trial(control), peak_in_trial(trained)
-    assert control_peak > 0.75  # the meal surprised dopamine
-    assert trained_peak < control_peak - 0.15  # the cue's prediction ate the burst
-    # The dip is brief: an RW prediction extinguishes itself once falsified,
-    # so read it at the start of the probe.
+    assert max(window(control, DA, 360.0, 2400.0)) > 0.75  # the meal surprised dopamine
     omission = min(window(trained, DA, omission_at, omission_at + 60.0))
     assert omission < 0.47  # the cue without its reward dips below tonic
 
