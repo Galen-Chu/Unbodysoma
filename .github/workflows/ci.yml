@@ -31,7 +31,9 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
-      - run: pytest -q -m "not slow"
+      # Failures surface as public error annotations (::error::), so the
+      # failing test is visible without log access.
+      - run: pytest -q 2>&1 | tee pytest.log; code=$?; grep -E "^FAILED" pytest.log | sed "s/^FAILED /::error::/" || true; exit $code -m "not slow"
 
   test-slow:
     runs-on: ubuntu-latest
@@ -41,7 +43,9 @@ jobs:
         with:
           python-version: "3.13"
       - run: pip install -e ".[dev]"
-      - run: pytest -q
+      # Failures surface as public error annotations (::error::), so the
+      # failing test is visible without log access.
+      - run: pytest -q 2>&1 | tee pytest.log; code=$?; grep -E "^FAILED" pytest.log | sed "s/^FAILED /::error::/" || true; exit $code
       - run: python examples/fear_response.py
       - run: python examples/lesion_study.py --runs runs/lesion_study
       - run: python examples/feeding.py --runs runs/feeding
